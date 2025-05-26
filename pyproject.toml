@@ -1,6 +1,11 @@
 # TODO(mmschlk): add your project name and description here
-# uncomment the following line and incpororate the build system
-# [build-system]
+# uncomment the following line and incoprorate the build system
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["shapiq_student"]
 
 [project]
 name = "shapiq-student"

@@ -126,5 +126,5 @@ exclude_lines = [
 
 # mypy stuff
 [tool.mypy]
-exclude = ["^tests_grading/"]
+exclude = ["^tests_grading/."]
 

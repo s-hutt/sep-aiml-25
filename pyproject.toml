@@ -124,3 +124,7 @@ exclude_lines = [
     "if TYPE_CHECKING",
 ]
 
+# mypy stuff
+[tool.mypy]
+exclude = "tests_grading/.*"
+

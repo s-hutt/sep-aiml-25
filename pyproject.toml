@@ -124,4 +124,7 @@ exclude_lines = [
     "if TYPE_CHECKING",
 ]
 
-# TODO(mmschlk): add mypy or ty typing configuration below
+# mypy stuff
+[tool.mypy]
+exclude = ["^tests_grading"]
+

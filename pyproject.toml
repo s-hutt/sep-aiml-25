@@ -132,3 +132,10 @@ exclude_lines = [
 # mypy stuff
 [tool.mypy]
 exclude = "^tests_grading/"
+
+# commitizen stuff
+[tool.commitizen]
+name = "cz_conventional_commits"
+version_file = ["VERSION"]
+update_changelog_on_bump = true
+changelog_file = "CHANGELOG.md"

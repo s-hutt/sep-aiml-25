@@ -131,7 +131,6 @@ exclude_lines = [
 
 # mypy stuff
 [tool.mypy]
-exclude = "^tests_grading/"
 
 # commitizen stuff
 [tool.commitizen]

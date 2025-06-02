@@ -12,6 +12,9 @@ Installation and working with `shapiq_student` can be done via `uv`:
 uv sync
 ```
 
+## 📖 Documentation (Under Construction)
+The documentation of `shapiq_student` can be found at https://s-hutt.github.io/sep-aiml-25/.
+
 ## 📜 License
 This project is licensed under the [MIT License](https://github.com/mmschlk/shapiq/blob/main/LICENSE).
 

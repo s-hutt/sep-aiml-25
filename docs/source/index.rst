@@ -30,4 +30,3 @@ Built with ❤️ by the shapiq_student team.
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
-

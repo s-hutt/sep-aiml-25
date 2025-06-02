@@ -47,7 +47,7 @@ dev = [
 output-format = "full"
 line-length = 100
 target-version = "py310"
-src = ["tests", "shapiq_student", "tests_grading"]
+src = ["tests", "shapiq_student", "docs", "tests_grading"]
 [tool.ruff.lint]
 select = [
     "ALL"
@@ -106,6 +106,10 @@ exclude = [
     "ARG",  # some functions are not used
     "INP",  # inports can be different
     "N",  # type hints are excludes in tests
+]
+"docs/source/conf.py" = [
+    "INP001", # conf.py doesn't belong to a python package
+    "A001", # `copyright` is a keyword in sphinx, cannot be renamed
 ]
 [tool.ruff.lint.pydocstyle]
 convention = "google"

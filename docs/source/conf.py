@@ -8,10 +8,13 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 from __future__ import annotations
 
+import shapiq_student
+
 project = "shapiq_student"
 copyright = "2025, Sep-AIML-25-Group-2"
 author = "Sep-AIML-25-Group-2"
-release = "0.1.1"
+release = shapiq_student.__version__
+version = shapiq_student.__version__
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

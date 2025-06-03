@@ -1,17 +1,30 @@
 """Sphinx configuration for building project documentation."""
+
 # Configuration file for the Sphinx documentation builder.
 #
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
+from __future__ import annotations
+
+import os
+import sys
+
+sys.path.insert(0, os.path.abspath("../.."))  # noqa: PTH100
+sys.path.insert(0, os.path.abspath("../../shapiq_student"))  # noqa: PTH100
+
+
+import shapiq_student
+
+# -- Read the Docs ---------------------------------------------------------------------------------
+master_doc = "index"
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
-from __future__ import annotations
-
 project = "shapiq_student"
 copyright = "2025, Sep-AIML-25-Group-2"
 author = "Sep-AIML-25-Group-2"
-release = "0.1.1"
+release = shapiq_student.__version__
+version = shapiq_student.__version__
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

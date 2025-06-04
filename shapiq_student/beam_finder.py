@@ -48,55 +48,47 @@ class BeamCoalitionFinder:
     def find_max(self, size: int) -> tuple[set[int], float]:
         """Finde die Koalition der Größe `size`, die den höchsten Bewertungswert erzielt."""
         beam_width = self._get_beam_width(size)
-        beam = [{f} for f in self.features]
-        beam_scores = [self.evaluate_fn({f}, self.interactions) for f in self.features]
+        beam = [frozenset({f}) for f in self.features]
+        beam_scores = [self.evaluate_fn(set(b), self.interactions) for b in beam]
 
         for _ in range(1, size):
-            candidates = []
-            candidate_scores = []
+            candidates: dict[frozenset[int], float] = {}
 
             for S in beam:
                 for f in self.features:
                     if f not in S:
-                        new_S = S | {f}
-                        score = self.evaluate_fn(new_S, self.interactions)
-                        candidates.append(new_S)
-                        candidate_scores.append(score)
+                        new_S = frozenset(S | {f})
+                        if new_S not in candidates:
+                            score = self.evaluate_fn(set(new_S), self.interactions)
+                            candidates[new_S] = score
 
-            sorted_pairs = sorted(
-                zip(candidates, candidate_scores, strict=False), key=lambda x: x[1], reverse=True
-            )
-
+            sorted_pairs = sorted(candidates.items(), key=lambda x: x[1], reverse=True)
             beam = [S for S, _ in sorted_pairs[:beam_width]]
             beam_scores = [score for _, score in sorted_pairs[:beam_width]]
 
         best_idx = beam_scores.index(max(beam_scores))
-        return beam[best_idx], beam_scores[best_idx]
+        return set(beam[best_idx]), beam_scores[best_idx]
 
     def find_min(self, size: int) -> tuple[set[int], float]:
         """Finde die Koalition der Größe `size`, die den niedrigsten Bewertungswert erzielt."""
         beam_width = self._get_beam_width(size)
-        beam = [{f} for f in self.features]
-        beam_scores = [self.evaluate_fn({f}, self.interactions) for f in self.features]
+        beam = [frozenset({f}) for f in self.features]
+        beam_scores = [self.evaluate_fn(set(b), self.interactions) for b in beam]
 
         for _ in range(1, size):
-            candidates = []
-            candidate_scores = []
+            candidates: dict[frozenset[int], float] = {}
 
             for S in beam:
                 for f in self.features:
                     if f not in S:
-                        new_S = S | {f}
-                        score = self.evaluate_fn(new_S, self.interactions)
-                        candidates.append(new_S)
-                        candidate_scores.append(score)
+                        new_S = frozenset(S | {f})
+                        if new_S not in candidates:
+                            score = self.evaluate_fn(set(new_S), self.interactions)
+                            candidates[new_S] = score
 
-            sorted_pairs = sorted(
-                zip(candidates, candidate_scores, strict=False), key=lambda x: x[1]
-            )
-
+            sorted_pairs = sorted(candidates.items(), key=lambda x: x[1])
             beam = [S for S, _ in sorted_pairs[:beam_width]]
             beam_scores = [score for _, score in sorted_pairs[:beam_width]]
 
         best_idx = beam_scores.index(min(beam_scores))
-        return beam[best_idx], beam_scores[best_idx]
+        return set(beam[best_idx]), beam_scores[best_idx]

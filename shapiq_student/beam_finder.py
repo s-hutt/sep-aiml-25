@@ -11,15 +11,13 @@ if TYPE_CHECKING:
 class BeamCoalitionFinder:
     """Heuristischer Algorithmus zur Suche optimaler Feature-Koalitionen mittels Beam Search.
 
-    Die Klasse erlaubt die Suche nach Koalitionen fester Größe, die den höchsten (find_max)
-    oder niedrigsten (find_min) Interaktionswert gemäß einer Bewertungsfunktion erzielen.
+    Die Koalitionssuche erfolgt mit adaptiver Beam-Breitenreduktion: Beginnend mit einer
+    Breite von p * n (Standard: 100% der Features) wird diese pro Iteration exponentiell
+    reduziert. Die Stärke des Abfalls kann über den Parameter beam_decay ∈ (0, 1] gesteuert
+    werden. Ein kleinerer Wert führt zu stärkerer Reduktion (Standard: 0.3).
 
-    Die Beam-Breite wird standardmäßig iterativ reduziert, um in frühen Suchphasen breit zu
-    explorieren und in späteren Schritten effizient zu fokussieren. Die Reduktion kann linear,
-    logarithmisch oder exponentiell erfolgen. Alternativ kann eine feste Breite angegeben werden.
-
-    Optional erlaubt ein Startfaktor p ∈ (0, 1] die Skalierung der initialen Beam-Breite
-    (Standard: 70 % von n).
+    Die initiale Breite kann über beam_start_fraction ebenfalls angepasst werden - z. B. bei
+    sehr großen Featuremengen zur Reduktion des Anfangssuchraums.
     """
 
     def __init__(
@@ -27,56 +25,50 @@ class BeamCoalitionFinder:
         features: list[int],
         interactions: dict[tuple[int, ...], float],
         evaluate_fn: Callable[[set[int], dict[tuple[int, ...], float]], float],
-        beam_reduction_strategy: str = "linear",
-        beam_start_fraction: float = 0.7,
+        beam_start_fraction: float = 1.0,
+        beam_decay: float = 0.3,
     ) -> None:
         """Initialisiert den BeamCoalitionFinder.
 
         :param features: Liste aller verfügbaren Feature-Indizes.
         :param interactions: Dictionary mit Interaktionswerten.
         :param evaluate_fn: Bewertungsfunktion, die einer Koalition einen Wert zuweist.
-        :param beam_reduction_strategy: Strategie zur iterativen Reduktion der Beam-Breite
-            bei wachsender Koalitionstiefe. Optionen:
-                - "linear" (Standard): gleichmäßiger Abfall
-                - "log": langsamer, logarithmischer Abfall
-                - "exp": schneller, exponentieller Abfall
-        :param beam_start_fraction: Startfaktor p ∈ (0, 1], bestimmt initiale Breite als p * n.
-            Standard ist 0.7 (70 % der Feature-Anzahl).
+        :param beam_start_fraction: Startfaktor p ∈ (0, 1], bestimmt die initiale Beam-Breite als p * n.
+            Bei großen Featuremengen kann p < 1 gewählt werden, um die Startbreite zu begrenzen.
+            Standard ist 1.0 (alle Features zu Beginn berücksichtigt).
+        :param beam_decay: Abfallfaktor r ∈ (0, 1], steuert die Stärke der exponentiellen Reduktion
+            der Beam-Breite über die Iterationen. Kleinere Werte führen zu schnellerem Abfall.
+            Standard ist 0.3.
         """
         self.features = features
         self.interactions = interactions
         self.evaluate_fn = evaluate_fn
-        self.reduction_strategy = beam_reduction_strategy
         self.start_fraction = min(1.0, max(beam_start_fraction, 0.01))
+        self.beam_decay = min(1.0, max(beam_decay, 0.01))
 
-    def _beam_width_at(self, iteration: int, total_steps: int) -> int:
+    def _beam_width_at(self, iteration: int) -> int:
         """Berechnet die Beam-Breite für eine gegebene Iteration innerhalb des Beam Search.
 
-        Falls beam_width gesetzt ist, wird dieser Wert zurückgegeben. Ansonsten wird
-        die Beam-Breite adaptiv reduziert, basierend auf der gewählten Strategie
-        und dem initialen Startfaktor p.
+        Die initiale Beam-Breite wird als p * n festgelegt (p = beam_start_fraction).
+        Ab der zweiten Iteration wird die Breite exponentiell reduziert gemäß:
 
-        :param iteration: Aktuelle Iteration im Beam Search, beginnend bei 1.
-        :param total_steps: Anzahl der Iterationen insgesamt.
-        :return: Ganze Zahl ≥ 2 als Beam-Breite für die aktuelle Tiefe.
+            w_t = w0 * (r ** (t - 1))
+
+        wobei w0 = Startbreite, r = beam_decay und t = aktuelle Iteration.
+        Eine Mindestbreite von 2 wird immer eingehalten.
+
+        :param iteration: Aktuelle Iteration im Beam Search (beginnend bei 1).
+        :return: Ganze Zahl ≥ 2 als Beam-Breite für die aktuelle Iteration.
         """
         n = len(self.features)
         w0 = round(n * self.start_fraction)
         w0 = min(n, max(2, w0))
 
-        t = iteration
-        T = max(1, total_steps)
+        if iteration == 1:
+            return w0
 
-        if self.reduction_strategy == "log":
-            import math
-
-            w = w0 / math.log2(t + 2)
-        elif self.reduction_strategy == "exp":
-            r = 0.7
-            w = w0 * (r ** (t - 1))
-        else:  # linear (default)
-            slope = (w0 - 2) / T
-            w = w0 - slope * (t - 1)
+        r = self.beam_decay
+        w = w0 * (r ** (iteration - 1))
 
         return max(2, round(w))
 
@@ -89,7 +81,7 @@ class BeamCoalitionFinder:
         beam_scores = [self.evaluate_fn(set(b), self.interactions) for b in beam]
 
         for depth in range(1, size):
-            beam_width = self._beam_width_at(depth, size - 1)
+            beam_width = self._beam_width_at(depth)
 
             candidates: dict[frozenset[int], float] = {}
 
@@ -117,7 +109,7 @@ class BeamCoalitionFinder:
         beam_scores = [self.evaluate_fn(set(b), self.interactions) for b in beam]
 
         for depth in range(1, size):
-            beam_width = self._beam_width_at(depth, size - 1)
+            beam_width = self._beam_width_at(depth)
 
             candidates: dict[frozenset[int], float] = {}
 

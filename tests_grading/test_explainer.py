@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from shapiq import Explainer
 
-from shapiq_student.knn_explainer import KNNExplainer
+from shapiq_student.knnexplainer1 import KNNExplainer
 
 
 def test_is_explainer_class() -> None:

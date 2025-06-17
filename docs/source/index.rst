@@ -9,7 +9,7 @@ shapiq_student Documentation
 Sep-AIML-2025-Group 2
 ---------------------
 
-**shapiq_student** is a Python package that extends the functionalities of **shapiq**, a library for explaining machine learning models with Shapley interactions.
+**shapiq_student** is a Python package that extends the functionalities of `shapiq <https://shapiq.readthedocs.io/en/latest/index.html>`_, a library for explaining machine learning models with Shapley interactions.
 
 Installation
 ------------
@@ -19,6 +19,15 @@ Install using `uv`:
 .. code-block:: bash
 
    uv sync
+
+Contents
+~~~~~~~~
+
+.. toctree::
+   :maxdepth: 1
+   :caption: INTRODUCTION
+
+   introduction/index
 
 License
 -------

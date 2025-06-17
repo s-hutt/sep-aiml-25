@@ -3,6 +3,12 @@ This changelog is to be updated with each important change to the codebase.
 
 ## Development
 
+## 0.3.0 (2025-06-17)
+
+### Feat
+
+- **docs**: integrate Sphinx autodoc for API generation; Setup the doc page structure
+
 ## 0.2.0 (2025-06-02)
 
 ### Feat

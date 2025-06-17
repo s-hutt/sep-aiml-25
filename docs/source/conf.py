@@ -6,8 +6,17 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 from __future__ import annotations
 
+from collections.abc import Mapping
 import os
 import sys
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+    from sphinx.application import Sphinx
+
+import commonmark
 
 sys.path.insert(0, os.path.abspath("../.."))  # noqa: PTH100
 sys.path.insert(0, os.path.abspath("../../shapiq_student"))  # noqa: PTH100
@@ -92,3 +101,43 @@ html_sidebars = {
         "sidebar/scroll-end.html",
     ],
 }
+
+# -- Autodoc ---------------------------------------------------------------------------------------
+autosummary_generate = True
+autodoc_default_options = {
+    "show-inheritance": True,
+    "members": True,
+    "member-order": "groupwise",
+    "special-members": "__call__",
+    "undoc-members": True,
+    "exclude-members": "__weakref__",
+}
+autoclass_content = "both"
+autodoc_inherit_docstrings = True
+autodoc_member_order = "groupwise"
+
+# -- Markdown in docstring -----------------------------------------------------------------------------
+# https://gist.github.com/dmwyatt/0f555c8f9c129c0ac6fed6fabe49078b#file-docstrings-py
+# based on https://stackoverflow.com/a/56428123/23972
+
+
+def docstring(
+    _app: Sphinx,
+    _what: str,
+    _name: str,
+    _obj: object,
+    _options: Mapping[str, object],
+    lines: list[str],
+) -> None:
+    """Convert Markdown in docstrings to reStructuredText."""
+    if len(lines) > 1 and lines[0] == "@&ismd":
+        md = "\n".join(lines[1:])
+        ast = commonmark.Parser().parse(md)
+        rst = commonmark.ReStructuredTextRenderer().render(ast)
+        lines.clear()
+        lines += rst.splitlines()
+
+
+def setup(app: Sphinx) -> None:
+    """Setup function for the Sphinx extension to convert Markdown in docstrings to reStructuredText."""
+    app.connect("autodoc-process-docstring", docstring)

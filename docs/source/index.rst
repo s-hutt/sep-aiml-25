@@ -29,6 +29,12 @@ Contents
    examples/conditional_data_imputers
    examples/coalition_finding_algorithmus
 
+.. toctree::
+   :maxdepth: 1
+   :caption: API REFERENCE
+
+   api
+
 License
 -------
 

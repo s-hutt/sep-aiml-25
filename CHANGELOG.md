@@ -3,6 +3,12 @@ This changelog is to be updated with each important change to the codebase.
 
 ## Development
 
+## 0.3.1 (2025-06-17)
+
+### Fix
+
+- **ci**: rename and update sphinx workflow. sphinx.yml should trigger when main branch is changed.
+
 ## 0.3.0 (2025-06-17)
 
 ### Feat

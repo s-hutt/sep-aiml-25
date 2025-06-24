@@ -9,12 +9,11 @@ heuristischen Verfahrens zu bewerten.
 
 from __future__ import annotations
 
-from collections import defaultdict
 import logging
 
 from shapiq import Explainer
 from shapiq.datasets import load_bike_sharing
-from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
 
 from shapiq_student.beam_finder import BeamCoalitionFinder
@@ -29,7 +28,7 @@ def test_beam_vs_brute_on_bike_sharing():
     y = y.loc[X.index]
 
     X_train, _, y_train, _ = train_test_split(X, y, test_size=0.2, random_state=0)
-    model = LinearRegression().fit(X_train, y_train)
+    model = RandomForestRegressor().fit(X_train, y_train)
 
     explainer = Explainer(
         model=model.predict,
@@ -38,12 +37,12 @@ def test_beam_vs_brute_on_bike_sharing():
         max_order=3,
     )
 
-    aggregated_interactions: dict[tuple[int, ...], float] = defaultdict(float)
-    for i in range(len(X_train)):
-        instance = X_train.iloc[i].to_numpy()
-        interaction = explainer.explain(instance).to_dict()
-        for indices, idx in interaction["interaction_lookup"].items():
-            aggregated_interactions[indices] += interaction["values"][idx]
+    x0 = X_train.to_numpy()[0]
+    explanation = explainer.explain(x0).to_dict()
+    values = explanation["values"]
+    lookup = explanation["interaction_lookup"]
+
+    interactions = {T: values[idx] for T, idx in lookup.items()}
 
     def evaluate(S: set[int], e: dict[tuple[int, ...], float]) -> float:
         return evaluate_interaction_coalition(S, e, max_order=3)
@@ -51,24 +50,30 @@ def test_beam_vs_brute_on_bike_sharing():
     features = list(range(X_train.shape[1]))
 
     S_max_b, val_max_b = brute_force_find_extrema(
-        features, aggregated_interactions, evaluate, size=3, mode="max"
+        features, interactions, evaluate, size=3, mode="max"
     )
     S_min_b, val_min_b = brute_force_find_extrema(
-        features, aggregated_interactions, evaluate, size=3, mode="min"
+        features, interactions, evaluate, size=3, mode="min"
     )
 
     beam = BeamCoalitionFinder(
         features=features,
-        interactions=aggregated_interactions,
+        interactions=interactions,
         evaluate_fn=evaluate,
     )
     S_max_bs, val_max_bs = beam.find_max(3)
     S_min_bs, val_min_bs = beam.find_min(3)
 
+    def readable_coalition(S: set[int], columns) -> set[str]:
+        return {columns[i] for i in S}
+
     logging.info("Brute-Force max: %s → %.2f", S_max_b, val_max_b)
     logging.info("Beam max       : %s → %.2f", S_max_bs, val_max_bs)
     logging.info("Brute-Force min: %s → %.2f", S_min_b, val_min_b)
     logging.info("Beam min       : %s → %.2f", S_min_bs, val_min_bs)
+
+    logging.info("Readable max coalition: %s", readable_coalition(S_max_bs, X_train.columns))
+    logging.info("Readable min coalition: %s", readable_coalition(S_min_bs, X_train.columns))
 
     assert isinstance(S_max_b, set)
     assert isinstance(S_min_b, set)

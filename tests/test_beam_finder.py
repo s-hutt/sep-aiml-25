@@ -26,8 +26,6 @@ def test_beam_finder_example():
         features=features,
         interactions=interactions,
         evaluate_fn=lambda S, e: evaluate_interaction_coalition(S, e, max_order=3),
-        beam_start_fraction=1.0,
-        beam_decay=0.3,
     )
 
     S_max, val_max = beam.find_max(2)

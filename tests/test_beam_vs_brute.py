@@ -1,10 +1,10 @@
-"""Vergleicht Beam-Search mit Brute-Force auf dem Bike-Sharing-Datensatz aus shapiq.
+"""Vergleicht Beam Search mit Brute-Force auf dem Bike-Sharing-Datensatz aus shapiq.
 
-Ein Linear-Regression-Modell wird auf Trainingsdaten trainiert, anschließend werden
-Interaktionswerte mit STInteractionIndex (shapiq) berechnet. Daraufhin erfolgt eine
-Koalitionssuche mittels Beam und Brute-Force für eine feste Koalitionsgröße l.
+Ein RandomForestRegressor-Modell wird auf Trainingsdaten trainiert. Anschließend werden
+Interaktionswerte mit dem k-SII-Index (shapiq) berechnet. Daraufhin erfolgt eine
+Koalitionssuche mittels Beam Search und Brute-Force für eine feste Koalitionsgröße l.
 Die Ergebnisse werden verglichen, um die Genauigkeit und Zuverlässigkeit des
-heuristischen Verfahrens zu bewerten.
+heuristischen Beam-Ansatzes zu bewerten.
 """
 
 from __future__ import annotations
@@ -67,13 +67,18 @@ def test_beam_vs_brute_on_bike_sharing():
     def readable_coalition(S: set[int], columns) -> set[str]:
         return {columns[i] for i in S}
 
-    logging.info("Brute-Force max: %s → %.2f", S_max_b, val_max_b)
-    logging.info("Beam max       : %s → %.2f", S_max_bs, val_max_bs)
-    logging.info("Brute-Force min: %s → %.2f", S_min_b, val_min_b)
-    logging.info("Beam min       : %s → %.2f", S_min_bs, val_min_bs)
-
-    logging.info("Readable max coalition: %s", readable_coalition(S_max_bs, X_train.columns))
-    logging.info("Readable min coalition: %s", readable_coalition(S_min_bs, X_train.columns))
+    logging.info(
+        "Brute-Force max: %s → %.2f", readable_coalition(S_max_b, X_train.columns), val_max_b
+    )
+    logging.info(
+        "Beam max       : %s → %.2f", readable_coalition(S_max_bs, X_train.columns), val_max_bs
+    )
+    logging.info(
+        "Brute-Force min: %s → %.2f", readable_coalition(S_min_b, X_train.columns), val_min_b
+    )
+    logging.info(
+        "Beam min       : %s → %.2f", readable_coalition(S_min_bs, X_train.columns), val_min_bs
+    )
 
     assert isinstance(S_max_b, set)
     assert isinstance(S_min_b, set)

@@ -24,6 +24,7 @@ class KNNExplainer(Explainer):
         k: int = 5,
         t: int = 3,
         samples: int = 100,
+        alpha: float = 1.0,
     ) -> None:
         """Initialisiert den KNNExplainer mit Modell, Trainingsdaten und Methode."""
         super().__init__(model, data=x_train)
@@ -33,6 +34,7 @@ class KNNExplainer(Explainer):
         self.k = k
         self.t = t
         self.samples = samples
+        self.alpha = alpha
 
     def explain_function(self, x: np.ndarray) -> InteractionValues:
         """Je nach ausgewählter Methode wird passender Explainer aufgerufen."""
@@ -55,7 +57,7 @@ class KNNExplainer(Explainer):
         """Berechnet euklidische Distanz zwischen zwei Trainingspunkten."""
         return np.linalg.norm(a - b)
 
-    def vt_s(self, subset: list[int], x_test: np.ndarray, k: int, t: int) -> int:  # vt(S)
+    def vt_s(self, subset: list[int], x_test: np.ndarray, k: int, t: int) -> int:
         """Bewertungsfunktion v_t(S):.
 
         v_t(S) = 1, wenn unter den k nächsten Nachbarn in subset
@@ -138,5 +140,51 @@ class KNNExplainer(Explainer):
 
         return InteractionValues(values=shapley_values)
 
+    def vw_s(self, subset: list[int], x_test: np.ndarray, alpha: float) -> float:
+        """Berechnet die gewichtete Summe der Einflüsse der Subset-Punkte auf x_test basierend auf deren Distanz."""
+        subset_x = self.x_train[subset]
+        distances = [self.euclidian_distance(x, x_test) for x in subset_x]
+
+        # v(S) = sum(exp(-alpha * ||x_test - x_i||^2)) -> Nahe Punkte bekommen mehr Einfluss, entfernte fast keinen
+        weight = [np.exp(-alpha * d**2) for d in distances]
+
+        return sum(weight)
+
     def weighted_knn_shapley(self, x_test: np.ndarray) -> InteractionValues:
-        """Berechnet gewichtet basierte KNN-Shapley-Werte für x_test."""
+        """Berechnet gewichtete  KNN-Shapley-Werte für x_test."""
+        # Statt strenge Trennung mit k -> Indirekte leichte Trennung (k = Trainingspunkte mit höherem Gewicht , Im paper : which implicitly emphasizes closer neighbors, without requiring a hard number of neighbors k
+
+        alpha = self.alpha  # Größeres a : Nur die nächsten Nachbarn werden berücksichtigt , sonst :weitere haben Einfluß
+        # a bestimmt, wie schnell der Einfluss abfällt.
+
+        samples = self.samples
+
+        n = len(self.x_train)
+        shapley_values = np.zeros(n)  # Wird noch später mit echten Shapley Werten befüllt
+
+        # Sampling zufälliger Teilmengen
+        for x_i in range(n):  # Jeden Index/Trainingspunkt durchgehen
+            marginal_contributions = []
+            for _ in range(samples):
+                set_without_xi = [
+                    j for j in range(n) if j != x_i
+                ]  # Teilmenge der Trainingsdaten bilden ohne Punkt den wir gerade untersuchen
+
+                rng = np.random.default_rng()
+                subset_size = rng.integers(
+                    1, len(set_without_xi) + 1
+                )  # Länge der Teilmenge zufällig bestimmen( 1 <= random < set_without_xi +1)
+
+                subset = list(rng.choice(set_without_xi, size=subset_size, replace=False))
+
+                vw_S = self.vw_s(subset, x_test, alpha)
+
+                # v_t(S U {x_i})
+                subset_with_xi = [*subset, x_i]
+                vw_Si = self.vw_s(subset_with_xi, x_test, alpha)
+
+                marginal_contributions.append(vw_Si - vw_S)  # Marginaler Beitrag
+
+            shapley_values[x_i] = np.mean(marginal_contributions)
+
+        return InteractionValues(values=shapley_values)

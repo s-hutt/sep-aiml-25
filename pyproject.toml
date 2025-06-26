@@ -151,7 +151,7 @@ exclude_lines = [
 # commitizen stuff
 [tool.commitizen]
 name = "cz_conventional_commits"
-version = "0.3.2"
+version = "0.3.3"
 version_files = ["shapiq_student/__init__.py"]
 update_changelog_on_bump = true
 changelog_file = "CHANGELOG.md"

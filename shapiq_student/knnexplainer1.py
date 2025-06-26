@@ -76,9 +76,28 @@ class KNNExplainer(Explainer):
     def knn_shapley_weighted(self, x_test: np.ndarray, alpha: float = 1.0) -> InteractionValues:
         """Berechnet gewichtet abgeschwächte KNN-Shapley-Werte auf Basis der Distanzen.
 
-        Einflusswerte sinken mit wachsender Distanz gemäß einer exponentiellen Gewichtung.
+        Einflusswerte sinken mit wachsender Distanz gemäß einer Gewichtung (1 / dist^alpha).
         """
-        # Dummy-Rückgabe
+        epsilon = 1e-8  # zur Vermeidung von Division durch 0
+        x = np.asarray(x_test).reshape(1, -1)  # Umwandlung in 2D-Form
+        dists = np.linalg.norm(self.X_train - x, axis=1)  # Distanzberechnung: Euklidischer Abstand
+        sorted_indices = np.argsort(dists)  # Nachbarn sortieren
+
+        # Gewichte berechnen
+        weights = 1 / (dists[sorted_indices] ** alpha + epsilon)
+        weights /= weights.sum()  # Normalisierung
+
+        shapley_values = np.zeros(len(self.X_train))
+
+        # Nur k-nächste Nachbarn berücksichtigen
+        k = self.model.n_neighbors
+        for i, idx in enumerate(sorted_indices[:k]):
+            contribution = weights[i]
+            if self.y_train[idx] == self.model.predict(x)[0]:
+                shapley_values[idx] += contribution  # positiver Einfluss bei richtiger Klasse
+            else:
+                shapley_values[idx] -= contribution  # negativer Einfluss bei falscher Klasse
+        return shapley_values
 
     def get_neighbors(self, x_test: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         """Gibt Indizes und Distanzen der Trainingspunkte zurück, sortiert nach Distanz."""

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 from shapiq.games.imputer.base import Imputer
+from shapiq.games.imputer.marginal_imputer import MarginalImputer
 
 from shapiq_student import GaussianImputer
 
@@ -25,21 +26,21 @@ class TestImputers:
 
     def test_gaussian_imputer_init(self, knn_basic, data_test, x_explain):
         """Test init of GaussianImputer."""
-        assert issubclass(GaussianImputer, Imputer), (
+        assert issubclass(MarginalImputer, Imputer), (
             "GaussianCopulaImputer should be a subclass of Imputer."
         )
 
         x_test, _ = data_test
         n_features = x_test.shape[1]
-        imputer = GaussianImputer(model=knn_basic, data=x_test)
-        assert isinstance(imputer, GaussianImputer)
+        imputer = MarginalImputer(model=knn_basic, data=x_test)
+        assert isinstance(imputer, MarginalImputer)
         assert isinstance(imputer, Imputer)
         assert imputer.x is None, "x should be None initially."
         assert imputer.n_players == n_features
 
         # test with x set to x_explain
-        imputer = GaussianImputer(model=knn_basic, data=x_test, x=x_explain)
-        assert isinstance(imputer, GaussianImputer)
+        imputer = MarginalImputer(model=knn_basic, data=x_test, x=x_explain)
+        assert isinstance(imputer, MarginalImputer)
         assert isinstance(imputer, Imputer)
         assert np.array_equal(imputer.x, x_explain), "x should be set to x_explain."
 

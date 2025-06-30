@@ -1,7 +1,5 @@
-import warnings
-
 import numpy as np
-from numpy.linalg import inv, cholesky
+from numpy.linalg import pinv, cholesky
 
 from typing import Literal
 from shapiq.games.imputer.base import Imputer
@@ -28,8 +26,8 @@ class GaussianImputer(Imputer):
             categorical_features=categorical_features,
             random_state=random_state
         )
-        if method not in {"gaussianConditional", "gaussCopula"}:
-            raise ValueError("Currently only 'gaussConditional' and 'gaussCopula' imputers are implemented.")
+        if method not in {"gaussianConditional"}:
+            raise ValueError("This contructor is for gaussianConditional imputers only.")
         self.method = method
         self.conditional_budget = conditional_budget
         self.conditional_threshold = conditional_threshold
@@ -131,7 +129,7 @@ class GaussianImputer(Imputer):
             cov_SbarS = cov_mat[np.ix_(Sbar_idx, S_idx)]
             cov_SbarSbar = cov_mat[np.ix_(Sbar_idx, Sbar_idx)]
 
-            cov_SbarS_cov_SS_inv = cov_SbarS @ inv(cov_SS)
+            cov_SbarS_cov_SS_inv = cov_SbarS @ pinv(cov_SS)
             cond_cov_Sbar_given_S = cov_SbarSbar - cov_SbarS_cov_SS_inv @ cov_SSbar
 
             # Ensure symmetry

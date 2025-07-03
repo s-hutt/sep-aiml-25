@@ -30,22 +30,15 @@ class GaussianCopulaImputer(Imputer):
             raise ValueError("This constructor is for 'gaussCopula' imputers only.")
         self.method = method
 
-        # Check that no categorical features are included
-        if self._cat_features:
-            raise ValueError(
-                f"Gaussian Copula imputer does not support categorical features. "
-                f"Found categorical feature indices: {self._cat_features}"
-            )
-
         # Set empty value and normalization
         self.empty_prediction: float = self.calc_empty_prediction()
         if normalize:
             self.normalization_value = self.empty_prediction
+        if method == "gaussCopula":
+            # Initialize background distribution via Gaussian copula transform
+            self.init_background(data)
 
-        # Initialize background distribution via Gaussian copula transform
-        self.init_background_gauss_copula(data)
-
-    def init_background_gauss_copula(self, data: np.ndarray) -> "GaussianCopulaImputer":
+    def init_background(self, data: np.ndarray) -> "GaussianCopulaImputer":
         """
         Initializes the background distribution for Copula-based imputation.
         Transforms data to Gaussian space via rank-based transform.
@@ -63,11 +56,6 @@ class GaussianCopulaImputer(Imputer):
         self._copula_cov = np.cov(data_gauss, rowvar=False)
         self._train_data = data.copy()
 
-        # Store x transformed the same way
-        x_combined = np.vstack([self._x[np.newaxis, :], data])
-        x_gauss = np.apply_along_axis(self.gaussian_transform_separate, axis=0, arr=x_combined, n_y=1)
-        self._x_gauss = x_gauss[0]  # Only the first row (explained instance)
-
         return self
 
     def value_function(self, coalitions: np.ndarray[bool]) -> np.ndarray[float]:
@@ -80,6 +68,11 @@ class GaussianCopulaImputer(Imputer):
     Returns:
         np.ndarray of shape (n_subsets,), model predictions per coalition.
     """
+        # Store x transformed the same way
+        x_combined = np.vstack([self._x, self.data])
+        x_gauss = np.apply_along_axis(self.gaussian_transform_separate, axis=0, arr=x_combined, n_y=1)
+        self._x_gauss = x_gauss[0]  # Only the first row (explained instance)
+
         n_coalitions, n_features = coalitions.shape
 
         mu = self._copula_mu
@@ -96,8 +89,8 @@ class GaussianCopulaImputer(Imputer):
         # Run conditional sampling using the Gaussian copula approach
         imputed_data = self._prepare_data_copula_py(
             MC_samples_mat=MC_samples,
-            x_explain_gauss=self._x_gauss[np.newaxis, :],  # already Gaussianized
-            x_explain_original=self._x[np.newaxis, :],  # original for back-transform
+            x_explain_gauss=self._x_gauss,  # already Gaussianized
+            x_explain_original=self._x,  # original for back-transform
             x_train_mat=self._train_data,  # needed for copula rank transforms
             S=coalitions.astype(float),
             mu=self._copula_mu,
@@ -138,6 +131,9 @@ class GaussianCopulaImputer(Imputer):
             S_now = S[S_ind]
             S_idx = np.where(S_now > 0.5)[0]
             Sbar_idx = np.where(S_now < 0.5)[0]
+
+            print("x_explain_original.shape:", x_explain_original.shape)
+            print("S_idx:", S_idx)
 
             x_S_star = x_explain_original[:, S_idx]
             x_S_star_gauss = x_explain_gauss[:, S_idx]

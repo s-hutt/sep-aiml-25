@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 from shapiq.games.imputer.base import Imputer
 
-from shapiq_student import GaussianImputer
+from shapiq_student import GaussianCopulaImputer, GaussianImputer
 
 from .utils import get_random_coalitions
 
@@ -39,25 +39,25 @@ class TestImputers:
         assert coalitions.shape == (10, n_features), "Coalitions should have the correct shape."
         return coalitions
 
-    # def test_gaussian_copula_imputer_init(self, data_test, x_explain):
-    #     """Test init of GaussianCopulaImputer."""
-    #     assert issubclass(GaussianCopulaImputer, Imputer), (
-    #         "GaussianCopulaImputer should be a subclass of Imputer."
-    #     )
-    #
-    #     x_test, _ = data_test
-    #     n_features = x_test.shape[1]
-    #     imputer = GaussianCopulaImputer(model=dummy_model, data=x_test)
-    #     assert isinstance(imputer, GaussianCopulaImputer)
-    #     assert isinstance(imputer, Imputer)
-    #     assert imputer.x is None, "x should be None initially."
-    #     assert imputer.n_players == n_features
-    #
-    #     # test with x set to x_explain
-    #     imputer = GaussianCopulaImputer(model=dummy_model, data=x_test, x=x_explain)
-    #     assert isinstance(imputer, GaussianCopulaImputer)
-    #     assert isinstance(imputer, Imputer)
-    #     assert np.array_equal(imputer.x, x_explain), "x should be set to x_explain."
+    def test_gaussian_copula_imputer_init(self, data_test, x_explain):
+        """Test init of GaussianCopulaImputer."""
+        assert issubclass(GaussianCopulaImputer, Imputer), (
+            "GaussianCopulaImputer should be a subclass of Imputer."
+        )
+
+        x_test, _ = data_test
+        n_features = x_test.shape[1]
+        imputer = GaussianCopulaImputer(model=dummy_model, data=x_test)
+        assert isinstance(imputer, GaussianCopulaImputer)
+        assert isinstance(imputer, Imputer)
+        assert imputer.x is None, "x should be None initially."
+        assert imputer.n_players == n_features
+
+        # test with x set to x_explain
+        imputer = GaussianCopulaImputer(model=dummy_model, data=x_test, x=x_explain)
+        assert isinstance(imputer, GaussianCopulaImputer)
+        assert isinstance(imputer, Imputer)
+        assert np.array_equal(imputer.x, x_explain), "x should be set to x_explain."
 
     def test_gaussian_imputer_init(self, data_test, x_explain):
         """Test init of GaussianImputer."""
@@ -91,14 +91,14 @@ class TestImputers:
         assert isinstance(output, np.ndarray)
         assert output.shape == (10,), "Output should be a vector of predictions."
 
-    # def test_gaussian_copula_can_be_called(self, data_test, x_explain):
-    #     """Test if GaussianCopulaImputer can be called."""
-    #     coalitions = self.get_coalitions(data_test)
-    #
-    #     # check the GaussianCopulaImputer can be called with coalitions
-    #     x_test, _ = data_test
-    #     imputer = GaussianCopulaImputer(model=dummy_model, data=x_test)
-    #     imputer.fit(x=x_explain)
-    #     output = imputer(coalitions=coalitions)
-    #     assert isinstance(output, np.ndarray)
-    #     assert output.shape == (10,), "Output should be a vector of predictions."
+    def test_gaussian_copula_can_be_called(self, data_test, x_explain):
+        """Test if GaussianCopulaImputer can be called."""
+        coalitions = self.get_coalitions(data_test)
+
+        # check the GaussianCopulaImputer can be called with coalitions
+        x_test, _ = data_test
+        imputer = GaussianCopulaImputer(model=dummy_model, data=x_test)
+        imputer.fit(x=x_explain)
+        output = imputer(coalitions=coalitions)
+        assert isinstance(output, np.ndarray)
+        assert output.shape == (10,), "Output should be a vector of predictions."

@@ -6,17 +6,17 @@ from shapiq.games.imputer.base import Imputer
 
 class GaussianImputer(Imputer):
     def __init__(
-            self,
-            model,
-            data: np.ndarray,
-            x: np.ndarray | None = None,
-            sample_size: int = 10,
-            conditional_budget: int = 128,
-            conditional_threshold: float = 0.05,
-            normalize: bool = True,
-            categorical_features: list[int] | None = None,
-            method: Literal["gaussConditional"] = "gaussConditional",
-            random_state: int | None = None,
+        self,
+        model,
+        data: np.ndarray,
+        x: np.ndarray | None = None,
+        sample_size: int = 10,
+        conditional_budget: int = 128,
+        conditional_threshold: float = 0.05,
+        normalize: bool = True,
+        categorical_features: list[int] | None = None,
+        method: Literal["gaussConditional"] = "gaussConditional",
+        random_state: int | None = None,
     ) -> None:
         super().__init__(
             model=model,
@@ -62,7 +62,7 @@ class GaussianImputer(Imputer):
 
         return self
 
-    def value_function(self, coalitions: np.ndarray[bool]) -> np.ndarray[float]:
+    def value_function(self, coalitions: np.ndarray) -> np.ndarray:
         """
         Computes the value function using multivariate Gaussian conditional sampling.
 
@@ -82,7 +82,6 @@ class GaussianImputer(Imputer):
         rng = np.random.default_rng()
         MC_samples = rng.standard_normal((n_samples, n_features))
 
-        # Expand input x for batch
         x_explain = self._x  # shape (1, n_features)
 
         # Run conditional sampling

@@ -3,6 +3,12 @@ This changelog is to be updated with each important change to the codebase.
 
 ## Development
 
+## 0.3.3 (2025-06-26)
+
+### Refactor
+
+- new tests_grading files and default python modules are added for matching the new 1.3.0 version shapiq.
+
 ## 0.3.2 (2025-06-17)
 
 ### Fix

@@ -26,7 +26,7 @@ class GaussianImputer(Imputer):
             categorical_features=categorical_features,
             random_state=random_state
         )
-        if method not in {"gaussianConditional"}:
+        if method not in {"gaussConditional"}:
             raise ValueError("This contructor is for gaussianConditional imputers only.")
         self.method = method
         self.conditional_budget = conditional_budget

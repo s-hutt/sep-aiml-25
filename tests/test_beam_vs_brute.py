@@ -24,7 +24,7 @@ from shapiq_student.evaluation import evaluate_interaction_coalition
 def test_beam_vs_brute_on_bike_sharing():
     """Vergleicht die Beam-Koalitionssuche mit Brute-Force für l=3 auf echten Daten."""
     X, y = load_bike_sharing()
-    X = X.sample(n=50, random_state=42)
+    X = X.sample(n=100, random_state=42)
     y = y.loc[X.index]
 
     X_train, _, y_train, _ = train_test_split(X, y, test_size=0.2, random_state=0)
@@ -37,8 +37,8 @@ def test_beam_vs_brute_on_bike_sharing():
         max_order=3,
     )
 
-    x0 = X_train.to_numpy()[0]
-    explanation = explainer.explain(x0).to_dict()
+    x0 = X_train.to_numpy()[20]
+    explanation = explainer.explain(x0, budget=512).to_dict()
     values = explanation["values"]
     lookup = explanation["interaction_lookup"]
 

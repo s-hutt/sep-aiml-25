@@ -31,7 +31,7 @@ jobs:
           pip install sphinx furo myst-parser sphinx-copybutton sphinx-autodoc-typehints sphinx_toolbox sphinxcontrib-bibtex nbconvert nbsphinx commonmark
 
       - name: Install project dependencies
-        run: uv pip install .
+        run: pip install .
 
       - name: Build HTML docs
         run: sphinx-build -M html docs/source docs/build/

@@ -83,7 +83,7 @@ class GaussianImputer(Imputer):
         MC_samples = rng.standard_normal((n_samples, n_features))
 
         # Expand input x for batch
-        x_explain = self._x[np.newaxis, :]  # shape (1, n_features)
+        x_explain = self._x  # shape (1, n_features)
 
         # Run conditional sampling
         imputed_data = self._prepare_data_gaussian_py(

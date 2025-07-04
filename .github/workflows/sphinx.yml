@@ -28,7 +28,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y pandoc
 
       - name: Install project dependencies
-        run: uv sync --all-extras
+        run: uv pip install .
 
       - name: Build HTML docs
         run: sphinx-build -M html docs/source docs/build/

@@ -71,7 +71,8 @@ class GaussianCopulaImputer(Imputer):
         # Store x transformed the same way
         x_combined = np.vstack([self._x, self.data])
         x_gauss = np.apply_along_axis(self.gaussian_transform_separate, axis=0, arr=x_combined, n_y=1)
-        self._x_gauss = x_gauss[0]  # Only the first row (explained instance)
+        n_y = self._x.shape[0]  # number of instances to explain
+        self._x_gauss = x_gauss[:n_y]  # all instances to explain
 
         n_coalitions, n_features = coalitions.shape
 

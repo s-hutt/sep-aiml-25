@@ -148,6 +148,9 @@ exclude_lines = [
 
 # mypy stuff
 [tool.mypy]
+ignore_missing_imports = true
+explicit_package_bases = true
+strict_optional = true
 
 # commitizen stuff
 [tool.commitizen]

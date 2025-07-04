@@ -33,7 +33,7 @@ jobs:
       - name: Install project dependencies
         run: |
           source .venv/bin/activate
-          uv pip install .
+          uv pip install .[docs]
 
       - name: Build HTML docs
         run: sphinx-build -M html docs/source docs/build/

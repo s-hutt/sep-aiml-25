@@ -148,6 +148,7 @@ exclude_lines = [
 
 # mypy stuff
 [tool.mypy]
+python_version = "3.10"
 ignore_missing_imports = true
 explicit_package_bases = true
 strict_optional = true

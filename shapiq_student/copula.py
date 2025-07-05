@@ -1,9 +1,11 @@
-import numpy as np
+from __future__ import annotations
 
 from typing import Literal
-from scipy.stats import norm, rankdata
 
+import numpy as np
+from scipy.stats import norm, rankdata
 from shapiq.games.imputer.base import Imputer
+
 
 class GaussianCopulaImputer(Imputer):
     def __init__(
@@ -38,9 +40,8 @@ class GaussianCopulaImputer(Imputer):
             # Initialize background distribution via Gaussian copula transform
             self.init_background(data)
 
-    def init_background(self, data: np.ndarray) -> "GaussianCopulaImputer":
-        """
-        Initializes the background distribution for Copula-based imputation.
+    def init_background(self, data: np.ndarray) -> GaussianCopulaImputer:
+        """Initializes the background distribution for Copula-based imputation.
         Transforms data to Gaussian space via rank-based transform.
         """
         if self._cat_features:
@@ -59,18 +60,19 @@ class GaussianCopulaImputer(Imputer):
         return self
 
     def value_function(self, coalitions: np.ndarray[bool]) -> np.ndarray[float]:
-        """
-        Computes the value function using multivariate Gaussian conditional sampling.
+        """Computes the value function using multivariate Gaussian conditional sampling.
 
-    Args:
+        Args:
         coalitions: Boolean array (n_subsets, n_features), True for present features.
 
-    Returns:
+        Returns:
         np.ndarray of shape (n_subsets,), model predictions per coalition.
-    """
+        """
         # Store x transformed the same way
         x_combined = np.vstack([self._x, self.data])
-        x_gauss = np.apply_along_axis(self.gaussian_transform_separate, axis=0, arr=x_combined, n_y=1)
+        x_gauss = np.apply_along_axis(
+            self.gaussian_transform_separate, axis=0, arr=x_combined, n_y=1
+        )
         n_y = self._x.shape[0]  # number of instances to explain
         self._x_gauss = x_gauss[:n_y]  # all instances to explain
 
@@ -85,7 +87,7 @@ class GaussianCopulaImputer(Imputer):
         MC_samples = rng.standard_normal((n_samples, n_features))
 
         # Expand input x for batch
-        x_explain = self._x # shape (1, n_features)
+        x_explain = self._x  # shape (1, n_features)
 
         # Run conditional sampling using the Gaussian copula approach
         imputed_data = self._prepare_data_copula_py(
@@ -95,7 +97,7 @@ class GaussianCopulaImputer(Imputer):
             x_train_mat=self._train_data,  # needed for copula rank transforms
             S=coalitions.astype(float),
             mu=self._copula_mu,
-            cov_mat=self._copula_cov
+            cov_mat=self._copula_cov,
         )
 
         # Flatten for prediction
@@ -113,14 +115,14 @@ class GaussianCopulaImputer(Imputer):
         return avg_predictions
 
     def _prepare_data_copula_py(
-            self,
-            MC_samples_mat: np.ndarray,
-            x_explain_original: np.ndarray,
-            x_explain_gauss: np.ndarray,
-            x_train_mat: np.ndarray,
-            S: np.ndarray,
-            mu: np.ndarray,
-            cov_mat: np.ndarray
+        self,
+        MC_samples_mat: np.ndarray,
+        x_explain_original: np.ndarray,
+        x_explain_gauss: np.ndarray,
+        x_train_mat: np.ndarray,
+        S: np.ndarray,
+        mu: np.ndarray,
+        cov_mat: np.ndarray,
     ) -> np.ndarray:
         n_explain, n_features = x_explain_gauss.shape
         n_MC_samples = MC_samples_mat.shape[0]
@@ -132,9 +134,6 @@ class GaussianCopulaImputer(Imputer):
             S_now = S[S_ind]
             S_idx = np.where(S_now > 0.5)[0]
             Sbar_idx = np.where(S_now < 0.5)[0]
-
-            print("x_explain_original.shape:", x_explain_original.shape)
-            print("S_idx:", S_idx)
 
             x_S_star = x_explain_original[:, S_idx]
             x_S_star_gauss = x_explain_gauss[:, S_idx]
@@ -163,7 +162,9 @@ class GaussianCopulaImputer(Imputer):
                 aux = np.zeros((n_MC_samples, n_features))
                 aux[:, S_idx] = np.tile(x_S_star[i], (n_MC_samples, 1))
                 x_sbar_i = MC_samples_now + x_Sbar_gaussian_mean[i]
-                x_sbar_i_transformed = self.inv_gaussian_transform(x_sbar_i, x_train_mat[:, Sbar_idx])
+                x_sbar_i_transformed = self.inv_gaussian_transform(
+                    x_sbar_i, x_train_mat[:, Sbar_idx]
+                )
                 aux[:, Sbar_idx] = x_sbar_i_transformed
                 result_cube[:, S_ind * n_explain + i, :] = aux
 
@@ -185,7 +186,7 @@ class GaussianCopulaImputer(Imputer):
         n = len(x)
         if n == 0:
             raise ValueError("Cannot compute quantile with empty array.")
-        elif n == 1:
+        if n == 1:
             return np.full_like(probs, x[0])
         x_sorted = np.sort(x)
         index = 1 + (n - 1) * probs
@@ -204,8 +205,7 @@ class GaussianCopulaImputer(Imputer):
         return transformed
 
     def gaussian_transform(self, x: np.ndarray) -> np.ndarray:
-        """
-        Transforms a sample to a standardized normal distribution.
+        """Transforms a sample to a standardized normal distribution.
         Equivalent to the R version using rank-based transform.
 
         Args:
@@ -214,14 +214,13 @@ class GaussianCopulaImputer(Imputer):
         Returns:
             Transformed vector with standard normal marginals.
         """
-        ranks = rankdata(x, method='average')  # rank(x)
+        ranks = rankdata(x, method="average")  # rank(x)
         u = ranks / (len(x) + 1)  # rank / (n + 1)
         z = norm.ppf(u)  # qnorm(u)
         return z
 
     def gaussian_transform_separate(self, yx: np.ndarray, n_y: int) -> np.ndarray:
-        """
-        Transforms new data to standardized normal (dimension 1) based on other data transformations.
+        """Transforms new data to standardized normal (dimension 1) based on other data transformations.
 
         Args:
             yx: Numeric vector where first n_y items belong to Gaussian data,
@@ -238,11 +237,11 @@ class GaussianCopulaImputer(Imputer):
         x = yx[n_y:]  # original data part
 
         # tmp = rank(yx)[ind]
-        ranks_yx = rankdata(yx, method='average')
+        ranks_yx = rankdata(yx, method="average")
         tmp = ranks_yx[ind]
 
         # tmp = tmp - rank(tmp) + 0.5
-        rank_tmp = rankdata(tmp, method='average')
+        rank_tmp = rankdata(tmp, method="average")
         tmp = tmp - rank_tmp + 0.5
 
         u_y = tmp / (len(x) + 1)

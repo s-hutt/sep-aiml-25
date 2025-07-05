@@ -1,8 +1,11 @@
-import numpy as np
-from numpy.linalg import pinv, cholesky
+from __future__ import annotations
 
 from typing import Literal
+
+import numpy as np
+from numpy.linalg import cholesky, pinv
 from shapiq.games.imputer.base import Imputer
+
 
 class GaussianImputer(Imputer):
     def __init__(
@@ -24,7 +27,7 @@ class GaussianImputer(Imputer):
             x=x,
             sample_size=sample_size,
             categorical_features=categorical_features,
-            random_state=random_state
+            random_state=random_state,
         )
         if method not in {"gaussConditional"}:
             raise ValueError("This contructor is for gaussianConditional imputers only.")
@@ -39,8 +42,7 @@ class GaussianImputer(Imputer):
         if method == "gaussConditional":
             self.init_background(data)
 
-    def init_background(self, data: np.ndarray) -> "GaussianImputer":
-
+    def init_background(self, data: np.ndarray) -> GaussianImputer:
         if self._cat_features:
             raise ValueError(
                 f"Gaussian imputer does not support categorical features. "
@@ -63,15 +65,14 @@ class GaussianImputer(Imputer):
         return self
 
     def value_function(self, coalitions: np.ndarray) -> np.ndarray:
-        """
-        Computes the value function using multivariate Gaussian conditional sampling.
+        """Computes the value function using multivariate Gaussian conditional sampling.
 
-    Args:
+        Args:
         coalitions: Boolean array (n_subsets, n_features), True for present features.
 
-    Returns:
+        Returns:
         np.ndarray of shape (n_subsets,), model predictions per coalition.
-    """
+        """
         n_coalitions, n_features = coalitions.shape
 
         mu = self._mu
@@ -90,7 +91,7 @@ class GaussianImputer(Imputer):
             x_explain_mat=x_explain,
             S=coalitions.astype(float),  # shape (n_coalitions, n_features)
             mu=mu,
-            cov_mat=cov
+            cov_mat=cov,
         )  # shape: (n_samples, n_coalitions, n_features)
 
         # Flatten for prediction

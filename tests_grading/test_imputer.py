@@ -46,7 +46,7 @@ class TestImputers:
     def test_gaussian_imputer_init(self, knn_basic, data_test, x_explain):
         """Test init of GaussianImputer."""
         assert issubclass(GaussianImputer, Imputer), (
-            "GaussianCopulaImputer should be a subclass of Imputer."
+            "GaussianImputer should be a subclass of Imputer."
         )
 
         x_test, _ = data_test

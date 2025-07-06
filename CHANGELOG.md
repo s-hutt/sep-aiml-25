@@ -3,6 +3,12 @@ This changelog is to be updated with each important change to the codebase.
 
 ## Development
 
+## 0.4.0 (2025-07-06)
+
+### Feat
+
+- **imputers**: add imputers and tests with >95% coverage
+
 ## 0.3.3 (2025-06-26)
 
 ### Refactor

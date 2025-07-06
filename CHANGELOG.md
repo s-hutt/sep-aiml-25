@@ -3,6 +3,12 @@ This changelog is to be updated with each important change to the codebase.
 
 ## Development
 
+## 0.4.2 (2025-07-06)
+
+### Fix
+
+- **ci**: reduce minimal test coverage from 95% to 92%. (#25)
+
 ## 0.4.1 (2025-07-06)
 
 ### Fix

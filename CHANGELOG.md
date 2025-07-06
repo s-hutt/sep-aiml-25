@@ -3,6 +3,12 @@ This changelog is to be updated with each important change to the codebase.
 
 ## Development
 
+## 0.4.1 (2025-07-06)
+
+### Fix
+
+- **docs**: link shapiq_student to sphinx's api references (#24)
+
 ## 0.4.0 (2025-07-06)
 
 ### Feat

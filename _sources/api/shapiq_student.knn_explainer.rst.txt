@@ -1,0 +1,12 @@
+﻿shapiq\_student.knn\_explainer
+==============================
+
+.. automodule:: shapiq_student.knn_explainer
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      KNNExplainer
+   

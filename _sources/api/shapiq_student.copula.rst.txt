@@ -1,0 +1,12 @@
+﻿shapiq\_student.copula
+======================
+
+.. automodule:: shapiq_student.copula
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      GaussianCopulaImputer
+   

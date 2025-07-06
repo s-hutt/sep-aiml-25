@@ -3,10 +3,10 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Conditional Data Imputers" href="conditional_data_imputers.html" /><link rel="prev" title="Installation" href="../introduction/start.html" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="prev" title="shapiq_student.knn_explainer" href="shapiq_student.knn_explainer.html" />
 
     <link rel="shortcut icon" href="../_static/shapiq.ico"/><!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
-        <title>KNN-Shapley - shapiq_student 0.4.0 documentation</title>
+        <title>shapiq_student.subset_finding - shapiq_student 0.4.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -180,7 +180,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -209,18 +209,18 @@
 <li class="toctree-l1"><a class="reference internal" href="../introduction/start.html">Installation</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">EXAMPLES</span></p>
-<ul class="current">
-<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">KNN-Shapley</a></li>
-<li class="toctree-l1"><a class="reference internal" href="conditional_data_imputers.html">Conditional Data Imputers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="coalition_finding_algorithmus.html">Coalition-Finding Algorithmus</a></li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../examples/KNN_shapley.html">KNN-Shapley</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/conditional_data_imputers.html">Conditional Data Imputers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/coalition_finding_algorithmus.html">Coalition-Finding Algorithmus</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">API REFERENCE</span></p>
-<ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../api.html">📖 API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of 📖 API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="../api/shapiq_student.copula.html">shapiq_student.copula</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/shapiq_student.gaussian.html">shapiq_student.gaussian</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/shapiq_student.knn_explainer.html">shapiq_student.knn_explainer</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/shapiq_student.subset_finding.html">shapiq_student.subset_finding</a></li>
+<ul class="current">
+<li class="toctree-l1 current has-children"><a class="reference internal" href="../api.html">📖 API Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of 📖 API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="shapiq_student.copula.html">shapiq_student.copula</a></li>
+<li class="toctree-l2"><a class="reference internal" href="shapiq_student.gaussian.html">shapiq_student.gaussian</a></li>
+<li class="toctree-l2"><a class="reference internal" href="shapiq_student.knn_explainer.html">shapiq_student.knn_explainer</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">shapiq_student.subset_finding</a></li>
 </ul>
 </li>
 </ul>
@@ -241,7 +241,7 @@
         </a>
         <div class="content-icon-container">
           <div class="view-this-page">
-  <a class="muted-link" href="../_sources/examples/KNN_shapley.ipynb.txt" title="View this page">
+  <a class="muted-link" href="../_sources/api/shapiq_student.subset_finding.rst.txt" title="View this page">
     <svg><use href="#svg-eye"></use></svg>
     <span class="visually-hidden">View this page</span>
   </a>
@@ -255,14 +255,36 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section id="KNN-Shapley">
-<h1>KNN-Shapley<a class="headerlink" href="#KNN-Shapley" title="Link to this heading">¶</a></h1>
+          <section id="module-shapiq_student.subset_finding">
+<span id="shapiq-student-subset-finding"></span><h1>shapiq_student.subset_finding<a class="headerlink" href="#module-shapiq_student.subset_finding" title="Link to this heading">¶</a></h1>
+<p>Subset finding module for selecting relevant features based on interaction values.</p>
+<p class="rubric">Functions</p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#shapiq_student.subset_finding.run_subset_finding" title="shapiq_student.subset_finding.run_subset_finding"><code class="xref py py-obj docutils literal notranslate"><span class="pre">run_subset_finding</span></code></a>(interaction_values, max_size)</p></td>
+<td><p>Placeholder for run_subset_finding implementation.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py function">
+<dt class="sig sig-object py" id="shapiq_student.subset_finding.run_subset_finding">
+<span class="sig-prename descclassname"><span class="pre">shapiq_student.subset_finding.</span></span><span class="sig-name descname"><span class="pre">run_subset_finding</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">interaction_values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_size</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/shapiq_student/subset_finding.html#run_subset_finding"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#shapiq_student.subset_finding.run_subset_finding" title="Link to this definition">¶</a></dt>
+<dd><p>Placeholder for run_subset_finding implementation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 
         </article>
@@ -270,23 +292,15 @@
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="conditional_data_imputers.html">
-              <div class="page-info">
-                <div class="context">
-                  <span>Next</span>
-                </div>
-                <div class="title">Conditional Data Imputers</div>
-              </div>
-              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
-            </a>
-          <a class="prev-page" href="../introduction/start.html">
+          
+          <a class="prev-page" href="shapiq_student.knn_explainer.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">Installation</div>
+                <div class="title">shapiq_student.knn_explainer</div>
                 
               </div>
             </a>
@@ -308,8 +322,27 @@
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">shapiq_student.subset_finding</a><ul>
+<li><a class="reference internal" href="#shapiq_student.subset_finding.run_subset_finding"><code class="docutils literal notranslate"><span class="pre">run_subset_finding()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>
@@ -321,7 +354,5 @@
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     </body>
 </html>

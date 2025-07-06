@@ -1,0 +1,12 @@
+﻿shapiq\_student.gaussian
+========================
+
+.. automodule:: shapiq_student.gaussian
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      GaussianImputer
+   

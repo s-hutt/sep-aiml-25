@@ -1,9 +1,65 @@
-"""Subset finding module for selecting relevant features based on interaction values."""
+"""Modul zur Teilmengenfindung für die Auswahl relevanter Merkmale basierend auf Interaktionswerten."""
 
 from __future__ import annotations
 
+import numpy as np
+from shapiq import InteractionValues
 
-def run_subset_finding(interaction_values: object, max_size: int | str) -> list[int]:
-    """Placeholder for run_subset_finding implementation."""
-    _ = interaction_values, max_size
-    return [0]
+from shapiq_student.beam_finder import BeamCoalitionFinder
+from shapiq_student.evaluation import evaluate_interaction_coalition
+
+
+def subset_finding(interaction_values: InteractionValues, max_size: int) -> InteractionValues:
+    """Findet S_max,l und S_min,l für l = 1 bis max_size mittels Beam Search."""
+    if max_size == 0:
+        return InteractionValues(
+            values=np.array([]),
+            index=interaction_values.index,
+            max_order=0,
+            min_order=0,
+            n_players=interaction_values.n_players,
+            interaction_lookup={},
+            estimated=True,
+            estimation_budget=None,
+            baseline_value=interaction_values.baseline_value,
+        )
+
+    features = list(range(interaction_values.n_players))
+    interactions = interaction_values.dict_values
+    max_order = interaction_values.max_order
+
+    def evaluate(S: set[int], e: dict[tuple[int, ...], float]) -> float:
+        return evaluate_interaction_coalition(S, e, max_order)
+
+    finder = BeamCoalitionFinder(
+        features=features,
+        interactions=interactions,
+        evaluate_fn=evaluate,
+    )
+
+    selected_dict = {}
+    for subset_size in range(1, max_size + 1):
+        S_max, _ = finder.find_max(subset_size)
+        S_min, _ = finder.find_min(subset_size)
+        selected_dict[frozenset(S_max)] = evaluate_interaction_coalition(
+            S_max, interactions, max_order
+        )
+        selected_dict[frozenset(S_min)] = evaluate_interaction_coalition(
+            S_min, interactions, max_order
+        )
+
+    sorted_items = sorted(selected_dict.items(), key=lambda x: tuple(sorted(x[0])))
+    interaction_lookup = {tuple(sorted(k)): i for i, (k, _) in enumerate(sorted_items)}
+    values = np.array([v for _, v in sorted_items])
+
+    return InteractionValues(
+        values=values,
+        index=interaction_values.index,
+        max_order=max(len(k) for k in selected_dict),
+        min_order=min(len(k) for k in selected_dict),
+        n_players=interaction_values.n_players,
+        interaction_lookup=interaction_lookup,
+        estimated=True,
+        estimation_budget=None,
+        baseline_value=interaction_values.baseline_value,
+    )

@@ -14,3 +14,5 @@ __all__ = [
     "GaussianImputer",
     "subset_finding",
 ]
+
+from .subset_finding import subset_finding

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import numpy as np
+import pytest
 from shapiq.games.imputer.base import Imputer
 
 from shapiq_student import GaussianCopulaImputer, GaussianImputer
@@ -102,3 +103,48 @@ class TestImputers:
         output = imputer(coalitions=coalitions)
         assert isinstance(output, np.ndarray)
         assert output.shape == (10,), "Output should be a vector of predictions."
+
+    def test_categorical_features(self, data_test, x_explain):
+        """Test if CategoricalFeatures are correctly handled."""
+        # check the GaussianCopulaImputer can be called with coalitions
+        x_test, _ = data_test
+        categorical_features = [0]
+
+        with pytest.raises(ValueError, match="does not support categorical features"):
+            GaussianCopulaImputer(
+                model=dummy_model, data=x_test, categorical_features=categorical_features
+            )
+
+        with pytest.raises(ValueError, match="does not support categorical features"):
+            GaussianImputer(
+                model=dummy_model, data=x_test, categorical_features=categorical_features
+            )
+
+    def test_gaussian_transform_separate_invalid_n_y(self):
+        """Test if exception are correctly handled."""
+        rng = np.random.default_rng()  # create a Generator instance
+
+        data = rng.random((5, 3))  # replace np.random.rand(5, 3)
+        dummy = GaussianCopulaImputer(
+            model=lambda x: x,
+            data=data,
+        )
+
+        yx = rng.random((5, 3))
+
+        with pytest.raises(ValueError, match="n_y should be less than length of yx"):
+            dummy.gaussian_transform_separate(yx=yx, n_y=5)  # n_y == len(yx)
+
+    def test_quantile_type7_empty_array(self):
+        """Test if exception are correctly handled."""
+        dummy = GaussianCopulaImputer(model=lambda x: x, data=np.ones((5, 2)))
+        with pytest.raises(ValueError, match="Cannot compute quantile with empty array."):
+            dummy.quantile_type7(np.array([]), probs=np.array([0.1, 0.5]))
+
+    def test_quantile_type7_single_element(self):
+        """Test if exception are correctly handled."""
+        PI_VALUE = 3.14
+
+        dummy = GaussianCopulaImputer(model=lambda x: x, data=np.ones((5, 2)))
+        result = dummy.quantile_type7(np.array([3.14]), probs=np.array([0.25, 0.75]))
+        assert np.all(result == PI_VALUE)

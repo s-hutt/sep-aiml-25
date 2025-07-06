@@ -1,4 +1,4 @@
-"""Example test copied from grading_test"""
+"""Example test copied from grading_test."""
 
 from __future__ import annotations
 

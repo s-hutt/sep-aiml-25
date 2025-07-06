@@ -1,4 +1,4 @@
-"""Example test case for the Explainer class."""
+"""Testing the correctness and performance of the functionalities of Both imputers."""
 
 from __future__ import annotations
 
@@ -42,7 +42,11 @@ class TestImputersPerformance:
         assert coalitions.shape == (10, n_features), "Coalitions should have the correct shape."
         return coalitions
 
+    """Test the correctness of gaussian multivariate imputer and gaussian copula imputer."""
+
     def test_imputers_with_various_datasets_and_coalitions_with_dummy(self):
+        """Test the correctness of gaussian multivariate imputer and gaussian copula imputer."""
+
         def run_imputer_test(imputer_cls, x_test, coalitions, x_explain):
             imputer = imputer_cls(model=dummy_model, data=x_test)
             imputer.fit(x=x_explain)
@@ -106,8 +110,7 @@ class TestImputersPerformance:
         run_imputer_test(GaussianCopulaImputer, x_test_large, coalitions_large, x_explain_large)
 
     def test_conditional_performance(self):
-        print(f"shapiq version: {shapiq.__version__}")
-
+        """Test the performance of gaussian multivariate imputer and gaussian copula imputer."""
         # Load Data
         X, y = shapiq.load_california_housing()
         X_train, X_test, y_train, y_test = train_test_split(
@@ -126,10 +129,22 @@ class TestImputersPerformance:
             random_state=42,
         )
         model.fit(X_train, y_train)
-        print(f"Train R2: {model.score(X_train, y_train):.4f}")
-        print(f"Test  R2: {model.score(X_test, y_test):.4f}")
 
-        conditional_imputer = ConditionalImputer(model=model, data=X_test)
+        class PredictWrapper:
+            def __init__(self, model):
+                self.model = model
+
+            def __call__(self, X):
+                return self.model.predict(X)
+
+        wrapped_model = PredictWrapper(model)
+        assert hasattr(model, "predict"), (
+            f"Model of type {type(model)} does not have a 'predict' method"
+        )
+        assert callable(wrapped_model), f"Model instance of type {type(model)} is not callable"
+
+        conditional_imputer = ConditionalImputer(model=wrapped_model, data=X_test)
+        gaussian_imputer = GaussianImputer(model=wrapped_model, data=X_test)
 
         explainer = shapiq.TabularExplainer(
             # attributes of the explainer
@@ -138,7 +153,7 @@ class TestImputersPerformance:
             index="SII",
             max_order=2,
             # attributes of the imputer
-            imputer="conditional",
+            imputer=conditional_imputer,
             sample_size=100,
             conditional_budget=32,
             conditional_threshold=0.04,
@@ -146,10 +161,22 @@ class TestImputersPerformance:
 
         x_explain = X_test[100]
 
-        interaction_values = explainer.explain(x_explain, budget=2**n_features, random_state=0)
-        print(interaction_values)
+        _ = explainer.explain(x_explain, budget=2**n_features, random_state=0)
 
-        _ = shapiq.network_plot(
-            interaction_values=interaction_values,
-            feature_names=X.columns,
+        # Now testing the gaussian imputers
+        explainer_gauss = shapiq.TabularExplainer(
+            # attributes of the explainer
+            model=model,
+            data=X_train,
+            index="SII",
+            max_order=2,
+            # attributes of the imputer
+            imputer=gaussian_imputer,
+            sample_size=100,
+            conditional_budget=32,
+            conditional_threshold=0.04,
         )
+
+        x_explain_gauss = X_test[100]
+
+        _ = explainer_gauss.explain(x_explain_gauss, budget=2**n_features, random_state=0)

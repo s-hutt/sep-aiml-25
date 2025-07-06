@@ -1,4 +1,4 @@
-"""Example test case for the Explainer class."""
+"""Example test copied from grading_test"""
 
 from __future__ import annotations
 

@@ -6,10 +6,11 @@
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Coalition-Finding Algorithmus" href="coalition_finding_algorithmus.html" /><link rel="prev" title="KNN-Shapley" href="KNN_shapley.html" />
 
     <link rel="shortcut icon" href="../_static/shapiq.ico"/><!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
-        <title>Conditional Data Imputers - shapiq_student 0.4.1 documentation</title>
+        <title>Conditional Data Imputers - shapiq_student 0.4.2 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css?v=2aa19091" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
     
@@ -168,7 +169,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../index.html"><div class="brand">shapiq_student 0.4.1 documentation</div></a>
+      <a href="../index.html"><div class="brand">shapiq_student 0.4.2 documentation</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -180,7 +181,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -212,6 +213,9 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="KNN_shapley.html">KNN-Shapley</a></li>
 <li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Conditional Data Imputers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#Import-Modules">Import Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#Train-a-Model">Train a Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#Using-multivariate-Gaussian-or-Gaussian-Copula-Imputer-for-Explanations">Using multivariate Gaussian or Gaussian Copula Imputer for Explanations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coalition_finding_algorithmus.html">Coalition-Finding Algorithmus</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">API REFERENCE</span></p>
@@ -255,7 +259,7 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
@@ -263,6 +267,299 @@
         <article role="main" id="furo-main-content">
           <section id="Conditional-Data-Imputers">
 <h1>Conditional Data Imputers<a class="headerlink" href="#Conditional-Data-Imputers" title="Link to this heading">¶</a></h1>
+<p>This example notebook demonstrates the usage and performance of <code class="docutils literal notranslate"><span class="pre">GaussianImputer</span></code> and <code class="docutils literal notranslate"><span class="pre">GaussianCopulaImputer</span></code> in the context of conditional imputation of Shapley interaction values and model-agnostic explanations. Two Conditional imputations modules are implemented as part of the <code class="docutils literal notranslate"><span class="pre">student_shapiq</span></code> package.</p>
+<section id="Gaussian-Imputer">
+<h2>Gaussian Imputer<a class="headerlink" href="#Gaussian-Imputer" title="Link to this heading">¶</a></h2>
+<p>For nice-behaving unimodal data, a natural approach is to assume that x stems from a multivariate Gaussian distribution with mean µ and covariance matrix Σ. In the present context, this method was first suggested by <a class="reference external" href="https://doi.org/10.1016/j.artint.2021.103502">(Aas et al. (2021))</a>.</p>
+</section>
+<section id="Gaussian-Copula-Imputer">
+<h2>Gaussian Copula Imputer<a class="headerlink" href="#Gaussian-Copula-Imputer" title="Link to this heading">¶</a></h2>
+<p>A generalization of the gaussian approach, also proposed by <a class="reference external" href="https://doi.org/10.1016/j.artint.2021.103502">(Aas et al. (2021))</a>, is to use a Gaussian copula. That is, to represent the marginals of the features by their empirical distributions and then model the dependence structure by a Gaussian distribution.</p>
+</section>
+</section>
+<section id="Import-Modules">
+<h1>Import Modules<a class="headerlink" href="#Import-Modules" title="Link to this heading">¶</a></h1>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">shapiq</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.ensemble</span><span class="w"> </span><span class="kn">import</span> <span class="n">RandomForestRegressor</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.model_selection</span><span class="w"> </span><span class="kn">import</span> <span class="n">train_test_split</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">shapiq_student</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">shapiq_student.gaussian</span><span class="w"> </span><span class="kn">import</span> <span class="n">GaussianImputer</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;shapiq version: </span><span class="si">{</span><span class="n">shapiq</span><span class="o">.</span><span class="n">__version__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;shapiq_student version: </span><span class="si">{</span><span class="n">shapiq_student</span><span class="o">.</span><span class="n">__version__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+shapiq version: 1.3.0
+shapiq_student version: 0.4.1
+</pre></div></div>
+</div>
+<p>We firstly use California housing dataset for demonstration. Dataset can be found at <a class="reference external" href="https://www.kaggle.com/datasets/camnugent/california-housing-prices">https://www.kaggle.com/datasets/camnugent/california-housing-prices</a></p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">shapiq</span><span class="o">.</span><span class="n">load_california_housing</span><span class="p">()</span>
+<span class="n">X_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span>
+    <span class="n">X</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
+    <span class="n">y</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
+    <span class="n">test_size</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span>
+    <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">n_features</span> <span class="o">=</span> <span class="n">X_train</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Feature names:&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Feature names:
+[&#39;MedInc&#39;, &#39;HouseAge&#39;, &#39;AveRooms&#39;, &#39;AveBedrms&#39;, &#39;Population&#39;, &#39;AveOccup&#39;, &#39;Latitude&#39;, &#39;Longitude&#39;]
+</pre></div></div>
+</div>
+</section>
+<section id="Train-a-Model">
+<h1>Train a Model<a class="headerlink" href="#Train-a-Model" title="Link to this heading">¶</a></h1>
+<p>We train a random forest regressor on the California housing dataset to explain the model with conditional imputation. The model achieves a relatively good fit in terms of the <span class="math notranslate nohighlight">\(R^2\)</span> score.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">RandomForestRegressor</span><span class="p">(</span>
+    <span class="n">n_estimators</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>
+    <span class="n">max_depth</span><span class="o">=</span><span class="n">n_features</span><span class="p">,</span>
+    <span class="n">max_features</span><span class="o">=</span><span class="mi">2</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span>
+    <span class="n">max_samples</span><span class="o">=</span><span class="mi">2</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span>
+    <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Train R2: </span><span class="si">{</span><span class="n">model</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span><span class="w"> </span><span class="n">y_train</span><span class="p">)</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Test  R2: </span><span class="si">{</span><span class="n">model</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">X_test</span><span class="p">,</span><span class="w"> </span><span class="n">y_test</span><span class="p">)</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Train R2: 0.7991
+Test  R2: 0.7462
+</pre></div></div>
+</div>
+</section>
+<section id="Using-multivariate-Gaussian-or-Gaussian-Copula-Imputer-for-Explanations">
+<h1>Using multivariate Gaussian or Gaussian Copula Imputer for Explanations<a class="headerlink" href="#Using-multivariate-Gaussian-or-Gaussian-Copula-Imputer-for-Explanations" title="Link to this heading">¶</a></h1>
+<p>We initialize multivariate gaussian or gaussian copula imputer and pass it to the explainer. We firstly wrap the function with a predict function, so it can work with the shapiq API.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">PredictWrapper</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
+
+<span class="n">wrapped_model</span> <span class="o">=</span> <span class="n">PredictWrapper</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+
+<span class="n">gaussian_imputer</span> <span class="o">=</span> <span class="n">GaussianImputer</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">wrapped_model</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">X_test</span><span class="p">)</span>
+<span class="c1"># gaussian_copula_imputer = GaussianCopulaImputer(model=wrapped_model, data=X_test)</span>
+
+<span class="n">explainer</span> <span class="o">=</span> <span class="n">shapiq</span><span class="o">.</span><span class="n">TabularExplainer</span><span class="p">(</span>
+    <span class="c1"># attributes of the explainer</span>
+    <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+    <span class="n">data</span><span class="o">=</span><span class="n">X_train</span><span class="p">,</span>
+    <span class="n">index</span><span class="o">=</span><span class="s2">&quot;SII&quot;</span><span class="p">,</span>
+    <span class="n">max_order</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+
+    <span class="c1"># attributes of the imputer</span>
+    <span class="n">imputer</span><span class="o">=</span><span class="s2">&quot;conditional&quot;</span><span class="p">,</span>
+    <span class="c1"># imputer=gaussian_copula_imputer</span>
+    <span class="n">sample_size</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">conditional_budget</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+    <span class="n">conditional_threshold</span><span class="o">=</span><span class="mf">0.04</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>Both Multivariate Gaussian and Gaussian Copula Imputers use the joint distribution of features to estimate missing values, but in different ways. The Multivariate Gaussian Imputer assumes all variables follow a joint Gaussian distribution, modeling both marginals and dependencies parametrically.</p>
+<section id="Gausian-Multivariate">
+<h2>Gausian Multivariate<a class="headerlink" href="#Gausian-Multivariate" title="Link to this heading">¶</a></h2>
+<p>A classic and beneficial property of this assumption is that the conditional distributions are also multivariate Gaussian. That is, if</p>
+<p>$ p(x) = p(x_S,x_{<span class="math">\overline{S}</span>}) = <span class="math">\mathcal{N}</span>_M(µ,Σ) $, where $ µ = [µ_S,µ_{<span class="math">\overline{S}</span>}]^T $ and $ :nbsphinx-math:<a href="#id1"><span class="problematic" id="id2">`</span></a>Sigma <a href="#id3"><span class="problematic" id="id4">`</span></a>=</p>
+<p>$ , then, $ p(x_:nbsphinx-math:<cite>overline{S}</cite>|x_S = x^{∗}<em>S) = :nbsphinx-math:`mathcal{N}`</em>{|:nbsphinx-math:<cite>overline{S}</cite>|}(µ_{<span class="math">\overline{S}</span>|S},Σ_{<span class="math">\overline{S}</span>|S}) $, where $ µ_{<span class="math">\overline{S}</span>|S} = µ_{<span class="math">\overline{S}</span>} + Σ_{<span class="math">\overline{S}`S}Σ\_{SS}\ :sup:`{-1}(x</span>{∗}_S − µ_S) $ and <span class="math notranslate nohighlight">\(Σ_{\overline{S}|S} = Σ_{\overline{SS}}-Σ_{\overline{S}S}Σ_{SS}^{-1}Σ_{S\overline{S}}\)</span>. The parameters <span class="math notranslate nohighlight">\(µ\)</span> and
+<span class="math notranslate nohighlight">\(Σ\)</span> are easily estimated using, respectively, the sample mean and covariance matrix of the training data.</p>
+</section>
+<section id="Gaussian-Copula">
+<h2>Gaussian Copula<a class="headerlink" href="#Gaussian-Copula" title="Link to this heading">¶</a></h2>
+<p>A generalization of the <em>gaussian</em> approach, which is, to represent the marginals of the features by their empirical distributions and then model the dependence structure by a Gaussian distribution. This <em>copula</em> approach generates the <span class="math notranslate nohighlight">\(K\)</span> conditional Monte Carlo samples <span class="math notranslate nohighlight">\(x_{\overline{S}}^{(k)} \sim p(x_{\overline{S}}|x_S = x^{*}_{S})\)</span> with the following routine:</p>
+<ol class="arabic simple">
+<li><p>Convert each marginal <span class="math notranslate nohighlight">\(x_j\)</span> of the feature distribution <span class="math notranslate nohighlight">\(x\)</span> to a Gaussian distributed variable <span class="math notranslate nohighlight">\(v_j\)</span> by <span class="math notranslate nohighlight">\(v_j = Φ^{−1}(\hat{F}(x_j))\)</span>, where $ <span class="math">\hat{F}`(x_j)$ is the empirical distribution function of :math:`x_j</span>.</p></li>
+<li><p>Assume that <span class="math notranslate nohighlight">\(v\)</span> is distributed according to a <em>multivariate Gaussian</em>, and sample from the conditional distribution <span class="math notranslate nohighlight">\(p(v_{\overline{S}}|v_{S} = v^{∗}_S)\)</span> using the method described for the gaussian approach.</p></li>
+<li><p>Convert the marginals <span class="math notranslate nohighlight">\(v_j\)</span> in the conditional distribution to the original distribution using <span class="math notranslate nohighlight">\(\hat{x}_j = \hat{F}^{−1}_j(Φ(v_j))\)</span>.</p></li>
+</ol>
+<p>Next, select we an instance to be explained.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">x_explain</span> <span class="o">=</span> <span class="n">X_test</span><span class="p">[</span><span class="mi">100</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<p>Call an explain() interface setting random_state for reproducible approximation.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">interaction_values</span> <span class="o">=</span> <span class="n">explainer</span><span class="o">.</span><span class="n">explain</span><span class="p">(</span><span class="n">x_explain</span><span class="p">,</span> <span class="n">budget</span><span class="o">=</span><span class="mi">2</span><span class="o">**</span><span class="n">n_features</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">interaction_values</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+InteractionValues(
+    index=SII, max_order=2, min_order=0, estimated=False, estimation_budget=256,
+    n_players=8, baseline_value=2.06997805874991,
+    Top 10 interactions:
+        (5,): 0.07380611267017625
+        (0, 1): 0.0596087604477067
+        (2,): 0.03475381093966788
+        (5, 7): 0.027985525163259178
+        (1, 7): -0.026695075662078658
+        (1, 5): -0.02789824003743552
+        (0, 7): -0.02919889288052874
+        (1,): -0.13725001940693232
+        (0,): -0.17756231448209567
+        (7,): -0.18450352252236774
+)
+</pre></div></div>
+</div>
+<p>Visualize the explanation.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">shapiq</span><span class="o">.</span><span class="n">network_plot</span><span class="p">(</span>
+    <span class="n">interaction_values</span><span class="o">=</span><span class="n">interaction_values</span><span class="p">,</span>
+    <span class="n">feature_names</span><span class="o">=</span><span class="n">X</span><span class="o">.</span><span class="n">columns</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+(&lt;Figure size 700x700 with 1 Axes&gt;, &lt;Axes: &gt;)
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/examples_conditional_data_imputers_19_1.png" src="../_images/examples_conditional_data_imputers_19_1.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">shapiq</span><span class="o">.</span><span class="n">stacked_bar_plot</span><span class="p">(</span>
+    <span class="n">interaction_values</span><span class="o">.</span><span class="n">get_n_order</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span>
+    <span class="n">feature_names</span><span class="o">=</span><span class="n">X</span><span class="o">.</span><span class="n">columns</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+(&lt;Figure size 640x480 with 1 Axes&gt;,
+ &lt;Axes: xlabel=&#39;features&#39;, ylabel=&#39;SI values&#39;&gt;)
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/examples_conditional_data_imputers_20_1.png" src="../_images/examples_conditional_data_imputers_20_1.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">shapiq</span><span class="o">.</span><span class="n">stacked_bar_plot</span><span class="p">(</span>
+    <span class="n">interaction_values</span><span class="o">=</span><span class="n">interaction_values</span><span class="p">,</span>
+    <span class="n">feature_names</span><span class="o">=</span><span class="n">X</span><span class="o">.</span><span class="n">columns</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+(&lt;Figure size 640x480 with 1 Axes&gt;,
+ &lt;Axes: xlabel=&#39;features&#39;, ylabel=&#39;SI values&#39;&gt;)
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/examples_conditional_data_imputers_21_1.png" src="../_images/examples_conditional_data_imputers_21_1.png" />
+</div>
+</div>
+<p>Visualize the Shapley values</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">interaction_values</span><span class="o">.</span><span class="n">plot_force</span><span class="p">(</span><span class="n">feature_names</span><span class="o">=</span><span class="n">X</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/examples_conditional_data_imputers_23_0.png" src="../_images/examples_conditional_data_imputers_23_0.png" />
+</div>
+</div>
+</section>
 </section>
 
         </article>
@@ -308,13 +605,40 @@
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Conditional Data Imputers</a><ul>
+<li><a class="reference internal" href="#Gaussian-Imputer">Gaussian Imputer</a></li>
+<li><a class="reference internal" href="#Gaussian-Copula-Imputer">Gaussian Copula Imputer</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#Import-Modules">Import Modules</a></li>
+<li><a class="reference internal" href="#Train-a-Model">Train a Model</a></li>
+<li><a class="reference internal" href="#Using-multivariate-Gaussian-or-Gaussian-Copula-Imputer-for-Explanations">Using multivariate Gaussian or Gaussian Copula Imputer for Explanations</a><ul>
+<li><a class="reference internal" href="#Gausian-Multivariate">Gausian Multivariate</a></li>
+<li><a class="reference internal" href="#Gaussian-Copula">Gaussian Copula</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=c87aa342"></script>
+</div><script src="../_static/documentation_options.js?v=ff822928"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/furo.js?v=5fa4622c"></script>

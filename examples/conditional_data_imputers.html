@@ -213,9 +213,6 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="KNN_shapley.html">KNN-Shapley</a></li>
 <li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Conditional Data Imputers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="#Import-Modules">Import Modules</a></li>
-<li class="toctree-l1"><a class="reference internal" href="#Train-a-Model">Train a Model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="#Using-multivariate-Gaussian-or-Gaussian-Copula-Imputer-for-Explanations">Using multivariate Gaussian or Gaussian Copula Imputer for Explanations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coalition_finding_algorithmus.html">Coalition-Finding Algorithmus</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">API REFERENCE</span></p>
@@ -276,9 +273,8 @@
 <h2>Gaussian Copula Imputer<a class="headerlink" href="#Gaussian-Copula-Imputer" title="Link to this heading">¶</a></h2>
 <p>A generalization of the gaussian approach, also proposed by <a class="reference external" href="https://doi.org/10.1016/j.artint.2021.103502">(Aas et al. (2021))</a>, is to use a Gaussian copula. That is, to represent the marginals of the features by their empirical distributions and then model the dependence structure by a Gaussian distribution.</p>
 </section>
-</section>
 <section id="Import-Modules">
-<h1>Import Modules<a class="headerlink" href="#Import-Modules" title="Link to this heading">¶</a></h1>
+<h2>Import Modules<a class="headerlink" href="#Import-Modules" title="Link to this heading">¶</a></h2>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
@@ -336,7 +332,7 @@ Feature names:
 </div>
 </section>
 <section id="Train-a-Model">
-<h1>Train a Model<a class="headerlink" href="#Train-a-Model" title="Link to this heading">¶</a></h1>
+<h2>Train a Model<a class="headerlink" href="#Train-a-Model" title="Link to this heading">¶</a></h2>
 <p>We train a random forest regressor on the California housing dataset to explain the model with conditional imputation. The model achieves a relatively good fit in terms of the <span class="math notranslate nohighlight">\(R^2\)</span> score.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
@@ -366,7 +362,7 @@ Test  R2: 0.7462
 </div>
 </section>
 <section id="Using-multivariate-Gaussian-or-Gaussian-Copula-Imputer-for-Explanations">
-<h1>Using multivariate Gaussian or Gaussian Copula Imputer for Explanations<a class="headerlink" href="#Using-multivariate-Gaussian-or-Gaussian-Copula-Imputer-for-Explanations" title="Link to this heading">¶</a></h1>
+<h2>Using multivariate Gaussian or Gaussian Copula Imputer for Explanations<a class="headerlink" href="#Using-multivariate-Gaussian-or-Gaussian-Copula-Imputer-for-Explanations" title="Link to this heading">¶</a></h2>
 <p>We initialize multivariate gaussian or gaussian copula imputer and pass it to the explainer. We firstly wrap the function with a predict function, so it can work with the shapiq API.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
@@ -403,6 +399,7 @@ Test  R2: 0.7462
 </div>
 </div>
 <p>Both Multivariate Gaussian and Gaussian Copula Imputers use the joint distribution of features to estimate missing values, but in different ways. The Multivariate Gaussian Imputer assumes all variables follow a joint Gaussian distribution, modeling both marginals and dependencies parametrically.</p>
+</section>
 <section id="Gausian-Multivariate">
 <h2>Gausian Multivariate<a class="headerlink" href="#Gausian-Multivariate" title="Link to this heading">¶</a></h2>
 <p>A classic and beneficial property of this assumption is that the conditional distributions are also multivariate Gaussian. That is, if</p>
@@ -620,11 +617,9 @@ InteractionValues(
 <li><a class="reference internal" href="#">Conditional Data Imputers</a><ul>
 <li><a class="reference internal" href="#Gaussian-Imputer">Gaussian Imputer</a></li>
 <li><a class="reference internal" href="#Gaussian-Copula-Imputer">Gaussian Copula Imputer</a></li>
-</ul>
-</li>
 <li><a class="reference internal" href="#Import-Modules">Import Modules</a></li>
 <li><a class="reference internal" href="#Train-a-Model">Train a Model</a></li>
-<li><a class="reference internal" href="#Using-multivariate-Gaussian-or-Gaussian-Copula-Imputer-for-Explanations">Using multivariate Gaussian or Gaussian Copula Imputer for Explanations</a><ul>
+<li><a class="reference internal" href="#Using-multivariate-Gaussian-or-Gaussian-Copula-Imputer-for-Explanations">Using multivariate Gaussian or Gaussian Copula Imputer for Explanations</a></li>
 <li><a class="reference internal" href="#Gausian-Multivariate">Gausian Multivariate</a></li>
 <li><a class="reference internal" href="#Gaussian-Copula">Gaussian Copula</a></li>
 </ul>

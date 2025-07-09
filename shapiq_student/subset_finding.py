@@ -10,7 +10,7 @@ from shapiq_student.evaluation import evaluate_interaction_coalition
 
 
 def subset_finding(interaction_values: InteractionValues, max_size: int) -> InteractionValues:
-    """Findet S_max,l und S_min,l für l = 1 bis max_size mittels Beam Search."""
+    """Findet S_max,l und S_min,l für eine Koalition der Größe max_size mittels Beam Search."""
     if max_size == 0:
         return InteractionValues(
             values=np.array([]),
@@ -37,16 +37,13 @@ def subset_finding(interaction_values: InteractionValues, max_size: int) -> Inte
         evaluate_fn=evaluate,
     )
 
-    selected_dict = {}
-    for subset_size in range(1, max_size + 1):
-        S_max, _ = finder.find_max(subset_size)
-        S_min, _ = finder.find_min(subset_size)
-        selected_dict[frozenset(S_max)] = evaluate_interaction_coalition(
-            S_max, interactions, max_order
-        )
-        selected_dict[frozenset(S_min)] = evaluate_interaction_coalition(
-            S_min, interactions, max_order
-        )
+    S_max, _ = finder.find_max(max_size)
+    S_min, _ = finder.find_min(max_size)
+
+    selected_dict = {
+        frozenset(S_max): evaluate_interaction_coalition(S_max, interactions, max_size),
+        frozenset(S_min): evaluate_interaction_coalition(S_min, interactions, max_size),
+    }
 
     sorted_items = sorted(selected_dict.items(), key=lambda x: tuple(sorted(x[0])))
     interaction_lookup = {tuple(sorted(k)): i for i, (k, _) in enumerate(sorted_items)}
@@ -55,8 +52,8 @@ def subset_finding(interaction_values: InteractionValues, max_size: int) -> Inte
     return InteractionValues(
         values=values,
         index=interaction_values.index,
-        max_order=max(len(k) for k in selected_dict),
-        min_order=min(len(k) for k in selected_dict),
+        max_order=max_size,
+        min_order=max_size,
         n_players=interaction_values.n_players,
         interaction_lookup=interaction_lookup,
         estimated=True,

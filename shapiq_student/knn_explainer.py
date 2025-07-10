@@ -17,6 +17,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 """
 Papergetreuer KNNExplainer nach:
 - Jia et al. (2019) "Efficient Task-Specific Data Valuation for Nearest Neighbor Algorithms"
+- Wang et al. (2024) "Threshold KNN-Shapley: A Linear-Time and Privacy-Friendly Approach to Data Valuation"
 - Wang et al. (2024) "Efficient Data Shapley for Weighted Nearest Neighbor Algorithms"
 """
 
@@ -27,34 +28,64 @@ class KNNExplainer(Explainer):
     def __init__(
         self,
         model: KNeighborsClassifier,
-        x_train: np.ndarray,
-        y_train: np.ndarray,
-        method: str = "KNN-Shapley",  # Basisexplainer falls nichts angegeben wird
+        data: np.ndarray,
+        labels: np.ndarray,
+        method: str | None = None,  # Basisexplainer falls nichts angegeben wird
         k: int = 5,
         tau: float = -0.5,
         alpha: float = 1.0,
+        class_index: int | None = None,
     ) -> None:
         """Initialisiert den KNNExplainer mit Modell, Trainingsdaten und Parameter."""
-        super().__init__(model, data=x_train)
-        self.method = method
-        self.x_train = x_train
-        self.y_train = y_train
+        super().__init__(model, data=data, labels=labels, max_order=1)
+
+        self.x_train = data
+        self.y_train = labels
         self.k = k
         self.tau = tau
         self.alpha = alpha
+        self.class_index = class_index
+
+        if method is None:
+            if hasattr(model, "radius") and model.radius is not None:
+                method = "threshold_knn_shapley"
+            elif hasattr(model, "weights") and model.weights == "distance":
+                method = "weighted_knn_shapley"
+            else:
+                method = "KNN-Shapley"
+
+        self.method = method
+
+        if method == "KNN-Shapley":
+            self.mode = "normal"
+        elif method == "threshold_knn_shapley":
+            self.mode = "threshold"
+        elif method == "weighted_knn_shapley":
+            self.mode = "weighted"
+        else:
+            msg = f"Unknown method {method}"
+            raise ValueError(msg)
 
     def explain_function(self, x: np.ndarray, y_test: int | None = None) -> InteractionValues:
         """Je nach ausgewählter Methode wird passender Explainer aufgerufen."""
+        if y_test is None:
+            if self.class_index is not None:
+                y_test = self.class_index
+            else:
+                y_test = self.model.predict(x.reshape(1, -1))[
+                    0
+                ]  # selber generieren, Nutzer hat nichts angegeben
+
         if self.method == "KNN-Shapley":
-            if y_test is None:
-                y_test = self.model.predict(x.reshape(1, -1))[0]
             return self.knn_shapley_standard(x, y_test)
 
         if self.method == "threshold_knn_shapley":
-            return self.threshold_knn_shapley(x)  # y_test nicht nötig, macht predict intern
+            return self.threshold_knn_shapley(x, y_test)  # y_test nicht nötig, macht predict intern
 
         if self.method == "weighted_knn_shapley":
-            return self.weighted_knn_shapley(x)  # evtl später auch optional y_test übergeben
+            return self.weighted_knn_shapley(
+                x, y_test
+            )  # evtl später auch optional y_test übergeben
 
         msg = "Method not supported"
         raise ValueError(msg)
@@ -84,7 +115,14 @@ class KNNExplainer(Explainer):
             delta = (int(label_i == y_test) - int(label_next == y_test)) / min(self.k, i + 1)
             shapley_values[idx_i] = shapley_values[idx_next] + delta
 
-        return shapley_values
+        return InteractionValues(
+            values=shapley_values,
+            index="SV",
+            max_order=1,
+            n_players=len(self.x_train),
+            min_order=1,
+            baseline_value=0.0,
+        )
 
     def function_a1(self, z_i: int, c_tau: int, c_tau_plus: int, x_test_label: int) -> float:
         """Gibt an, ob z_i bei der Vorhersage hilft oder stört - abhängig vom Label."""
@@ -113,15 +151,13 @@ class KNNExplainer(Explainer):
         indicator = int(self.y_train[z_i] == x_test_label)
         return (indicator - 1 / C) / c_tau
 
-    def threshold_knn_shapley(self, x_test: np.ndarray) -> InteractionValues:
+    def threshold_knn_shapley(self, x_test: np.ndarray, y_test: int) -> InteractionValues:
         """Berechnet die analytischen Shapley-Werte für x_test nach Theorem 13 der Threshold-KNN-Methode (Wang et al., 2024)."""
         # analytisch
         # Implementiert auf Basis von Theorem 13 aus: Wang et al. (2024)
 
         tau = self.tau  # Radius/Threshold
         n = len(self.x_train)
-        x_test_label = self.model.predict(x_test.reshape(1, -1))[0]
-
         shapley_values = np.zeros(n)  # Wird noch später mit echten Shapley Werten befüllt
 
         cos_similarity = cosine_similarity(self.x_train, x_test.reshape(1, -1)).flatten()
@@ -133,7 +169,7 @@ class KNNExplainer(Explainer):
         c_all = len(self.x_train)  # alle Punkte mit z_i
         c_tau_all = len(neighbours)  # Alle Nachbarn inklusive z_i
         c_tau_plus_all = np.sum(
-            self.y_train[neighbours] == x_test_label
+            self.y_train[neighbours] == y_test
         )  # ctauall, die gleiches Label wie xtest haben
 
         for z_i in range(n):
@@ -143,26 +179,26 @@ class KNNExplainer(Explainer):
             else:
                 c = c_all - 1  # Jetzt ohne z_i
                 c_tau = c_tau_all - 1
-                if self.y_train[z_i] == x_test_label:
-                    c_tau_plus = c_tau_plus_all - 1
-                else:
-                    c_tau_plus = c_tau_plus_all
+                c_tau_plus = c_tau_plus_all - 1 if self.y_train[z_i] == y_test else c_tau_plus_all
 
                 # Bedingung , dass ctau >= 2 und gesamte Formel Theorem 13, genug Nachbarn
                 if c_tau >= min_neighbours:
-                    shapley = self.function_a1(
-                        z_i, c_tau, c_tau_plus, x_test_label
-                    ) * self.function_a2(c_tau, c) + self.correction_term(z_i, c_tau, x_test_label)
+                    shapley = self.function_a1(z_i, c_tau, c_tau_plus, y_test) * self.function_a2(
+                        c_tau, c
+                    ) + self.correction_term(z_i, c_tau, y_test)
                 else:
-                    shapley = self.correction_term(z_i, c_tau, x_test_label)
+                    shapley = self.correction_term(z_i, c_tau, y_test)
 
                 shapley_values[z_i] = shapley
 
         return InteractionValues(
             values=shapley_values,
-            index=None,
+            index="SV",
             max_order=1,
             n_players=len(self.x_train),
             min_order=1,
             baseline_value=0.0,
         )
+
+    def weighted_knn_shapley(self, x_test: np.ndarray, y_test: int) -> InteractionValues:
+        """."""

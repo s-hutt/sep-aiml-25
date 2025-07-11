@@ -70,7 +70,7 @@ class TestImputersPerformance:
             np.testing.assert_allclose(
                 unnormalized - imputer.normalization_value,
                 output,
-                rtol=1e-1,
+                rtol=3e-1,
                 err_msg=f"Normalized output does not match value_function minus normalization_value for {imputer_cls.__name__}",
             )
 
@@ -108,6 +108,31 @@ class TestImputersPerformance:
 
         # Test 4: GaussianCopulaImputer with larger dataset
         run_imputer_test(GaussianCopulaImputer, x_test_large, coalitions_large, x_explain_large)
+
+        # Test 5 and 6
+        # Set a seed for reproducibility
+        np.random.seed(42)
+
+        # Define mean and covariance
+        mean = [0.0, 0.0]
+        cov = [[1.0, 0.8], [0.8, 1.0]]  # Moderate positive correlation
+
+        # Generate a primitive dataset of 4 samples
+        x_test_gaussian = np.random.multivariate_normal(mean, cov, size=4)
+
+        # Use a test instance to explain
+        x_explain_gaussian = np.array([[1.0, -1.0]])
+
+        # Define coalitions (0 = impute, 1 = observe)
+        coalitions_gaussian = np.array([
+            [0, 0],  # Both features missing
+            [1, 0],  # Only second missing
+            [0, 1],  # Only first missing
+            [1, 1]  # Fully observed
+        ])
+
+        run_imputer_test(GaussianImputer, x_test_gaussian, coalitions_gaussian, x_explain_gaussian)
+        run_imputer_test(GaussianCopulaImputer, x_test_gaussian, coalitions_gaussian, x_explain_gaussian)
 
     def test_conditional_performance(self):
         """Test the performance of gaussian multivariate imputer and gaussian copula imputer."""

@@ -40,12 +40,12 @@ def subset_finding(interaction_values: InteractionValues, max_size: int) -> Inte
     S_max, _ = finder.find_max(max_size)
     S_min, _ = finder.find_min(max_size)
 
-    selected_dict = {
-        frozenset(S_max): evaluate_interaction_coalition(S_max, interactions, max_size),
-        frozenset(S_min): evaluate_interaction_coalition(S_min, interactions, max_size),
-    }
+    selected_items = [
+        (frozenset(S_min), evaluate(S_min, interactions)),
+        (frozenset(S_max), evaluate(S_max, interactions)),
+    ]
+    sorted_items = sorted(selected_items, key=lambda x: x[1])
 
-    sorted_items = sorted(selected_dict.items(), key=lambda x: tuple(sorted(x[0])))
     interaction_lookup = {tuple(sorted(k)): i for i, (k, _) in enumerate(sorted_items)}
     values = np.array([v for _, v in sorted_items])
 

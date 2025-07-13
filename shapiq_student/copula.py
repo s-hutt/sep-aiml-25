@@ -250,8 +250,12 @@ class GaussianCopulaImputer(ConditionalImputer):
             cond_cov_Sbar_given_S = cov_SbarSbar - cov_SbarS_cov_SS_inv @ cov_SSbar
             cond_cov_Sbar_given_S = (cond_cov_Sbar_given_S + cond_cov_Sbar_given_S.T) / 2
 
+            # Add regularization to avoid singular matrix
+            epsilon = 1e-8
+            cond_cov_Sbar_given_S += np.eye(cond_cov_Sbar_given_S.shape[0]) * epsilon
+
             # Add jitter to make covariance matrix positive definite
-            eps = 1e-6  # small value, tune as needed
+            eps = 1e-3  # smoother conditioning
             chol_cov = np.linalg.cholesky(cond_cov_Sbar_given_S + eps * np.eye(len(Sbar_idx)))
 
             MC_samples_now = MC_samples_mat[:, Sbar_idx] @ chol_cov

@@ -515,8 +515,12 @@
             <span class="n">cond_cov_Sbar_given_S</span> <span class="o">=</span> <span class="n">cov_SbarSbar</span> <span class="o">-</span> <span class="n">cov_SbarS_cov_SS_inv</span> <span class="o">@</span> <span class="n">cov_SSbar</span>
             <span class="n">cond_cov_Sbar_given_S</span> <span class="o">=</span> <span class="p">(</span><span class="n">cond_cov_Sbar_given_S</span> <span class="o">+</span> <span class="n">cond_cov_Sbar_given_S</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
 
+            <span class="c1"># Add regularization to avoid singular matrix</span>
+            <span class="n">epsilon</span> <span class="o">=</span> <span class="mf">1e-8</span>
+            <span class="n">cond_cov_Sbar_given_S</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">cond_cov_Sbar_given_S</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="n">epsilon</span>
+
             <span class="c1"># Add jitter to make covariance matrix positive definite</span>
-            <span class="n">eps</span> <span class="o">=</span> <span class="mf">1e-6</span>  <span class="c1"># small value, tune as needed</span>
+            <span class="n">eps</span> <span class="o">=</span> <span class="mf">1e-3</span>  <span class="c1"># smoother conditioning</span>
             <span class="n">chol_cov</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">cholesky</span><span class="p">(</span><span class="n">cond_cov_Sbar_given_S</span> <span class="o">+</span> <span class="n">eps</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">Sbar_idx</span><span class="p">)))</span>
 
             <span class="n">MC_samples_now</span> <span class="o">=</span> <span class="n">MC_samples_mat</span><span class="p">[:,</span> <span class="n">Sbar_idx</span><span class="p">]</span> <span class="o">@</span> <span class="n">chol_cov</span>

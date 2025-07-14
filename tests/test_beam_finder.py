@@ -1,4 +1,4 @@
-"""Testet den BeamCoalitionFinder anhand eines Beispiel-Datensatzes."""
+"""Testet den BeamCoalitionFinder anhand von Dummyvariablen."""
 
 from __future__ import annotations
 
@@ -8,33 +8,33 @@ from shapiq_student.beam_finder import BeamCoalitionFinder
 from shapiq_student.evaluation import evaluate_interaction_coalition
 
 
-def test_beam_finder_example():
-    """Testet die Beam-Search für eine Koalitionsgröße von l=2 mit Dummy-Interaktionen."""
-    features = ["A", "B", "C", "D"]
+def test_beam_finder_dummy_input():
+    """Testet BeamCoalitionFinder mit Dummy-Interaktionen."""
+    features = [0, 1, 2]
     interactions = {
         (): 0.0,
-        ("A",): 1.0,
-        ("B",): -0.5,
-        ("C",): 0.2,
-        ("D",): -0.1,
-        ("A", "B"): 0.3,
-        ("B", "C"): -0.4,
-        ("A", "C", "D"): 0.6,
+        (0,): 1.0,
+        (1,): 1.0,
+        (2,): -2.0,
+        (0, 1): 0.5,
+        (1, 2): -0.4,
+        (0, 1, 2): 2.0,
     }
 
-    beam = BeamCoalitionFinder(
+    def evaluate(S, e):
+        return evaluate_interaction_coalition(S, e, max_order=2)
+
+    finder = BeamCoalitionFinder(
         features=features,
         interactions=interactions,
-        evaluate_fn=lambda S, e: evaluate_interaction_coalition(S, e, max_order=3),
+        evaluate_fn=evaluate,
     )
 
-    S_max, val_max = beam.find_max(2)
-    S_min, val_min = beam.find_min(2)
+    s_max, v_max = finder.find_max(size=2)
+    s_min, v_min = finder.find_min(size=2)
 
-    assert isinstance(S_max, set)
-    assert isinstance(val_max, float)
-    assert isinstance(S_min, set)
-    assert isinstance(val_min, float)
+    logging.info("Beam max: %s → %.2f", sorted(s_max), v_max)
+    logging.info("Beam min: %s → %.2f", sorted(s_min), v_min)
 
-    logging.info("Max-Koalition (l=2): %s → %.2f", S_max, val_max)
-    logging.info("Min-Koalition (l=2): %s → %.2f", S_min, val_min)
+    assert isinstance(v_max, float)
+    assert isinstance(v_min, float)

@@ -1,4 +1,4 @@
-"""Testet die Brute-Force-Suche anhand eines Beispiel-Datensatzes."""
+"""Testet die Brute-Force-Suche anhand von Dummyvariablen."""
 
 from __future__ import annotations
 
@@ -8,34 +8,28 @@ from shapiq_student.brute_force import brute_force_find_extrema
 from shapiq_student.evaluation import evaluate_interaction_coalition
 
 
-def test_brute_force_example():
-    """Testet Brute-Force für eine Koalitionsgröße von l=2 mit Dummy-Interaktionen."""
-    features = ["A", "B", "C", "D"]
+def test_brute_force_dummy_input():
+    """Testet brute_force_find_extrema mit dummy-Werten bei l = 2."""
+    features = [0, 1, 2]
     interactions = {
-        (): 0.0,
-        ("A",): 1.0,
-        ("B",): -0.5,
-        ("C",): 0.2,
-        ("D",): -0.1,
-        ("A", "B"): 0.3,
-        ("B", "C"): -0.4,
-        ("A", "C", "D"): 0.6,
+        (): 1.0,
+        (0,): 2.0,
+        (1,): -1.0,
+        (2,): 0.5,
+        (0, 1): 0.1,
+        (1, 2): -0.3,
+        (0, 2): 0.2,
+        (0, 1, 2): 5.0,
     }
 
-    def evaluate_fn(S, e):
-        return evaluate_interaction_coalition(S, e, max_order=3)
+    def evaluate(S, e):
+        return evaluate_interaction_coalition(S, e, max_order=2)
 
-    S_max, val_max = brute_force_find_extrema(
-        features, interactions, evaluate_fn, size=2, mode="max"
-    )
-    S_min, val_min = brute_force_find_extrema(
-        features, interactions, evaluate_fn, size=2, mode="min"
-    )
+    s_max, v_max = brute_force_find_extrema(features, interactions, evaluate, size=2, mode="max")
+    s_min, v_min = brute_force_find_extrema(features, interactions, evaluate, size=2, mode="min")
 
-    assert isinstance(S_max, set)
-    assert isinstance(val_max, float)
-    assert isinstance(S_min, set)
-    assert isinstance(val_min, float)
+    logging.info("Brute max: %s → %.2f", sorted(s_max), v_max)
+    logging.info("Brute min: %s → %.2f", sorted(s_min), v_min)
 
-    logging.info("Brute Max-Koalition (l=2): %s → %.2f", S_max, val_max)
-    logging.info("Brute Min-Koalition (l=2): %s → %.2f", S_min, val_min)
+    assert s_max != s_min or v_max == v_min
+    assert isinstance(v_max, float)

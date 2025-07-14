@@ -16,7 +16,7 @@ from sklearn.model_selection import train_test_split
 
 from shapiq_student.subset_finding import subset_finding
 
-MAX_ORDER = 150
+MAX_ORDER = 750
 
 
 def test_subset_finding_scalability():

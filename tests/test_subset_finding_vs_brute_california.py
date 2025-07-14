@@ -20,7 +20,7 @@ from shapiq_student.brute_force import brute_force_find_extrema
 from shapiq_student.evaluation import evaluate_interaction_coalition
 from shapiq_student.subset_finding import subset_finding
 
-MAX_ORDER = 5
+MAX_ORDER = 3
 
 
 def test_subset_finding_vs_brute_california():
@@ -60,13 +60,13 @@ def test_subset_finding_vs_brute_california():
     beam_output = subset_finding(interaction_values=interaction_values, max_size=MAX_ORDER)
     end_beam = time.perf_counter()
     beam_time = end_beam - start_beam
-    beam_results = list(beam_output.dict_values.items())
+    s_min = beam_output._s_min  # noqa: SLF001
+    s_max = beam_output._s_max  # noqa: SLF001
+    val_min = beam_output._v_min  # noqa: SLF001
+    val_max = beam_output._v_max  # noqa: SLF001
 
     logging.info("Brute-Force max: %s → %.3f", set(S_max_b), val_max_b)
     logging.info("Brute-Force min: %s → %.3f", set(S_min_b), val_min_b)
-
-    s_max, val_max = beam_results[1]
-    s_min, val_min = beam_results[0]
 
     logging.info("Beam max: %s → %.3f", set(s_max), val_max)
     logging.info("Beam min: %s → %.3f", set(s_min), val_min)

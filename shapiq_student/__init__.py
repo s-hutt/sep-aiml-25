@@ -1,4 +1,4 @@
-"""Source code for the shapiq_student package."""
+"""Quellcode für shapiq_student package."""
 
 from .copula import GaussianCopulaImputer
 from .gaussian import GaussianImputer

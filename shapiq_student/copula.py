@@ -1,9 +1,9 @@
-"""Implementation of the Gaussian copula imputer.
+"""Implementierung des Gaussian Copula Imputers.
 
-This module implements a gaussian conditional imputer using the Gaussian copula transformation.
-It enables imputing missing features in a feature coalition by modeling dependencies
-using a Gaussian copula approach, and generating conditional samples for SHAP or other feature
-attribution methods. (For conventional gaussian approach see gaussian.py)
+Dieses Modul implementiert einen gaußschen konditionalen Imputer unter Verwendung der Gaussian Copula Transformation.
+Es ermöglicht das Imputieren fehlender features in einer feature coalition durch Modellierung von Abhängigkeiten
+mit einem Gaussian Copula Ansatz und das Erzeugen conditional samples für SHAP oder andere feature
+attribution methods. (Für den konventionellen gaußschen Ansatz siehe gaussian.py)
 """
 
 from __future__ import annotations
@@ -19,25 +19,25 @@ if TYPE_CHECKING:
 
 
 class GaussianCopulaImputer(ConditionalImputer):
-    """Gaussian copula-based conditional imputer for missing feature imputation.
+    """Gaussian Copula-basierter konditionaler Imputer zur fehlender features.
 
-    This class implements conditional sampling based on a Gaussian copula transformation.
-    It is used for imputing missing features in a way that respects the dependence structure
-    of the observed data. This is particularly useful in model explanation tasks such as
-    computing SHAP values.
+    Diese Klasse implementiert conditional Sampling basierend auf einer Gaussian Copula Transformation.
+    Sie wird verwendet, um fehlende features so zu imputieren, dass die dependence struktur
+    der beobachteten Daten berücksichtigt wird. Dies ist besonders nützlich bei Modell-Erklärungsaufgaben wie
+    der Berechnung von SHAP-Werten.
 
     Args:
-        model: Predictive model to be explained.
-        data (np.ndarray): Background data for modeling the joint distribution.
-        x (np.ndarray | None): Data points to explain. If None, will be inferred.
-        sample_size (int): Number of Monte Carlo samples per coalition.
-        normalize (bool): Whether to normalize using the empty prediction.
-        categorical_features (list[int] | None): Indices of categorical features (unsupported).
-        method (Literal["gaussCopula"]): Must be "gaussCopula".
-        random_state (int | None): Random seed for reproducibility.
+        model: Zu erklärendes Predictive modell.
+        data (np.ndarray): Hintergrunddaten zur Modellierung der multivariaten Verteilung.
+        x (np.ndarray | None): Zu erklärende Datenpunkte. Falls None, werden sie inferiert.
+        sample_size (int): Anzahl der Monte-Carlo-samples pro coalition.
+        normalize (bool): Ob mit der leeren Vorhersage normalisiert werden soll.
+        categorical_features (list[int] | None): Indizes kategorialer features (nicht unterstützt).
+        method (Literal["gaussCopula"]): Muss "gaussCopula" sein.
+        random_state (int | None): Random seed für Reproduzierbarkeit.
 
     Raises:
-        ValueError: If an unsupported method is passed or if categorical features are provided.
+        ValueError: Wenn eine nicht unterstützte method übergeben wird oder kategoriale features vorhanden sind.
     """
 
     def __init__(
@@ -52,39 +52,39 @@ class GaussianCopulaImputer(ConditionalImputer):
         method: Literal["gaussCopula"] = "gaussCopula",
         random_state: int | None = None,
     ) -> None:
-        """Initialize the GaussianImputer.
+        """Initialisierung des GaussianImputers.
 
-        This class performs conditional imputation based on a multivariate Gaussian
-        distribution fitted to the background data. It is primarily used for imputing
-        missing features (as defined by coalitions) during model explanation tasks.
+        Diese Klasse führt conditional Imputation basierend auf einer multivariaten
+        Gaussian-Verteilung durch, die auf den Hintergrunddaten gefittet wird. Sie wird primär verwendet,
+        um fehlende features (wie durch coalitions definiert) bei Modell-Erklärungsaufgaben zu imputieren.
 
-        Parameters
+        Parameter
         ----------
         model : callable
-            The predictive model to explain. Must support `.predict()` with 2D input.
+            Das zu erklärende predictive model. Muss `.predict()` mit 2D-Input unterstützen.
         data : np.ndarray
-            Background dataset used to estimate the feature distribution (n_samples, n_features).
-        x : np.ndarray or None, optional
-            The instance(s) to explain. If not provided during initialization, can be set later.
+            Hintergrunddaten zur Schätzung der feature-Verteilung (n_samples, n_features).
+        x : np.ndarray oder None, optional
+            Die zu erklärenden Instanzen. Falls nicht bei der Initialisierung angegeben, kann später gesetzt werden.
         sample_size : int, default=10
-            Number of Monte Carlo samples to generate per coalition.
+            Anzahl der Monte-Carlo-samples, die pro coalition generiert werden.
         conditional_budget : int, default=128
-            Reserved for future use or budget-aware strategies (not directly used here).
+            Reserviert für zukünftige Nutzung oder budget-basierte Strategien (aktuell nicht verwendet).
         conditional_threshold : float, default=0.05
-            Reserved for future use, such as feature pruning based on contribution (not used here).
+            Reserviert für zukünftige Nutzung, z.B. feature pruning basierend auf Contribution (aktuell nicht verwendet).
         normalize : bool, default=True
-            Whether to normalize output values by the empty prediction value.
-        categorical_features : list of int or None, optional
-            Indices of categorical features. Gaussian imputation does not support categoricals.
+            Ob die Ausgaben mit der leeren Vorhersage normalisiert werden sollen.
+        categorical_features : list[int] oder None, optional
+            Indizes kategorialer features. Gaussian-Imputation unterstützt keine Kategorischen.
         method : {'gaussConditional'}, default='gaussConditional'
-            The imputation method name. Only 'gaussConditional' is supported in this class.
-        random_state : int or None, optional
-            Random seed for reproducibility.
+            Name der Imputationsmethode. Nur 'gaussConditional' wird in dieser Klasse unterstützt.
+        random_state : int oder None, optional
+            Random seed zur Reproduzierbarkeit.
 
         Raises:
-        ------
+        -------
         ValueError
-            If any categorical features are provided or if the method is not 'gaussConditional'.
+            Wenn kategoriale features angegeben werden oder die Methode ungleich 'gaussConditional' ist.
         """
         super().__init__(
             model=model,
@@ -96,43 +96,43 @@ class GaussianCopulaImputer(ConditionalImputer):
         )
 
         if method not in {"gaussCopula"}:
-            msg = "This constructor is for 'gaussCopula' imputers only."
+            msg = "Dieser Konstruktor ist ausschließlich für 'gaussCopula'-Imputer."
             raise ValueError(msg)
 
         self.method = method
 
-        # Set empty value and normalization
+        # Setze leeren Wert und Normalisierung
         self.empty_prediction: float = self.calc_empty_prediction()
         if normalize:
             self.normalization_value = self.empty_prediction
         if method == "gaussCopula":
-            # Initialize background distribution via Gaussian copula transform
+            # Initialisiere Hintergrundverteilung über Gaussian Copula Transformation
             self.init_background(data)
 
     def init_background(self, data: np.ndarray) -> GaussianCopulaImputer:
-        """Initializes the background distribution using a Gaussian copula.
+        """Initialisiert die Hintergrundverteilung mithilfe einer Gaussian Copula.
 
-        Transforms the background data into Gaussian space using a rank-based transform.
-        This transformation is used to compute the joint Gaussian distribution from
-        which conditional samples can be drawn.
+        Die Hintergrunddaten werden per rank-basierter Transformation in den Gaussian-Raum überführt.
+        Diese Transformation dient dazu, die gemeinsame Gaussian-Verteilung zu bestimmen,
+        aus der anschließend konditionale Samples gezogen werden können.
 
         Args:
-            data (np.ndarray): Input data matrix of shape (n_samples, n_features).
+            data (np.ndarray): Input-Datenmatrix der Form (n_samples, n_features).
 
         Returns:
-            GaussianCopulaImputer: The instance itself.
+            GaussianCopulaImputer: Die Instanz selbst.
 
         Raises:
-            ValueError: If categorical features are provided.
+            ValueError: Wenn kategoriale features angegeben werden.
         """
         if self._cat_features:
             msg = (
-                "Gaussian Copula imputer does not support categorical features. "
-                f"Found categorical feature indices: {self._cat_features}"
+                "Gaussian Copula Imputer unterstützt keine kategorialen features."
+                f"Gefundene Indizes kategorialer features: {self._cat_features}"
             )
             raise ValueError(msg)
 
-        # Gaussianize training data
+        # Training data gaussianisieren
         data_gauss = np.apply_along_axis(self.gaussian_transform, axis=0, arr=data)
 
         self._copula_mu = np.zeros(data.shape[1])
@@ -142,55 +142,55 @@ class GaussianCopulaImputer(ConditionalImputer):
         return self
 
     def value_function(self, coalitions: np.ndarray[bool]) -> np.ndarray[float]:
-        """Evaluates the value function for a set of feature coalitions.
+        """Evaluiert die value function für eine Menge von feature coalitions.
 
-        For each coalition, imputes missing features using conditional sampling under
-        a Gaussian copula model, evaluates the model on imputed data, and averages
-        the predictions.
+        Für jede coalition werden fehlende features durch conditional sampling unter
+        einem Gaussian Copula Modell imputiert, das Modell auf den imputierten Daten evaluiert
+        und die averages Prediction.
 
         Args:
-            coalitions (np.ndarray[bool]): Array of shape (n_coalitions, n_features)
-                indicating which features are present (True) or missing (False) in each coalition.
+            coalitions (np.ndarray[bool]): Array of shape (n_coalitions, n_features),
+                das angibt, welche features in jeder coalition vorhanden (True) oder fehlend (False) sind.
 
         Returns:
-            np.ndarray[float]: Array of shape (n_coalitions,) with averaged model predictions.
+            np.ndarray[float]: Array of shape (n_coalitions,) mit averaged predictions.
         """
-        # Store x transformed the same way
+        # Speichere x, transformiert auf dieselbe Weise
         x_combined = np.vstack([self._x, self.data])
         x_gauss = np.apply_along_axis(
             self.gaussian_transform_separate, axis=0, arr=x_combined, n_y=1
         )
-        n_y = self._x.shape[0]  # number of instances to explain
-        self._x_gauss = x_gauss[:n_y]  # all instances to explain
+        n_y = self._x.shape[0]  # Anzahl der zu erklärenden Instanzen
+        self._x_gauss = x_gauss[:n_y]  # Alle zu erklärenden Instanzen
 
         n_coalitions, n_features = coalitions.shape
 
-        n_samples = self.sample_size  # or any desired MC sample size
+        n_samples = self.sample_size  # Oder beliebige gewünschte MC-Samplegröße
 
         # Standard normal samples
         rng = np.random.default_rng(self.random_state)
         MC_samples = rng.standard_normal((n_samples, n_features))
 
-        # Run conditional sampling using the Gaussian copula approach
+        # Führe conditional sampling mit dem Gaussian Copula Ansatz durch
         imputed_data = self._prepare_data_copula_py(
             MC_samples_mat=MC_samples,
-            x_explain_gauss=self._x_gauss,  # already Gaussianized
-            x_explain_original=self._x,  # original for back-transform
-            x_train_mat=self._train_data,  # needed for copula rank transforms
+            x_explain_gauss=self._x_gauss,  # Bereits gaussianized
+            x_explain_original=self._x,  # Original für Back-Transform
+            x_train_mat=self._train_data,  # Wird für Copula Rank Transforms benötigt
             S=coalitions.astype(float),
             mu=self._copula_mu,
             cov_mat=self._copula_cov,
         )
 
-        # Flatten for prediction
+        # Flatten für die Prediction
         flat_input = imputed_data.reshape(-1, n_features)
         predictions = self.predict(flat_input)
 
-        # Reshape and average predictions per coalition
+        # Reshape und average predictions per coalition
         predictions = predictions.reshape(n_samples, n_coalitions)
         avg_predictions = predictions.mean(axis=0)
 
-        # Handle empty coalitions (all features False)
+        # Leere coalitions behandeln (alle features False)
         empty_coalitions = ~np.any(coalitions, axis=1)
         avg_predictions[empty_coalitions] = self.empty_prediction
 
@@ -206,22 +206,23 @@ class GaussianCopulaImputer(ConditionalImputer):
         mu: np.ndarray,
         cov_mat: np.ndarray,
     ) -> np.ndarray:
-        """Performs conditional sampling using a Gaussian copula for each coalition.
+        """Führt conditional sampling mit einer Gaussian Copula für jede coalition durch.
 
-        Samples missing features conditional on observed ones by leveraging the
-        Gaussian copula transformation and conditional multivariate normal distributions.
+        Fehltende features werden konditional auf beobachtete mittels
+        Gaussian Copula Transformation und konditionalen multivariaten Normalverteilungen
+        gesampelt.
 
         Args:
-            MC_samples_mat (np.ndarray): Standard normal samples (n_samples, n_features).
-            x_explain_original (np.ndarray): Original values of the data points to explain.
-            x_explain_gauss (np.ndarray): Gaussianized values of the data points to explain.
-            x_train_mat (np.ndarray): Original training data for inverse transformation.
-            S (np.ndarray): Coalition matrix indicating known features.
-            mu (np.ndarray): Mean of the Gaussian copula.
-            cov_mat (np.ndarray): Covariance matrix of the Gaussian copula.
+            MC_samples_mat (np.ndarray): Standard-normalverteilte Samples (n_samples, n_features).
+            x_explain_original (np.ndarray): Originalwerte der zu erklärenden Datenpunkte.
+            x_explain_gauss (np.ndarray): Gaussianisierte Werte der zu erklärenden Datenpunkte.
+            x_train_mat (np.ndarray): Original-Trainingsdaten für die inverse Transformation.
+            S (np.ndarray): Coalition-Matrix, die bekannte features angibt.
+            mu (np.ndarray): Mittelwert der Gaussian Copula.
+            cov_mat (np.ndarray): Kovarianzmatrix der Gaussian Copula.
 
         Returns:
-            np.ndarray: Imputed data of shape (n_samples, n_coalitions * n_points, n_features).
+            np.ndarray: Imputierte Daten von shape (n_samples, n_coalitions * n_points, n_features).
         """
         n_explain, n_features = x_explain_gauss.shape
         n_MC_samples = MC_samples_mat.shape[0]
@@ -250,12 +251,12 @@ class GaussianCopulaImputer(ConditionalImputer):
             cond_cov_Sbar_given_S = cov_SbarSbar - cov_SbarS_cov_SS_inv @ cov_SSbar
             cond_cov_Sbar_given_S = (cond_cov_Sbar_given_S + cond_cov_Sbar_given_S.T) / 2
 
-            # Add regularization to avoid singular matrix
+            # Füge Regularisierung hinzu, um singuläre Matrix zu vermeiden
             epsilon = 1e-8
             cond_cov_Sbar_given_S += np.eye(cond_cov_Sbar_given_S.shape[0]) * epsilon
 
-            # Add jitter to make covariance matrix positive definite
-            eps = 1e-3  # smoother conditioning
+            # Füge Jitter hinzu, um die Kovarianzmatrix positiv definit zu machen
+            eps = 1e-3
             chol_cov = np.linalg.cholesky(cond_cov_Sbar_given_S + eps * np.eye(len(Sbar_idx)))
 
             MC_samples_now = MC_samples_mat[:, Sbar_idx] @ chol_cov
@@ -275,33 +276,33 @@ class GaussianCopulaImputer(ConditionalImputer):
         return result_cube
 
     def calc_empty_prediction(self) -> float:
-        """Runs the model on empty data points (all features missing) to get the empty prediction.
+        """Führt das Modell auf leeren Datenpunkten (alle features fehlen) aus, um die leere Prediction zu erhalten.
 
         Returns:
-            The empty prediction.
+            Die leere Prediction.
         """
         empty_predictions = self.predict(self.data)
         empty_prediction = float(np.mean(empty_predictions))
         return empty_prediction
 
     def quantile_type7(self, x: np.ndarray, probs: np.ndarray) -> np.ndarray:
-        """Computes quantiles using R's type-7 interpolation method.
+        """Berechnet Quantile mit R's Type-7 Interpolationsmethode.
 
-        This method is used to back-transform Gaussian samples to the original scale.
+        Diese Methode wird verwendet, um Gaussian samples zurück auf die Originalskala zu transformieren.
 
         Args:
-            x (np.ndarray): Sample from the original distribution.
-            probs (np.ndarray): Probabilities in [0, 1] to compute quantiles for.
+            x (np.ndarray): Sample aus der Originalverteilung.
+            probs (np.ndarray): Wahrscheinlichkeiten in [0, 1], für die Quantile berechnet werden.
 
         Returns:
-            np.ndarray: Quantile values corresponding to the given probabilities.
+            np.ndarray: Quantilwerte entsprechend den angegebenen Wahrscheinlichkeiten.
 
         Raises:
-            ValueError: If input array is empty.
+            ValueError: Falls das Input-Array leer ist.
         """
         n = len(x)
         if n == 0:
-            error_msg = "Cannot compute quantile with empty array."
+            error_msg = "Quantil kann mit leerem Array nicht berechnet werden."
             raise ValueError(error_msg)
         if n == 1:
             return np.full_like(probs, x[0])
@@ -315,16 +316,16 @@ class GaussianCopulaImputer(ConditionalImputer):
         return qs
 
     def inv_gaussian_transform(self, z: np.ndarray, x_train: np.ndarray) -> np.ndarray:
-        """Inverse Gaussian copula transformation to original feature space.
+        """Inverse Gaussian Copula Transformation zurück in den originalen feature space.
 
-        Converts Gaussianized data back to the original space using empirical quantiles.
+        Wandelt gaussianisierte Daten mittels empirischer Quantile zurück in den Originalraum.
 
         Args:
-            z (np.ndarray): Gaussian samples to transform.
-            x_train (np.ndarray): Training data for empirical distribution.
+            z (np.ndarray): Gaussian samples zum Transformieren.
+            x_train (np.ndarray): Trainingsdaten für die empirische Verteilung.
 
         Returns:
-            np.ndarray: Transformed data in the original feature space.
+            np.ndarray: Transformierte Daten im originalen feature space.
         """
         u = norm.cdf(z)
         transformed = np.empty_like(z)
@@ -333,40 +334,40 @@ class GaussianCopulaImputer(ConditionalImputer):
         return transformed
 
     def gaussian_transform(self, x: np.ndarray) -> np.ndarray:
-        """Applies Gaussian copula transformation to a feature vector.
+        """Wendet die Gaussian Copula Transformation auf einen feature Vektor an.
 
-        Converts a numeric feature to standard normal marginals using
-        rank-based transformation.
+        Wandelt ein numerisches feature mittels rank-basierter Transformation
+        in standard normal verteilte Marginals um.
 
         Args:
-            x (np.ndarray): Input 1D array (feature values).
+            x (np.ndarray): Input 1D Array (feature Werte).
 
         Returns:
-            np.ndarray: Transformed array with standard normal marginals.
+            np.ndarray: Transformiertes Array mit standard normal verteilten Marginals.
         """
-        ranks = rankdata(x, method="average")  # rank(x)
-        u = ranks / (len(x) + 1)  # rank / (n + 1)
-        z = norm.ppf(u)  # qnorm(u)
+        ranks = rankdata(x, method="average")
+        u = ranks / (len(x) + 1)
+        z = norm.ppf(u)
         return z
 
     def gaussian_transform_separate(self, yx: np.ndarray, n_y: int) -> np.ndarray:
-        """Transforms new data to standard normal space using rank information.
+        """Transformiert neue Daten in den standard normal Raum mittels Ranginformationen.
 
-        Used to convert a new data point to Gaussian copula space, while referencing
-        the rank distribution from a larger sample.
+        Wird verwendet, um einen neuen Datenpunkt in den Gaussian Copula Raum zu überführen,
+        wobei die Rangverteilung einer größeren sampling als Referenz dient.
 
         Args:
-            yx (np.ndarray): Combined array of new values and reference sample.
-            n_y (int): Number of elements in yx that belong to the new data.
+            yx (np.ndarray): Kombiniertes Array aus neuen Werten und Referenzsampling.
+            n_y (int): Anzahl der Elemente in yx, die zu den neuen Daten gehören.
 
         Returns:
-            np.ndarray: Transformed values for the new data portion.
+            np.ndarray: Transformierte Werte für den neuen Datenanteil.
 
         Raises:
-            ValueError: If n_y is not less than the total array length.
+            ValueError: Falls n_y nicht kleiner als die Gesamtlänge des Arrays ist.
         """
         if n_y >= len(yx):
-            error_msg = "n_y should be less than length of yx"
+            error_msg = "n_y sollte kleiner als die Länge von yx sein"
             raise ValueError(error_msg)
 
         ind = np.arange(n_y)

@@ -3,6 +3,12 @@ This changelog is to be updated with each important change to the codebase.
 
 ## Development
 
+## 0.4.3 (2025-07-15)
+
+### Fix
+
+- Updated the imputer notebook; Translated english comments into german (#33)
+
 ## 0.4.2 (2025-07-06)
 
 ### Fix

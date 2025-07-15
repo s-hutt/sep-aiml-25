@@ -263,17 +263,18 @@
         <article role="main" id="furo-main-content">
           <section id="module-shapiq_student.gaussian">
 <span id="shapiq-student-gaussian"></span><h1>shapiq_student.gaussian<a class="headerlink" href="#module-shapiq_student.gaussian" title="Link to this heading">¶</a></h1>
-<p>Implementation of the Gaussian conditional imputer using multivariate normal distributions.</p>
-<p>This module defines the GaussianImputer class, which performs conditional imputation
-based on the multivariate Gaussian assumption. It is used in feature attribution methods
-such as SHAP, where imputing missing features conditionally is required for estimating
-model values in the presence of partial feature subsets (coalitions). (For gaussian Copula approach see copula.py)</p>
+<p>Implementierung des Gaussian Conditional Imputers mit multivariaten Normalverteilungen.</p>
+<p>Dieses Modul definiert die Klasse GaussianImputer, die conditional Imputation
+auf Basis der multivariaten Gaussian-Annahme durchführt. Sie wird in Feature Attribution Methoden
+wie SHAP verwendet, wo das conditional Imputieren fehlender features
+zur Schätzung von Shapley Werten bei Teilmengen von features (coalitions) nötig ist.
+(Für den Gaussian Copula Ansatz siehe copula.py)</p>
 <p class="rubric">Classes</p>
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#shapiq_student.gaussian.GaussianImputer" title="shapiq_student.gaussian.GaussianImputer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GaussianImputer</span></code></a>(model, data[, x, ...])</p></td>
-<td><p>Conditional imputer based on multivariate Gaussian distributions.</p></td>
+<td><p>Conditional Imputer basierend auf multivariaten Gaussian-Verteilungen.</p></td>
 </tr>
 </tbody>
 </table>
@@ -282,58 +283,58 @@ model values in the presence of partial feature subsets (coalitions). (For gauss
 <dt class="sig sig-object py" id="shapiq_student.gaussian.GaussianImputer">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">shapiq_student.gaussian.</span></span><span class="sig-name descname"><span class="pre">GaussianImputer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conditional_budget</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conditional_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">categorical_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'gaussConditional'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/shapiq_student/gaussian.html#GaussianImputer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#shapiq_student.gaussian.GaussianImputer" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ConditionalImputer</span></code></p>
-<p>Conditional imputer based on multivariate Gaussian distributions.</p>
-<p>This imputer assumes a multivariate normal distribution over the features and
-uses conditional Gaussian sampling to fill in missing features, depending on
-which features are present (coalition sets).</p>
+<p>Conditional Imputer basierend auf multivariaten Gaussian-Verteilungen.</p>
+<p>Dieser Imputer nimmt eine multivariate Normalverteilung über die features an und
+nutzt conditional Gaussian Sampling, um fehlende features abhängig davon
+aufzufüllen, welche features vorhanden sind (coalition Sets).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">Model</span></code>)</span>) – The predictive model to explain.</p></li>
-<li><p><strong>data</strong> (<em>np.ndarray</em>) – Background data used to estimate the Gaussian distribution.</p></li>
-<li><p><strong>x</strong> (<em>np.ndarray</em><em> | </em><em>None</em>) – Instances to explain (optional at init).</p></li>
-<li><p><strong>sample_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – Number of Monte Carlo samples per coalition. Default is 10.</p></li>
-<li><p><strong>conditional_budget</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – Not used directly here, reserved for compatibility.</p></li>
-<li><p><strong>conditional_threshold</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Not used directly here, reserved for compatibility.</p></li>
-<li><p><strong>normalize</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a>) – Whether to normalize predictions by the empty prediction.</p></li>
-<li><p><strong>categorical_features</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>] </em><em>| </em><em>None</em>) – Indices of categorical features. Not supported.</p></li>
-<li><p><strong>method</strong> (<em>Literal</em><em>[</em><em>&quot;gaussConditional&quot;</em><em>]</em>) – Method identifier for this imputer.</p></li>
-<li><p><strong>random_state</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em> | </em><em>None</em>) – Optional random seed for reproducibility.</p></li>
+<li><p><strong>model</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">Model</span></code>)</span>) – Das zu erklärende Predictive Modell.</p></li>
+<li><p><strong>data</strong> (<em>np.ndarray</em>) – Hintergrunddaten zur Schätzung der Gaussian-Verteilung.</p></li>
+<li><p><strong>x</strong> (<em>np.ndarray</em><em> | </em><em>None</em>) – Zu erklärende Instanzen (optional bei Init).</p></li>
+<li><p><strong>sample_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – Anzahl der Monte-Carlo Samples pro coalition. Default ist 10.</p></li>
+<li><p><strong>conditional_budget</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – Wird hier nicht direkt verwendet, dient der Kompatibilität.</p></li>
+<li><p><strong>conditional_threshold</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Wird hier nicht direkt verwendet, dient der Kompatibilität.</p></li>
+<li><p><strong>normalize</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a>) – Ob die Prediction anhand der leeren Prediction normalisiert werden.</p></li>
+<li><p><strong>categorical_features</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>] </em><em>| </em><em>None</em>) – Indizes kategorialer features. Nicht unterstützt.</p></li>
+<li><p><strong>method</strong> (<em>Literal</em><em>[</em><em>&quot;gaussConditional&quot;</em><em>]</em>) – Methodenkennung für diesen Imputer.</p></li>
+<li><p><strong>random_state</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em> | </em><em>None</em>) – Optionaler Random Seed zur Reproduzierbarkeit.</p></li>
 </ul>
 </dd>
 </dl>
-<p>Initialize the GaussianImputer.</p>
+<p>Initialisiert den GaussianImputer.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">Model</span></code>)</span>) – The predictive model to explain. Expected to have a <cite>predict</cite> method.</p></li>
-<li><p><strong>data</strong> (<em>np.ndarray</em>) – Background data used to estimate the Gaussian distribution.</p></li>
-<li><p><strong>x</strong> (<em>np.ndarray</em><em> | </em><em>None</em><em>, </em><em>optional</em>) – Data instances to explain. Defaults to None.</p></li>
-<li><p><strong>sample_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>, </em><em>optional</em>) – Number of Monte Carlo samples per coalition. Default is 10.</p></li>
-<li><p><strong>conditional_budget</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>, </em><em>optional</em>) – Budget parameter, reserved for compatibility. Default is 128.</p></li>
-<li><p><strong>conditional_threshold</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em>, </em><em>optional</em>) – Threshold parameter, reserved for compatibility. Default is 0.05.</p></li>
-<li><p><strong>normalize</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a><em>, </em><em>optional</em>) – Whether to normalize predictions by the empty prediction. Default is True.</p></li>
-<li><p><strong>categorical_features</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>] </em><em>| </em><em>None</em><em>, </em><em>optional</em>) – Indices of categorical features. Not supported by this imputer. Default is None.</p></li>
-<li><p><strong>method</strong> (<em>Literal</em><em>[</em><em>&quot;gaussConditional&quot;</em><em>]</em><em>, </em><em>optional</em>) – Method identifier for this imputer. Must be “gaussConditional”. Default is “gaussConditional”.</p></li>
-<li><p><strong>random_state</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em> | </em><em>None</em><em>, </em><em>optional</em>) – Random seed for reproducibility. Default is None.</p></li>
+<li><p><strong>model</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">Model</span></code>)</span>) – Das zu erklärende Predictive Modell. Erwartet eine <cite>predict</cite>-Methode.</p></li>
+<li><p><strong>data</strong> (<em>np.ndarray</em>) – Hintergrunddaten zur Schätzung der Gaussian-Verteilung.</p></li>
+<li><p><strong>x</strong> (<em>np.ndarray</em><em> | </em><em>None</em><em>, </em><em>optional</em>) – Zu erklärende Dateninstanzen. Defaults ist None.</p></li>
+<li><p><strong>sample_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>, </em><em>optional</em>) – Anzahl der Monte-Carlo Samples pro coalition. Defaults ist 10.</p></li>
+<li><p><strong>conditional_budget</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>, </em><em>optional</em>) – Budget-Parameter, dient der Kompatibilität. Defaults ist 128.</p></li>
+<li><p><strong>conditional_threshold</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em>, </em><em>optional</em>) – Schwellenwert-Parameter, dient der Kompatibilität. Defaults ist 0.05.</p></li>
+<li><p><strong>normalize</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a><em>, </em><em>optional</em>) – Ob die Prediction anhand der leeren Prediction normalisiert werden soll. Defaults ist True.</p></li>
+<li><p><strong>categorical_features</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>] </em><em>| </em><em>None</em><em>, </em><em>optional</em>) – Indizes kategorialer features. Nicht unterstützt. Defaults ist None.</p></li>
+<li><p><strong>method</strong> (<em>Literal</em><em>[</em><em>&quot;gaussConditional&quot;</em><em>]</em><em>, </em><em>optional</em>) – Methodenkennung für diesen Imputer. Muss “gaussConditional” sein. Defaults ist “gaussConditional”.</p></li>
+<li><p><strong>random_state</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em> | </em><em>None</em><em>, </em><em>optional</em>) – Random Seed zur Reproduzierbarkeit. Defaults ist None.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
-<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.13)"><strong>ValueError</strong></a> – If the method specified is not “gaussConditional”.</p></li>
-<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.13)"><strong>ValueError</strong></a> – If categorical features are provided (not supported).</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.13)"><strong>ValueError</strong></a> – Wenn die Methode nicht “gaussConditional” ist.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.13)"><strong>ValueError</strong></a> – Wenn kategoriale features übergeben werden (nicht unterstützt).</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="shapiq_student.gaussian.GaussianImputer.calc_empty_prediction">
 <span class="sig-name descname"><span class="pre">calc_empty_prediction</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/shapiq_student/gaussian.html#GaussianImputer.calc_empty_prediction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#shapiq_student.gaussian.GaussianImputer.calc_empty_prediction" title="Link to this definition">¶</a></dt>
-<dd><p>Estimates the model prediction when all features are missing.</p>
-<p>This is done by evaluating the model over the background data
-and averaging the predictions.</p>
+<dd><p>Schätzt die Modellvorhersage, wenn alle features fehlen.</p>
+<p>Dies geschieht durch Auswertung des Modells über die Hintergrunddaten
+und Mittelung der Prediction.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>The average prediction over the background data.</p>
+<dd class="field-odd"><p>Die durchschnittliche Prediction über die Hintergrunddaten.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)">float</a></p>
@@ -344,14 +345,15 @@ and averaging the predictions.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="shapiq_student.gaussian.GaussianImputer.init_background">
 <span class="sig-name descname"><span class="pre">init_background</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/shapiq_student/gaussian.html#GaussianImputer.init_background"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#shapiq_student.gaussian.GaussianImputer.init_background" title="Link to this definition">¶</a></dt>
-<dd><p>Initializes the background Gaussian distribution using the input data.</p>
-<p>Computes the empirical mean and (regularized) covariance matrix from the background data.</p>
+<dd><p>Initialisiert die Hintergrund-Gaussian-Verteilung mit den Eingabedaten.</p>
+<p>Berechnet den empirischen Mittelwert und die (regularisierte) Kovarianzmatrix
+aus den Hintergrunddaten.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>data</strong> (<em>np.ndarray</em>) – Background dataset (n_samples, n_features).</p>
+<dd class="field-odd"><p><strong>data</strong> (<em>np.ndarray</em>) – Hintergrunddaten (n_samples, n_features).</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>The fitted imputer instance.</p>
+<dd class="field-even"><p>Die gefittete Imputer-Instanz.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Self (<a class="reference internal" href="#shapiq_student.gaussian.GaussianImputer" title="shapiq_student.gaussian.GaussianImputer">GaussianImputer</a>)</p>
@@ -362,14 +364,14 @@ and averaging the predictions.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="shapiq_student.gaussian.GaussianImputer.value_function">
 <span class="sig-name descname"><span class="pre">value_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coalitions</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/shapiq_student/gaussian.html#GaussianImputer.value_function"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#shapiq_student.gaussian.GaussianImputer.value_function" title="Link to this definition">¶</a></dt>
-<dd><p>Computes the model predictions for each coalition via conditional Gaussian sampling.</p>
+<dd><p>Berechnet die Modell Predictions für jede coalition mittels conditional Gaussian Sampling.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>coalitions</strong> (<em>np.ndarray</em>) – Boolean array (n_subsets, n_features),
-where True means the feature is present.</p>
+<dd class="field-odd"><p><strong>coalitions</strong> (<em>np.ndarray</em>) – Boolesches Array (n_subsets, n_features),
+wobei True bedeutet, dass das feature vorhanden ist.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Predicted values for each coalition (n_subsets,).</p>
+<dd class="field-even"><p>Predicted Werte für jede coalition (n_subsets,).</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>np.ndarray</p>

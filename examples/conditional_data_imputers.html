@@ -282,11 +282,13 @@
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">shapiq</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.ensemble</span><span class="w"> </span><span class="kn">import</span> <span class="n">RandomForestRegressor</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.model_selection</span><span class="w"> </span><span class="kn">import</span> <span class="n">train_test_split</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">shapiq_student</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">shapiq_student.gaussian</span><span class="w"> </span><span class="kn">import</span> <span class="n">GaussianImputer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">shapiq_student.copula</span><span class="w"> </span><span class="kn">import</span> <span class="n">GaussianCopulaImputer</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;shapiq version: </span><span class="si">{</span><span class="n">shapiq</span><span class="o">.</span><span class="n">__version__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;shapiq_student version: </span><span class="si">{</span><span class="n">shapiq_student</span><span class="o">.</span><span class="n">__version__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -308,6 +310,7 @@ shapiq_student version: 0.4.2
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">shapiq</span><span class="o">.</span><span class="n">load_california_housing</span><span class="p">()</span>
+<span class="n">feature_names</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">columns</span>
 <span class="n">X_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span>
     <span class="n">X</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
     <span class="n">y</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
@@ -376,15 +379,6 @@ Test  R2: 0.7462
 \end{bmatrix}\end{split}\]</div>
 </div>
 <p>then, <span class="math notranslate nohighlight">\(p(x_\overline{S}|x_S = x^{∗}_S) = \mathcal{N}_{|\overline{S}|}(µ_{\overline{S}|S},Σ_{\overline{S}|S})\)</span>, where <span class="math notranslate nohighlight">\(µ_{\overline{S}|S} = µ_{\overline{S}} + Σ_{\overline{S}S}Σ_{SS}^{-1}(x^{∗}_S − µ_S)\)</span> and <span class="math notranslate nohighlight">\(Σ_{\overline{S}|S} = Σ_{\overline{SS}}-Σ_{\overline{S}S}Σ_{SS}^{-1}Σ_{S\overline{S}}\)</span>. The parameters <span class="math notranslate nohighlight">\(µ\)</span> and <span class="math notranslate nohighlight">\(Σ\)</span> are easily estimated using, respectively, the sample mean and covariance matrix of the training data.</p>
-</section>
-<section id="Gaussian-Copula">
-<h3>Gaussian Copula<a class="headerlink" href="#Gaussian-Copula" title="Link to this heading">¶</a></h3>
-<p>A generalization of the <em>gaussian</em> approach, which is, to represent the marginals of the features by their empirical distributions and then model the dependence structure by a Gaussian distribution. This <em>copula</em> approach generates the <span class="math notranslate nohighlight">\(K\)</span> conditional Monte Carlo samples <span class="math notranslate nohighlight">\(x_{\overline{S}}^{(k)} \sim p(x_{\overline{S}}|x_S = x^{*}_{S})\)</span> with the following routine:</p>
-<ol class="arabic simple">
-<li><p>Convert each marginal <span class="math notranslate nohighlight">\(x_j\)</span> of the feature distribution <span class="math notranslate nohighlight">\(x\)</span> to a Gaussian distributed variable <span class="math notranslate nohighlight">\(v_j\)</span> by <span class="math notranslate nohighlight">\(v_j = Φ^{-1}(\hat{F}(x_j))\)</span>, where <span class="math notranslate nohighlight">\(\hat{F}(x_j)\)</span> is the empirical distribution function of <span class="math notranslate nohighlight">\(x_j\)</span>.</p></li>
-<li><p>Assume that <span class="math notranslate nohighlight">\(v\)</span> is distributed according to a <em>multivariate Gaussian</em>, and sample from the conditional distribution <span class="math notranslate nohighlight">\(p(v_{\overline{S}}|v_{S} = v^{∗}_S)\)</span> using the method described for the gaussian approach.</p></li>
-<li><p>Convert the marginals <span class="math notranslate nohighlight">\(v_j\)</span> in the conditional distribution to the original distribution using <span class="math notranslate nohighlight">\(\hat{x}_j = \hat{F}^{−1}_j(Φ(v_j))\)</span>.</p></li>
-</ol>
 <p>We initialize multivariate gaussian or gaussian copula imputer and pass it to the explainer. We firstly wrap the function with a predict function, so it can work with the shapiq API.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
@@ -401,9 +395,8 @@ Test  R2: 0.7462
 <span class="n">wrapped_model</span> <span class="o">=</span> <span class="n">PredictWrapper</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
 
 <span class="n">gaussian_imputer</span> <span class="o">=</span> <span class="n">GaussianImputer</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">wrapped_model</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">X_test</span><span class="p">)</span>
-<span class="c1"># gaussian_copula_imputer = GaussianCopulaImputer(model=wrapped_model, data=X_test)</span>
 
-<span class="n">explainer</span> <span class="o">=</span> <span class="n">shapiq</span><span class="o">.</span><span class="n">TabularExplainer</span><span class="p">(</span>
+<span class="n">explainer_gaussian</span> <span class="o">=</span> <span class="n">shapiq</span><span class="o">.</span><span class="n">TabularExplainer</span><span class="p">(</span>
     <span class="c1"># attributes of the explainer</span>
     <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
     <span class="n">data</span><span class="o">=</span><span class="n">X_train</span><span class="p">,</span>
@@ -412,7 +405,6 @@ Test  R2: 0.7462
 
     <span class="c1"># attributes of the imputer</span>
     <span class="n">imputer</span><span class="o">=</span><span class="n">gaussian_imputer</span><span class="p">,</span>
-    <span class="c1"># imputer=gaussian_copula_imputer</span>
     <span class="n">sample_size</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
     <span class="n">conditional_budget</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
     <span class="n">conditional_threshold</span><span class="o">=</span><span class="mf">0.04</span><span class="p">,</span>
@@ -421,21 +413,39 @@ Test  R2: 0.7462
 </div>
 </div>
 <p>Next, select we an instance to be explained.</p>
-<div class="nbinput nblast docutils container">
+<div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">x_explain</span> <span class="o">=</span> <span class="n">X_test</span><span class="p">[</span><span class="mi">100</span><span class="p">]</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">x_explain_gaussian</span> <span class="o">=</span> <span class="n">X_test</span><span class="p">[</span><span class="mi">100</span><span class="p">]</span>
+<span class="n">x_explain_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">x_explain_gaussian</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">feature_names</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">x_explain_df</span><span class="p">)</span>
 </pre></div>
 </div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+MedInc          3.059800
+HouseAge       13.000000
+AveRooms        4.310056
+AveBedrms       1.069832
+Population    776.000000
+AveOccup        2.167598
+Latitude       34.040000
+Longitude    -117.670000
+dtype: float64
+</pre></div></div>
 </div>
 <p>Call an <code class="docutils literal notranslate"><span class="pre">explain()</span></code> interface setting <code class="docutils literal notranslate"><span class="pre">random_state</span></code> for reproducible approximation.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">interaction_values</span> <span class="o">=</span> <span class="n">explainer</span><span class="o">.</span><span class="n">explain</span><span class="p">(</span><span class="n">x_explain</span><span class="p">,</span> <span class="n">budget</span><span class="o">=</span><span class="mi">2</span><span class="o">**</span><span class="n">n_features</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">interaction_values</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">interaction_values_gaussian</span> <span class="o">=</span> <span class="n">explainer_gaussian</span><span class="o">.</span><span class="n">explain</span><span class="p">(</span><span class="n">x_explain_gaussian</span><span class="p">,</span> <span class="n">budget</span><span class="o">=</span><span class="mi">2</span><span class="o">**</span><span class="n">n_features</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">interaction_values_gaussian</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -448,16 +458,16 @@ InteractionValues(
     index=SII, max_order=2, min_order=0, estimated=False, estimation_budget=256,
     n_players=8, baseline_value=2.0654183865546734,
     Top 10 interactions:
-        (5,): 0.4148057322179091
-        (0, 2): 0.16612161146946003
-        (4, 5): -0.13181782734873948
-        (1,): -0.15230340454963803
-        (0, 5): -0.16673121381610045
-        (3, 4): -0.17004477547879115
-        (6, 7): -0.21662390468677964
-        (1, 5): -0.23109488698897265
-        (2, 4): -0.23885323999323796
-        (0,): -0.5564012586122014
+        (0, 2): 0.4007919397455912
+        (5,): 0.28988860024749524
+        (6,): 0.23356350605291934
+        (0, 4): 0.23215442452692148
+        (4,): -0.1711650522079124
+        (1, 2): -0.3456754150743492
+        (0, 1): -0.3707204884864466
+        (1, 4): -0.37120095560968663
+        (6, 7): -0.37832009536956246
+        (0,): -0.5504741515701727
 )
 </pre></div></div>
 </div>
@@ -467,26 +477,18 @@ InteractionValues(
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">shapiq</span><span class="o">.</span><span class="n">network_plot</span><span class="p">(</span>
-    <span class="n">interaction_values</span><span class="o">=</span><span class="n">interaction_values</span><span class="p">,</span>
+    <span class="n">interaction_values</span><span class="o">=</span><span class="n">interaction_values_gaussian</span><span class="p">,</span>
     <span class="n">feature_names</span><span class="o">=</span><span class="n">X</span><span class="o">.</span><span class="n">columns</span><span class="p">,</span>
+    <span class="n">show</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
-</pre></div>
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-(&lt;Figure size 700x700 with 1 Axes&gt;, &lt;Axes: &gt;)
-</pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/examples_conditional_data_imputers_19_1.png" src="../_images/examples_conditional_data_imputers_19_1.png" />
+<img alt="../_images/examples_conditional_data_imputers_18_0.png" src="../_images/examples_conditional_data_imputers_18_0.png" />
 </div>
 </div>
 <div class="nbinput docutils container">
@@ -494,27 +496,18 @@ InteractionValues(
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">shapiq</span><span class="o">.</span><span class="n">stacked_bar_plot</span><span class="p">(</span>
-    <span class="n">interaction_values</span><span class="o">.</span><span class="n">get_n_order</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span>
+    <span class="n">interaction_values_gaussian</span><span class="o">.</span><span class="n">get_n_order</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span>
     <span class="n">feature_names</span><span class="o">=</span><span class="n">X</span><span class="o">.</span><span class="n">columns</span><span class="p">,</span>
+    <span class="n">show</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
-</pre></div>
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-(&lt;Figure size 640x480 with 1 Axes&gt;,
- &lt;Axes: xlabel=&#39;features&#39;, ylabel=&#39;SI values&#39;&gt;)
-</pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/examples_conditional_data_imputers_20_1.png" src="../_images/examples_conditional_data_imputers_20_1.png" />
+<img alt="../_images/examples_conditional_data_imputers_19_0.png" src="../_images/examples_conditional_data_imputers_19_0.png" />
 </div>
 </div>
 <div class="nbinput docutils container">
@@ -522,46 +515,232 @@ InteractionValues(
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">shapiq</span><span class="o">.</span><span class="n">stacked_bar_plot</span><span class="p">(</span>
-    <span class="n">interaction_values</span><span class="o">=</span><span class="n">interaction_values</span><span class="p">,</span>
+    <span class="n">interaction_values</span><span class="o">=</span><span class="n">interaction_values_gaussian</span><span class="p">,</span>
     <span class="n">feature_names</span><span class="o">=</span><span class="n">X</span><span class="o">.</span><span class="n">columns</span><span class="p">,</span>
+    <span class="n">show</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 </div>
 </div>
-<div class="nboutput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
-</pre></div>
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-(&lt;Figure size 640x480 with 1 Axes&gt;,
- &lt;Axes: xlabel=&#39;features&#39;, ylabel=&#39;SI values&#39;&gt;)
-</pre></div></div>
-</div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/examples_conditional_data_imputers_21_1.png" src="../_images/examples_conditional_data_imputers_21_1.png" />
-</div>
-</div>
-<p>Visualize the Shapley values</p>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">interaction_values</span><span class="o">.</span><span class="n">plot_force</span><span class="p">(</span><span class="n">feature_names</span><span class="o">=</span><span class="n">X</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<img alt="../_images/examples_conditional_data_imputers_23_0.png" src="../_images/examples_conditional_data_imputers_23_0.png" />
+<img alt="../_images/examples_conditional_data_imputers_20_0.png" src="../_images/examples_conditional_data_imputers_20_0.png" />
 </div>
 </div>
 </section>
+<section id="Gaussian-Copula">
+<h3>Gaussian Copula<a class="headerlink" href="#Gaussian-Copula" title="Link to this heading">¶</a></h3>
+<p>A generalization of the <em>gaussian</em> approach, which is, to represent the marginals of the features by their empirical distributions and then model the dependence structure by a Gaussian distribution. This <em>copula</em> approach generates the <span class="math notranslate nohighlight">\(K\)</span> conditional Monte Carlo samples <span class="math notranslate nohighlight">\(x_{\overline{S}}^{(k)} \sim p(x_{\overline{S}}|x_S = x^{*}_{S})\)</span> with the following routine:</p>
+<ol class="arabic simple">
+<li><p>Convert each marginal <span class="math notranslate nohighlight">\(x_j\)</span> of the feature distribution <span class="math notranslate nohighlight">\(x\)</span> to a Gaussian distributed variable <span class="math notranslate nohighlight">\(v_j\)</span> by <span class="math notranslate nohighlight">\(v_j = Φ^{-1}(\hat{F}(x_j))\)</span>, where <span class="math notranslate nohighlight">\(\hat{F}(x_j)\)</span> is the empirical distribution function of <span class="math notranslate nohighlight">\(x_j\)</span>.</p></li>
+<li><p>Assume that <span class="math notranslate nohighlight">\(v\)</span> is distributed according to a <em>multivariate Gaussian</em>, and sample from the conditional distribution <span class="math notranslate nohighlight">\(p(v_{\overline{S}}|v_{S} = v^{∗}_S)\)</span> using the method described for the gaussian approach.</p></li>
+<li><p>Convert the marginals <span class="math notranslate nohighlight">\(v_j\)</span> in the conditional distribution to the original distribution using <span class="math notranslate nohighlight">\(\hat{x}_j = \hat{F}^{−1}_j(Φ(v_j))\)</span>.</p></li>
+</ol>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">PredictWrapper</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
+
+<span class="n">wrapped_model</span> <span class="o">=</span> <span class="n">PredictWrapper</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+
+<span class="n">gaussian_copula_imputer</span> <span class="o">=</span> <span class="n">GaussianCopulaImputer</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">wrapped_model</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">X_test</span><span class="p">)</span>
+
+<span class="n">explainer_copula</span> <span class="o">=</span> <span class="n">shapiq</span><span class="o">.</span><span class="n">TabularExplainer</span><span class="p">(</span>
+    <span class="c1"># attributes of the explainer</span>
+    <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+    <span class="n">data</span><span class="o">=</span><span class="n">X_train</span><span class="p">,</span>
+    <span class="n">index</span><span class="o">=</span><span class="s2">&quot;SII&quot;</span><span class="p">,</span>
+    <span class="n">max_order</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+
+    <span class="c1"># attributes of the imputer</span>
+    <span class="n">imputer</span><span class="o">=</span><span class="n">gaussian_copula_imputer</span><span class="p">,</span>
+    <span class="n">sample_size</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">conditional_budget</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+    <span class="n">conditional_threshold</span><span class="o">=</span><span class="mf">0.04</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">x_explain_copula</span> <span class="o">=</span> <span class="n">X_test</span><span class="p">[</span><span class="mi">100</span><span class="p">]</span>
+<span class="n">interaction_values_copula</span> <span class="o">=</span> <span class="n">explainer_copula</span><span class="o">.</span><span class="n">explain</span><span class="p">(</span><span class="n">x_explain_copula</span><span class="p">,</span> <span class="n">budget</span><span class="o">=</span><span class="mi">2</span><span class="o">**</span><span class="n">n_features</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">interaction_values_copula</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+InteractionValues(
+    index=SII, max_order=2, min_order=0, estimated=False, estimation_budget=256,
+    n_players=8, baseline_value=2.0654183865546734,
+    Top 10 interactions:
+        (0, 2): 0.7884737085054059
+        (5,): 0.36069420742112607
+        (1,): -0.10597534903944493
+        (0, 5): -0.1146493779594047
+        (1, 2): -0.1333480004627043
+        (7,): -0.15858891564937233
+        (6, 7): -0.17065178017924243
+        (1, 5): -0.21204539553947788
+        (2,): -0.2491285936342
+        (0,): -0.34139673483021343
+)
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">shapiq</span><span class="o">.</span><span class="n">network_plot</span><span class="p">(</span>
+    <span class="n">interaction_values</span><span class="o">=</span><span class="n">interaction_values_copula</span><span class="p">,</span>
+    <span class="n">feature_names</span><span class="o">=</span><span class="n">X</span><span class="o">.</span><span class="n">columns</span><span class="p">,</span>
+    <span class="n">show</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/examples_conditional_data_imputers_24_0.png" src="../_images/examples_conditional_data_imputers_24_0.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">shapiq</span><span class="o">.</span><span class="n">stacked_bar_plot</span><span class="p">(</span>
+    <span class="n">interaction_values_copula</span><span class="o">.</span><span class="n">get_n_order</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span>
+    <span class="n">feature_names</span><span class="o">=</span><span class="n">X</span><span class="o">.</span><span class="n">columns</span><span class="p">,</span>
+    <span class="n">show</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/examples_conditional_data_imputers_25_0.png" src="../_images/examples_conditional_data_imputers_25_0.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">shapiq</span><span class="o">.</span><span class="n">stacked_bar_plot</span><span class="p">(</span>
+    <span class="n">interaction_values</span><span class="o">=</span><span class="n">interaction_values_copula</span><span class="p">,</span>
+    <span class="n">feature_names</span><span class="o">=</span><span class="n">X</span><span class="o">.</span><span class="n">columns</span><span class="p">,</span>
+    <span class="n">show</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/examples_conditional_data_imputers_26_0.png" src="../_images/examples_conditional_data_imputers_26_0.png" />
+</div>
+</div>
+<p>Let’s compute the global explanations of both <code class="docutils literal notranslate"><span class="pre">GaussianImputer</span></code> and <code class="docutils literal notranslate"><span class="pre">GaussianCopulaImputer</span></code> using bar plot to have a better grasp of the performance.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tqdm.asyncio</span><span class="w"> </span><span class="kn">import</span> <span class="n">tqdm</span>
+
+<span class="n">explanations_gaussian</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">instance_id</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">20</span><span class="p">)):</span>
+    <span class="n">x_explain_gaussian</span> <span class="o">=</span> <span class="n">X_test</span><span class="p">[</span><span class="n">instance_id</span><span class="p">]</span>
+    <span class="n">si</span> <span class="o">=</span> <span class="n">explainer_gaussian</span><span class="o">.</span><span class="n">explain</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">x_explain_gaussian</span><span class="p">,</span> <span class="n">budget</span><span class="o">=</span><span class="mi">2</span><span class="o">**</span><span class="n">n_features</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">explanations_gaussian</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">si</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+100%|██████████| 20/20 [00:01&lt;00:00, 12.39it/s]
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">shapiq</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">bar_plot</span><span class="p">(</span><span class="n">explanations_gaussian</span><span class="p">,</span> <span class="n">feature_names</span><span class="o">=</span><span class="n">feature_names</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/examples_conditional_data_imputers_29_0.png" src="../_images/examples_conditional_data_imputers_29_0.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">explanations_copula</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">instance_id</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">20</span><span class="p">)):</span>
+    <span class="n">x_explain_copula</span> <span class="o">=</span> <span class="n">X_test</span><span class="p">[</span><span class="n">instance_id</span><span class="p">]</span>
+    <span class="n">si</span> <span class="o">=</span> <span class="n">explainer_copula</span><span class="o">.</span><span class="n">explain</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">x_explain_copula</span><span class="p">,</span> <span class="n">budget</span><span class="o">=</span><span class="mi">2</span><span class="o">**</span><span class="n">n_features</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">explanations_copula</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">si</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+100%|██████████| 20/20 [00:02&lt;00:00,  6.69it/s]
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">shapiq</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">bar_plot</span><span class="p">(</span><span class="n">explanations_copula</span><span class="p">,</span> <span class="n">feature_names</span><span class="o">=</span><span class="n">feature_names</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/examples_conditional_data_imputers_31_0.png" src="../_images/examples_conditional_data_imputers_31_0.png" />
+</div>
+</div>
+</section>
+</section>
+<section id="Analysis">
+<h2>Analysis<a class="headerlink" href="#Analysis" title="Link to this heading">¶</a></h2>
+<p>There are two intuitive ways to observe the improvement achieved by the <code class="docutils literal notranslate"><span class="pre">GaussianCopulaImputer</span></code>:</p>
+<ol class="arabic simple">
+<li><p>The <code class="docutils literal notranslate"><span class="pre">GaussianCopulaImputer</span></code> produces a clearer network plot compared to the <code class="docutils literal notranslate"><span class="pre">GaussianImputer</span></code>, indicating a better capture of feature interactions. This improvement is also reflected in the global explanations bar plot, where positively contributing features are more coherently clustered when using the <code class="docutils literal notranslate"><span class="pre">GaussianCopulaImputer</span></code>.</p></li>
+<li><p>In the global explanations bar plot, the <code class="docutils literal notranslate"><span class="pre">GaussianImputer</span></code> shows a positive interaction between <code class="docutils literal notranslate"><span class="pre">HouseAge</span></code> and <code class="docutils literal notranslate"><span class="pre">AveRooms</span></code>, which is likely inaccurate. In contrast, this interaction does not appear when using the <code class="docutils literal notranslate"><span class="pre">GaussianCopulaImputer</span></code>, suggesting a more reliable representation of the underlying relationships.</p></li>
+</ol>
 </section>
 </section>
 
@@ -630,6 +809,7 @@ InteractionValues(
 <li><a class="reference internal" href="#Gaussian-Copula">Gaussian Copula</a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#Analysis">Analysis</a></li>
 </ul>
 </li>
 </ul>

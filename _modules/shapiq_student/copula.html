@@ -255,12 +255,12 @@
         </div>
         <article role="main" id="furo-main-content">
           <h1>Source code for shapiq_student.copula</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Implementation of the Gaussian copula imputer.</span>
+<span></span><span class="sd">&quot;&quot;&quot;Implementierung des Gaussian Copula Imputers.</span>
 
-<span class="sd">This module implements a gaussian conditional imputer using the Gaussian copula transformation.</span>
-<span class="sd">It enables imputing missing features in a feature coalition by modeling dependencies</span>
-<span class="sd">using a Gaussian copula approach, and generating conditional samples for SHAP or other feature</span>
-<span class="sd">attribution methods. (For conventional gaussian approach see gaussian.py)</span>
+<span class="sd">Dieses Modul implementiert einen gaußschen konditionalen Imputer unter Verwendung der Gaussian Copula Transformation.</span>
+<span class="sd">Es ermöglicht das Imputieren fehlender features in einer feature coalition durch Modellierung von Abhängigkeiten</span>
+<span class="sd">mit einem Gaussian Copula Ansatz und das Erzeugen conditional samples für SHAP oder andere feature</span>
+<span class="sd">attribution methods. (Für den konventionellen gaußschen Ansatz siehe gaussian.py)</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
@@ -278,25 +278,25 @@
 <div class="viewcode-block" id="GaussianCopulaImputer">
 <a class="viewcode-back" href="../../api/shapiq_student.copula.html#shapiq_student.copula.GaussianCopulaImputer">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">GaussianCopulaImputer</span><span class="p">(</span><span class="n">ConditionalImputer</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Gaussian copula-based conditional imputer for missing feature imputation.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Gaussian Copula-basierter konditionaler Imputer zur fehlender features.</span>
 
-<span class="sd">    This class implements conditional sampling based on a Gaussian copula transformation.</span>
-<span class="sd">    It is used for imputing missing features in a way that respects the dependence structure</span>
-<span class="sd">    of the observed data. This is particularly useful in model explanation tasks such as</span>
-<span class="sd">    computing SHAP values.</span>
+<span class="sd">    Diese Klasse implementiert conditional Sampling basierend auf einer Gaussian Copula Transformation.</span>
+<span class="sd">    Sie wird verwendet, um fehlende features so zu imputieren, dass die dependence struktur</span>
+<span class="sd">    der beobachteten Daten berücksichtigt wird. Dies ist besonders nützlich bei Modell-Erklärungsaufgaben wie</span>
+<span class="sd">    der Berechnung von SHAP-Werten.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        model: Predictive model to be explained.</span>
-<span class="sd">        data (np.ndarray): Background data for modeling the joint distribution.</span>
-<span class="sd">        x (np.ndarray | None): Data points to explain. If None, will be inferred.</span>
-<span class="sd">        sample_size (int): Number of Monte Carlo samples per coalition.</span>
-<span class="sd">        normalize (bool): Whether to normalize using the empty prediction.</span>
-<span class="sd">        categorical_features (list[int] | None): Indices of categorical features (unsupported).</span>
-<span class="sd">        method (Literal[&quot;gaussCopula&quot;]): Must be &quot;gaussCopula&quot;.</span>
-<span class="sd">        random_state (int | None): Random seed for reproducibility.</span>
+<span class="sd">        model: Zu erklärendes Predictive modell.</span>
+<span class="sd">        data (np.ndarray): Hintergrunddaten zur Modellierung der multivariaten Verteilung.</span>
+<span class="sd">        x (np.ndarray | None): Zu erklärende Datenpunkte. Falls None, werden sie inferiert.</span>
+<span class="sd">        sample_size (int): Anzahl der Monte-Carlo-samples pro coalition.</span>
+<span class="sd">        normalize (bool): Ob mit der leeren Vorhersage normalisiert werden soll.</span>
+<span class="sd">        categorical_features (list[int] | None): Indizes kategorialer features (nicht unterstützt).</span>
+<span class="sd">        method (Literal[&quot;gaussCopula&quot;]): Muss &quot;gaussCopula&quot; sein.</span>
+<span class="sd">        random_state (int | None): Random seed für Reproduzierbarkeit.</span>
 
 <span class="sd">    Raises:</span>
-<span class="sd">        ValueError: If an unsupported method is passed or if categorical features are provided.</span>
+<span class="sd">        ValueError: Wenn eine nicht unterstützte method übergeben wird oder kategoriale features vorhanden sind.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
@@ -311,39 +311,39 @@
         <span class="n">method</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;gaussCopula&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;gaussCopula&quot;</span><span class="p">,</span>
         <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the GaussianImputer.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialisierung des GaussianImputers.</span>
 
-<span class="sd">        This class performs conditional imputation based on a multivariate Gaussian</span>
-<span class="sd">        distribution fitted to the background data. It is primarily used for imputing</span>
-<span class="sd">        missing features (as defined by coalitions) during model explanation tasks.</span>
+<span class="sd">        Diese Klasse führt conditional Imputation basierend auf einer multivariaten</span>
+<span class="sd">        Gaussian-Verteilung durch, die auf den Hintergrunddaten gefittet wird. Sie wird primär verwendet,</span>
+<span class="sd">        um fehlende features (wie durch coalitions definiert) bei Modell-Erklärungsaufgaben zu imputieren.</span>
 
-<span class="sd">        Parameters</span>
+<span class="sd">        Parameter</span>
 <span class="sd">        ----------</span>
 <span class="sd">        model : callable</span>
-<span class="sd">            The predictive model to explain. Must support `.predict()` with 2D input.</span>
+<span class="sd">            Das zu erklärende predictive model. Muss `.predict()` mit 2D-Input unterstützen.</span>
 <span class="sd">        data : np.ndarray</span>
-<span class="sd">            Background dataset used to estimate the feature distribution (n_samples, n_features).</span>
-<span class="sd">        x : np.ndarray or None, optional</span>
-<span class="sd">            The instance(s) to explain. If not provided during initialization, can be set later.</span>
+<span class="sd">            Hintergrunddaten zur Schätzung der feature-Verteilung (n_samples, n_features).</span>
+<span class="sd">        x : np.ndarray oder None, optional</span>
+<span class="sd">            Die zu erklärenden Instanzen. Falls nicht bei der Initialisierung angegeben, kann später gesetzt werden.</span>
 <span class="sd">        sample_size : int, default=10</span>
-<span class="sd">            Number of Monte Carlo samples to generate per coalition.</span>
+<span class="sd">            Anzahl der Monte-Carlo-samples, die pro coalition generiert werden.</span>
 <span class="sd">        conditional_budget : int, default=128</span>
-<span class="sd">            Reserved for future use or budget-aware strategies (not directly used here).</span>
+<span class="sd">            Reserviert für zukünftige Nutzung oder budget-basierte Strategien (aktuell nicht verwendet).</span>
 <span class="sd">        conditional_threshold : float, default=0.05</span>
-<span class="sd">            Reserved for future use, such as feature pruning based on contribution (not used here).</span>
+<span class="sd">            Reserviert für zukünftige Nutzung, z.B. feature pruning basierend auf Contribution (aktuell nicht verwendet).</span>
 <span class="sd">        normalize : bool, default=True</span>
-<span class="sd">            Whether to normalize output values by the empty prediction value.</span>
-<span class="sd">        categorical_features : list of int or None, optional</span>
-<span class="sd">            Indices of categorical features. Gaussian imputation does not support categoricals.</span>
+<span class="sd">            Ob die Ausgaben mit der leeren Vorhersage normalisiert werden sollen.</span>
+<span class="sd">        categorical_features : list[int] oder None, optional</span>
+<span class="sd">            Indizes kategorialer features. Gaussian-Imputation unterstützt keine Kategorischen.</span>
 <span class="sd">        method : {&#39;gaussConditional&#39;}, default=&#39;gaussConditional&#39;</span>
-<span class="sd">            The imputation method name. Only &#39;gaussConditional&#39; is supported in this class.</span>
-<span class="sd">        random_state : int or None, optional</span>
-<span class="sd">            Random seed for reproducibility.</span>
+<span class="sd">            Name der Imputationsmethode. Nur &#39;gaussConditional&#39; wird in dieser Klasse unterstützt.</span>
+<span class="sd">        random_state : int oder None, optional</span>
+<span class="sd">            Random seed zur Reproduzierbarkeit.</span>
 
 <span class="sd">        Raises:</span>
-<span class="sd">        ------</span>
+<span class="sd">        -------</span>
 <span class="sd">        ValueError</span>
-<span class="sd">            If any categorical features are provided or if the method is not &#39;gaussConditional&#39;.</span>
+<span class="sd">            Wenn kategoriale features angegeben werden oder die Methode ungleich &#39;gaussConditional&#39; ist.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
             <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
@@ -355,45 +355,45 @@
         <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">method</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;gaussCopula&quot;</span><span class="p">}:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;This constructor is for &#39;gaussCopula&#39; imputers only.&quot;</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Dieser Konstruktor ist ausschließlich für &#39;gaussCopula&#39;-Imputer.&quot;</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">=</span> <span class="n">method</span>
 
-        <span class="c1"># Set empty value and normalization</span>
+        <span class="c1"># Setze leeren Wert und Normalisierung</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">empty_prediction</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_empty_prediction</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">normalize</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">normalization_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">empty_prediction</span>
         <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;gaussCopula&quot;</span><span class="p">:</span>
-            <span class="c1"># Initialize background distribution via Gaussian copula transform</span>
+            <span class="c1"># Initialisiere Hintergrundverteilung über Gaussian Copula Transformation</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">init_background</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 
 <div class="viewcode-block" id="GaussianCopulaImputer.init_background">
 <a class="viewcode-back" href="../../api/shapiq_student.copula.html#shapiq_student.copula.GaussianCopulaImputer.init_background">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">init_background</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GaussianCopulaImputer</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initializes the background distribution using a Gaussian copula.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialisiert die Hintergrundverteilung mithilfe einer Gaussian Copula.</span>
 
-<span class="sd">        Transforms the background data into Gaussian space using a rank-based transform.</span>
-<span class="sd">        This transformation is used to compute the joint Gaussian distribution from</span>
-<span class="sd">        which conditional samples can be drawn.</span>
+<span class="sd">        Die Hintergrunddaten werden per rank-basierter Transformation in den Gaussian-Raum überführt.</span>
+<span class="sd">        Diese Transformation dient dazu, die gemeinsame Gaussian-Verteilung zu bestimmen,</span>
+<span class="sd">        aus der anschließend konditionale Samples gezogen werden können.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            data (np.ndarray): Input data matrix of shape (n_samples, n_features).</span>
+<span class="sd">            data (np.ndarray): Input-Datenmatrix der Form (n_samples, n_features).</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            GaussianCopulaImputer: The instance itself.</span>
+<span class="sd">            GaussianCopulaImputer: Die Instanz selbst.</span>
 
 <span class="sd">        Raises:</span>
-<span class="sd">            ValueError: If categorical features are provided.</span>
+<span class="sd">            ValueError: Wenn kategoriale features angegeben werden.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cat_features</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="s2">&quot;Gaussian Copula imputer does not support categorical features. &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;Found categorical feature indices: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_cat_features</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="s2">&quot;Gaussian Copula Imputer unterstützt keine kategorialen features.&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Gefundene Indizes kategorialer features: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_cat_features</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="p">)</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
-        <span class="c1"># Gaussianize training data</span>
+        <span class="c1"># Training data gaussianisieren</span>
         <span class="n">data_gauss</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">apply_along_axis</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gaussian_transform</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">arr</span><span class="o">=</span><span class="n">data</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_copula_mu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
@@ -406,55 +406,55 @@
 <div class="viewcode-block" id="GaussianCopulaImputer.value_function">
 <a class="viewcode-back" href="../../api/shapiq_student.copula.html#shapiq_student.copula.GaussianCopulaImputer.value_function">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">value_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coalitions</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="nb">bool</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Evaluates the value function for a set of feature coalitions.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Evaluiert die value function für eine Menge von feature coalitions.</span>
 
-<span class="sd">        For each coalition, imputes missing features using conditional sampling under</span>
-<span class="sd">        a Gaussian copula model, evaluates the model on imputed data, and averages</span>
-<span class="sd">        the predictions.</span>
+<span class="sd">        Für jede coalition werden fehlende features durch conditional sampling unter</span>
+<span class="sd">        einem Gaussian Copula Modell imputiert, das Modell auf den imputierten Daten evaluiert</span>
+<span class="sd">        und die averages Prediction.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            coalitions (np.ndarray[bool]): Array of shape (n_coalitions, n_features)</span>
-<span class="sd">                indicating which features are present (True) or missing (False) in each coalition.</span>
+<span class="sd">            coalitions (np.ndarray[bool]): Array of shape (n_coalitions, n_features),</span>
+<span class="sd">                das angibt, welche features in jeder coalition vorhanden (True) oder fehlend (False) sind.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            np.ndarray[float]: Array of shape (n_coalitions,) with averaged model predictions.</span>
+<span class="sd">            np.ndarray[float]: Array of shape (n_coalitions,) mit averaged predictions.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># Store x transformed the same way</span>
+        <span class="c1"># Speichere x, transformiert auf dieselbe Weise</span>
         <span class="n">x_combined</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">_x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">])</span>
         <span class="n">x_gauss</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">apply_along_axis</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">gaussian_transform_separate</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">arr</span><span class="o">=</span><span class="n">x_combined</span><span class="p">,</span> <span class="n">n_y</span><span class="o">=</span><span class="mi">1</span>
         <span class="p">)</span>
-        <span class="n">n_y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># number of instances to explain</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_x_gauss</span> <span class="o">=</span> <span class="n">x_gauss</span><span class="p">[:</span><span class="n">n_y</span><span class="p">]</span>  <span class="c1"># all instances to explain</span>
+        <span class="n">n_y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># Anzahl der zu erklärenden Instanzen</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_x_gauss</span> <span class="o">=</span> <span class="n">x_gauss</span><span class="p">[:</span><span class="n">n_y</span><span class="p">]</span>  <span class="c1"># Alle zu erklärenden Instanzen</span>
 
         <span class="n">n_coalitions</span><span class="p">,</span> <span class="n">n_features</span> <span class="o">=</span> <span class="n">coalitions</span><span class="o">.</span><span class="n">shape</span>
 
-        <span class="n">n_samples</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample_size</span>  <span class="c1"># or any desired MC sample size</span>
+        <span class="n">n_samples</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample_size</span>  <span class="c1"># Oder beliebige gewünschte MC-Samplegröße</span>
 
         <span class="c1"># Standard normal samples</span>
         <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">)</span>
         <span class="n">MC_samples</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">standard_normal</span><span class="p">((</span><span class="n">n_samples</span><span class="p">,</span> <span class="n">n_features</span><span class="p">))</span>
 
-        <span class="c1"># Run conditional sampling using the Gaussian copula approach</span>
+        <span class="c1"># Führe conditional sampling mit dem Gaussian Copula Ansatz durch</span>
         <span class="n">imputed_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prepare_data_copula_py</span><span class="p">(</span>
             <span class="n">MC_samples_mat</span><span class="o">=</span><span class="n">MC_samples</span><span class="p">,</span>
-            <span class="n">x_explain_gauss</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_x_gauss</span><span class="p">,</span>  <span class="c1"># already Gaussianized</span>
-            <span class="n">x_explain_original</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_x</span><span class="p">,</span>  <span class="c1"># original for back-transform</span>
-            <span class="n">x_train_mat</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_train_data</span><span class="p">,</span>  <span class="c1"># needed for copula rank transforms</span>
+            <span class="n">x_explain_gauss</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_x_gauss</span><span class="p">,</span>  <span class="c1"># Bereits gaussianized</span>
+            <span class="n">x_explain_original</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_x</span><span class="p">,</span>  <span class="c1"># Original für Back-Transform</span>
+            <span class="n">x_train_mat</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_train_data</span><span class="p">,</span>  <span class="c1"># Wird für Copula Rank Transforms benötigt</span>
             <span class="n">S</span><span class="o">=</span><span class="n">coalitions</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">),</span>
             <span class="n">mu</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_copula_mu</span><span class="p">,</span>
             <span class="n">cov_mat</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_copula_cov</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="c1"># Flatten for prediction</span>
+        <span class="c1"># Flatten für die Prediction</span>
         <span class="n">flat_input</span> <span class="o">=</span> <span class="n">imputed_data</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_features</span><span class="p">)</span>
         <span class="n">predictions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">flat_input</span><span class="p">)</span>
 
-        <span class="c1"># Reshape and average predictions per coalition</span>
+        <span class="c1"># Reshape und average predictions per coalition</span>
         <span class="n">predictions</span> <span class="o">=</span> <span class="n">predictions</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">n_samples</span><span class="p">,</span> <span class="n">n_coalitions</span><span class="p">)</span>
         <span class="n">avg_predictions</span> <span class="o">=</span> <span class="n">predictions</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
-        <span class="c1"># Handle empty coalitions (all features False)</span>
+        <span class="c1"># Leere coalitions behandeln (alle features False)</span>
         <span class="n">empty_coalitions</span> <span class="o">=</span> <span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">coalitions</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
         <span class="n">avg_predictions</span><span class="p">[</span><span class="n">empty_coalitions</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">empty_prediction</span>
 
@@ -471,22 +471,23 @@
         <span class="n">mu</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
         <span class="n">cov_mat</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Performs conditional sampling using a Gaussian copula for each coalition.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Führt conditional sampling mit einer Gaussian Copula für jede coalition durch.</span>
 
-<span class="sd">        Samples missing features conditional on observed ones by leveraging the</span>
-<span class="sd">        Gaussian copula transformation and conditional multivariate normal distributions.</span>
+<span class="sd">        Fehltende features werden konditional auf beobachtete mittels</span>
+<span class="sd">        Gaussian Copula Transformation und konditionalen multivariaten Normalverteilungen</span>
+<span class="sd">        gesampelt.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            MC_samples_mat (np.ndarray): Standard normal samples (n_samples, n_features).</span>
-<span class="sd">            x_explain_original (np.ndarray): Original values of the data points to explain.</span>
-<span class="sd">            x_explain_gauss (np.ndarray): Gaussianized values of the data points to explain.</span>
-<span class="sd">            x_train_mat (np.ndarray): Original training data for inverse transformation.</span>
-<span class="sd">            S (np.ndarray): Coalition matrix indicating known features.</span>
-<span class="sd">            mu (np.ndarray): Mean of the Gaussian copula.</span>
-<span class="sd">            cov_mat (np.ndarray): Covariance matrix of the Gaussian copula.</span>
+<span class="sd">            MC_samples_mat (np.ndarray): Standard-normalverteilte Samples (n_samples, n_features).</span>
+<span class="sd">            x_explain_original (np.ndarray): Originalwerte der zu erklärenden Datenpunkte.</span>
+<span class="sd">            x_explain_gauss (np.ndarray): Gaussianisierte Werte der zu erklärenden Datenpunkte.</span>
+<span class="sd">            x_train_mat (np.ndarray): Original-Trainingsdaten für die inverse Transformation.</span>
+<span class="sd">            S (np.ndarray): Coalition-Matrix, die bekannte features angibt.</span>
+<span class="sd">            mu (np.ndarray): Mittelwert der Gaussian Copula.</span>
+<span class="sd">            cov_mat (np.ndarray): Kovarianzmatrix der Gaussian Copula.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            np.ndarray: Imputed data of shape (n_samples, n_coalitions * n_points, n_features).</span>
+<span class="sd">            np.ndarray: Imputierte Daten von shape (n_samples, n_coalitions * n_points, n_features).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">n_explain</span><span class="p">,</span> <span class="n">n_features</span> <span class="o">=</span> <span class="n">x_explain_gauss</span><span class="o">.</span><span class="n">shape</span>
         <span class="n">n_MC_samples</span> <span class="o">=</span> <span class="n">MC_samples_mat</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
@@ -515,12 +516,12 @@
             <span class="n">cond_cov_Sbar_given_S</span> <span class="o">=</span> <span class="n">cov_SbarSbar</span> <span class="o">-</span> <span class="n">cov_SbarS_cov_SS_inv</span> <span class="o">@</span> <span class="n">cov_SSbar</span>
             <span class="n">cond_cov_Sbar_given_S</span> <span class="o">=</span> <span class="p">(</span><span class="n">cond_cov_Sbar_given_S</span> <span class="o">+</span> <span class="n">cond_cov_Sbar_given_S</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
 
-            <span class="c1"># Add regularization to avoid singular matrix</span>
+            <span class="c1"># Füge Regularisierung hinzu, um singuläre Matrix zu vermeiden</span>
             <span class="n">epsilon</span> <span class="o">=</span> <span class="mf">1e-8</span>
             <span class="n">cond_cov_Sbar_given_S</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">cond_cov_Sbar_given_S</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="n">epsilon</span>
 
-            <span class="c1"># Add jitter to make covariance matrix positive definite</span>
-            <span class="n">eps</span> <span class="o">=</span> <span class="mf">1e-3</span>  <span class="c1"># smoother conditioning</span>
+            <span class="c1"># Füge Jitter hinzu, um die Kovarianzmatrix positiv definit zu machen</span>
+            <span class="n">eps</span> <span class="o">=</span> <span class="mf">1e-3</span>
             <span class="n">chol_cov</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">cholesky</span><span class="p">(</span><span class="n">cond_cov_Sbar_given_S</span> <span class="o">+</span> <span class="n">eps</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">Sbar_idx</span><span class="p">)))</span>
 
             <span class="n">MC_samples_now</span> <span class="o">=</span> <span class="n">MC_samples_mat</span><span class="p">[:,</span> <span class="n">Sbar_idx</span><span class="p">]</span> <span class="o">@</span> <span class="n">chol_cov</span>
@@ -542,10 +543,10 @@
 <div class="viewcode-block" id="GaussianCopulaImputer.calc_empty_prediction">
 <a class="viewcode-back" href="../../api/shapiq_student.copula.html#shapiq_student.copula.GaussianCopulaImputer.calc_empty_prediction">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">calc_empty_prediction</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Runs the model on empty data points (all features missing) to get the empty prediction.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Führt das Modell auf leeren Datenpunkten (alle features fehlen) aus, um die leere Prediction zu erhalten.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            The empty prediction.</span>
+<span class="sd">            Die leere Prediction.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">empty_predictions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
         <span class="n">empty_prediction</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">empty_predictions</span><span class="p">))</span>
@@ -555,23 +556,23 @@
 <div class="viewcode-block" id="GaussianCopulaImputer.quantile_type7">
 <a class="viewcode-back" href="../../api/shapiq_student.copula.html#shapiq_student.copula.GaussianCopulaImputer.quantile_type7">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">quantile_type7</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">probs</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Computes quantiles using R&#39;s type-7 interpolation method.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Berechnet Quantile mit R&#39;s Type-7 Interpolationsmethode.</span>
 
-<span class="sd">        This method is used to back-transform Gaussian samples to the original scale.</span>
+<span class="sd">        Diese Methode wird verwendet, um Gaussian samples zurück auf die Originalskala zu transformieren.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            x (np.ndarray): Sample from the original distribution.</span>
-<span class="sd">            probs (np.ndarray): Probabilities in [0, 1] to compute quantiles for.</span>
+<span class="sd">            x (np.ndarray): Sample aus der Originalverteilung.</span>
+<span class="sd">            probs (np.ndarray): Wahrscheinlichkeiten in [0, 1], für die Quantile berechnet werden.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            np.ndarray: Quantile values corresponding to the given probabilities.</span>
+<span class="sd">            np.ndarray: Quantilwerte entsprechend den angegebenen Wahrscheinlichkeiten.</span>
 
 <span class="sd">        Raises:</span>
-<span class="sd">            ValueError: If input array is empty.</span>
+<span class="sd">            ValueError: Falls das Input-Array leer ist.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">error_msg</span> <span class="o">=</span> <span class="s2">&quot;Cannot compute quantile with empty array.&quot;</span>
+            <span class="n">error_msg</span> <span class="o">=</span> <span class="s2">&quot;Quantil kann mit leerem Array nicht berechnet werden.&quot;</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">error_msg</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span><span class="n">probs</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
@@ -588,16 +589,16 @@
 <div class="viewcode-block" id="GaussianCopulaImputer.inv_gaussian_transform">
 <a class="viewcode-back" href="../../api/shapiq_student.copula.html#shapiq_student.copula.GaussianCopulaImputer.inv_gaussian_transform">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">inv_gaussian_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">z</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">x_train</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Inverse Gaussian copula transformation to original feature space.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Inverse Gaussian Copula Transformation zurück in den originalen feature space.</span>
 
-<span class="sd">        Converts Gaussianized data back to the original space using empirical quantiles.</span>
+<span class="sd">        Wandelt gaussianisierte Daten mittels empirischer Quantile zurück in den Originalraum.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            z (np.ndarray): Gaussian samples to transform.</span>
-<span class="sd">            x_train (np.ndarray): Training data for empirical distribution.</span>
+<span class="sd">            z (np.ndarray): Gaussian samples zum Transformieren.</span>
+<span class="sd">            x_train (np.ndarray): Trainingsdaten für die empirische Verteilung.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            np.ndarray: Transformed data in the original feature space.</span>
+<span class="sd">            np.ndarray: Transformierte Daten im originalen feature space.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">u</span> <span class="o">=</span> <span class="n">norm</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
         <span class="n">transformed</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty_like</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
@@ -609,43 +610,43 @@
 <div class="viewcode-block" id="GaussianCopulaImputer.gaussian_transform">
 <a class="viewcode-back" href="../../api/shapiq_student.copula.html#shapiq_student.copula.GaussianCopulaImputer.gaussian_transform">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">gaussian_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Applies Gaussian copula transformation to a feature vector.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Wendet die Gaussian Copula Transformation auf einen feature Vektor an.</span>
 
-<span class="sd">        Converts a numeric feature to standard normal marginals using</span>
-<span class="sd">        rank-based transformation.</span>
+<span class="sd">        Wandelt ein numerisches feature mittels rank-basierter Transformation</span>
+<span class="sd">        in standard normal verteilte Marginals um.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            x (np.ndarray): Input 1D array (feature values).</span>
+<span class="sd">            x (np.ndarray): Input 1D Array (feature Werte).</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            np.ndarray: Transformed array with standard normal marginals.</span>
+<span class="sd">            np.ndarray: Transformiertes Array mit standard normal verteilten Marginals.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">ranks</span> <span class="o">=</span> <span class="n">rankdata</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;average&quot;</span><span class="p">)</span>  <span class="c1"># rank(x)</span>
-        <span class="n">u</span> <span class="o">=</span> <span class="n">ranks</span> <span class="o">/</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1"># rank / (n + 1)</span>
-        <span class="n">z</span> <span class="o">=</span> <span class="n">norm</span><span class="o">.</span><span class="n">ppf</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>  <span class="c1"># qnorm(u)</span>
+        <span class="n">ranks</span> <span class="o">=</span> <span class="n">rankdata</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;average&quot;</span><span class="p">)</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="n">ranks</span> <span class="o">/</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="n">norm</span><span class="o">.</span><span class="n">ppf</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">z</span></div>
 
 
 <div class="viewcode-block" id="GaussianCopulaImputer.gaussian_transform_separate">
 <a class="viewcode-back" href="../../api/shapiq_student.copula.html#shapiq_student.copula.GaussianCopulaImputer.gaussian_transform_separate">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">gaussian_transform_separate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">yx</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">n_y</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Transforms new data to standard normal space using rank information.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Transformiert neue Daten in den standard normal Raum mittels Ranginformationen.</span>
 
-<span class="sd">        Used to convert a new data point to Gaussian copula space, while referencing</span>
-<span class="sd">        the rank distribution from a larger sample.</span>
+<span class="sd">        Wird verwendet, um einen neuen Datenpunkt in den Gaussian Copula Raum zu überführen,</span>
+<span class="sd">        wobei die Rangverteilung einer größeren sampling als Referenz dient.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            yx (np.ndarray): Combined array of new values and reference sample.</span>
-<span class="sd">            n_y (int): Number of elements in yx that belong to the new data.</span>
+<span class="sd">            yx (np.ndarray): Kombiniertes Array aus neuen Werten und Referenzsampling.</span>
+<span class="sd">            n_y (int): Anzahl der Elemente in yx, die zu den neuen Daten gehören.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            np.ndarray: Transformed values for the new data portion.</span>
+<span class="sd">            np.ndarray: Transformierte Werte für den neuen Datenanteil.</span>
 
 <span class="sd">        Raises:</span>
-<span class="sd">            ValueError: If n_y is not less than the total array length.</span>
+<span class="sd">            ValueError: Falls n_y nicht kleiner als die Gesamtlänge des Arrays ist.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">n_y</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">yx</span><span class="p">):</span>
-            <span class="n">error_msg</span> <span class="o">=</span> <span class="s2">&quot;n_y should be less than length of yx&quot;</span>
+            <span class="n">error_msg</span> <span class="o">=</span> <span class="s2">&quot;n_y sollte kleiner als die Länge von yx sein&quot;</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">error_msg</span><span class="p">)</span>
 
         <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n_y</span><span class="p">)</span>

@@ -255,12 +255,13 @@
         </div>
         <article role="main" id="furo-main-content">
           <h1>Source code for shapiq_student.gaussian</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Implementation of the Gaussian conditional imputer using multivariate normal distributions.</span>
+<span></span><span class="sd">&quot;&quot;&quot;Implementierung des Gaussian Conditional Imputers mit multivariaten Normalverteilungen.</span>
 
-<span class="sd">This module defines the GaussianImputer class, which performs conditional imputation</span>
-<span class="sd">based on the multivariate Gaussian assumption. It is used in feature attribution methods</span>
-<span class="sd">such as SHAP, where imputing missing features conditionally is required for estimating</span>
-<span class="sd">model values in the presence of partial feature subsets (coalitions). (For gaussian Copula approach see copula.py)</span>
+<span class="sd">Dieses Modul definiert die Klasse GaussianImputer, die conditional Imputation</span>
+<span class="sd">auf Basis der multivariaten Gaussian-Annahme durchführt. Sie wird in Feature Attribution Methoden</span>
+<span class="sd">wie SHAP verwendet, wo das conditional Imputieren fehlender features</span>
+<span class="sd">zur Schätzung von Shapley Werten bei Teilmengen von features (coalitions) nötig ist.</span>
+<span class="sd">(Für den Gaussian Copula Ansatz siehe copula.py)</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
@@ -278,23 +279,23 @@
 <div class="viewcode-block" id="GaussianImputer">
 <a class="viewcode-back" href="../../api/shapiq_student.gaussian.html#shapiq_student.gaussian.GaussianImputer">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">GaussianImputer</span><span class="p">(</span><span class="n">ConditionalImputer</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Conditional imputer based on multivariate Gaussian distributions.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Conditional Imputer basierend auf multivariaten Gaussian-Verteilungen.</span>
 
-<span class="sd">    This imputer assumes a multivariate normal distribution over the features and</span>
-<span class="sd">    uses conditional Gaussian sampling to fill in missing features, depending on</span>
-<span class="sd">    which features are present (coalition sets).</span>
+<span class="sd">    Dieser Imputer nimmt eine multivariate Normalverteilung über die features an und</span>
+<span class="sd">    nutzt conditional Gaussian Sampling, um fehlende features abhängig davon</span>
+<span class="sd">    aufzufüllen, welche features vorhanden sind (coalition Sets).</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        model: The predictive model to explain.</span>
-<span class="sd">        data (np.ndarray): Background data used to estimate the Gaussian distribution.</span>
-<span class="sd">        x (np.ndarray | None): Instances to explain (optional at init).</span>
-<span class="sd">        sample_size (int): Number of Monte Carlo samples per coalition. Default is 10.</span>
-<span class="sd">        conditional_budget (int): Not used directly here, reserved for compatibility.</span>
-<span class="sd">        conditional_threshold (float): Not used directly here, reserved for compatibility.</span>
-<span class="sd">        normalize (bool): Whether to normalize predictions by the empty prediction.</span>
-<span class="sd">        categorical_features (list[int] | None): Indices of categorical features. Not supported.</span>
-<span class="sd">        method (Literal[&quot;gaussConditional&quot;]): Method identifier for this imputer.</span>
-<span class="sd">        random_state (int | None): Optional random seed for reproducibility.</span>
+<span class="sd">        model: Das zu erklärende Predictive Modell.</span>
+<span class="sd">        data (np.ndarray): Hintergrunddaten zur Schätzung der Gaussian-Verteilung.</span>
+<span class="sd">        x (np.ndarray | None): Zu erklärende Instanzen (optional bei Init).</span>
+<span class="sd">        sample_size (int): Anzahl der Monte-Carlo Samples pro coalition. Default ist 10.</span>
+<span class="sd">        conditional_budget (int): Wird hier nicht direkt verwendet, dient der Kompatibilität.</span>
+<span class="sd">        conditional_threshold (float): Wird hier nicht direkt verwendet, dient der Kompatibilität.</span>
+<span class="sd">        normalize (bool): Ob die Prediction anhand der leeren Prediction normalisiert werden.</span>
+<span class="sd">        categorical_features (list[int] | None): Indizes kategorialer features. Nicht unterstützt.</span>
+<span class="sd">        method (Literal[&quot;gaussConditional&quot;]): Methodenkennung für diesen Imputer.</span>
+<span class="sd">        random_state (int | None): Optionaler Random Seed zur Reproduzierbarkeit.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
@@ -311,23 +312,23 @@
         <span class="n">method</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;gaussConditional&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;gaussConditional&quot;</span><span class="p">,</span>
         <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the GaussianImputer.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialisiert den GaussianImputer.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            model: The predictive model to explain. Expected to have a `predict` method.</span>
-<span class="sd">            data (np.ndarray): Background data used to estimate the Gaussian distribution.</span>
-<span class="sd">            x (np.ndarray | None, optional): Data instances to explain. Defaults to None.</span>
-<span class="sd">            sample_size (int, optional): Number of Monte Carlo samples per coalition. Default is 10.</span>
-<span class="sd">            conditional_budget (int, optional): Budget parameter, reserved for compatibility. Default is 128.</span>
-<span class="sd">            conditional_threshold (float, optional): Threshold parameter, reserved for compatibility. Default is 0.05.</span>
-<span class="sd">            normalize (bool, optional): Whether to normalize predictions by the empty prediction. Default is True.</span>
-<span class="sd">            categorical_features (list[int] | None, optional): Indices of categorical features. Not supported by this imputer. Default is None.</span>
-<span class="sd">            method (Literal[&quot;gaussConditional&quot;], optional): Method identifier for this imputer. Must be &quot;gaussConditional&quot;. Default is &quot;gaussConditional&quot;.</span>
-<span class="sd">            random_state (int | None, optional): Random seed for reproducibility. Default is None.</span>
+<span class="sd">            model: Das zu erklärende Predictive Modell. Erwartet eine `predict`-Methode.</span>
+<span class="sd">            data (np.ndarray): Hintergrunddaten zur Schätzung der Gaussian-Verteilung.</span>
+<span class="sd">            x (np.ndarray | None, optional): Zu erklärende Dateninstanzen. Defaults ist None.</span>
+<span class="sd">            sample_size (int, optional): Anzahl der Monte-Carlo Samples pro coalition. Defaults ist 10.</span>
+<span class="sd">            conditional_budget (int, optional): Budget-Parameter, dient der Kompatibilität. Defaults ist 128.</span>
+<span class="sd">            conditional_threshold (float, optional): Schwellenwert-Parameter, dient der Kompatibilität. Defaults ist 0.05.</span>
+<span class="sd">            normalize (bool, optional): Ob die Prediction anhand der leeren Prediction normalisiert werden soll. Defaults ist True.</span>
+<span class="sd">            categorical_features (list[int] | None, optional): Indizes kategorialer features. Nicht unterstützt. Defaults ist None.</span>
+<span class="sd">            method (Literal[&quot;gaussConditional&quot;], optional): Methodenkennung für diesen Imputer. Muss &quot;gaussConditional&quot; sein. Defaults ist &quot;gaussConditional&quot;.</span>
+<span class="sd">            random_state (int | None, optional): Random Seed zur Reproduzierbarkeit. Defaults ist None.</span>
 
 <span class="sd">        Raises:</span>
-<span class="sd">            ValueError: If the method specified is not &quot;gaussConditional&quot;.</span>
-<span class="sd">            ValueError: If categorical features are provided (not supported).</span>
+<span class="sd">            ValueError: Wenn die Methode nicht &quot;gaussConditional&quot; ist.</span>
+<span class="sd">            ValueError: Wenn kategoriale features übergeben werden (nicht unterstützt).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
             <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
@@ -338,14 +339,14 @@
             <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="n">method</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;gaussConditional&quot;</span><span class="p">}:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;This contructor is for gaussianConditional imputers only.&quot;</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Dieser Konstructor ist nur für gaussianConditional Imputer ausschließlich.&quot;</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">=</span> <span class="n">method</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">conditional_budget</span> <span class="o">=</span> <span class="n">conditional_budget</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">conditional_threshold</span> <span class="o">=</span> <span class="n">conditional_threshold</span>
 
-        <span class="c1"># set empty value and normalization</span>
+        <span class="c1"># Leeren Wert und Normalisierung setzen</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">empty_prediction</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_empty_prediction</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">normalize</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">normalization_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">empty_prediction</span>
@@ -355,32 +356,33 @@
 <div class="viewcode-block" id="GaussianImputer.init_background">
 <a class="viewcode-back" href="../../api/shapiq_student.gaussian.html#shapiq_student.gaussian.GaussianImputer.init_background">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">init_background</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GaussianImputer</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initializes the background Gaussian distribution using the input data.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialisiert die Hintergrund-Gaussian-Verteilung mit den Eingabedaten.</span>
 
-<span class="sd">        Computes the empirical mean and (regularized) covariance matrix from the background data.</span>
+<span class="sd">        Berechnet den empirischen Mittelwert und die (regularisierte) Kovarianzmatrix</span>
+<span class="sd">        aus den Hintergrunddaten.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            data (np.ndarray): Background dataset (n_samples, n_features).</span>
+<span class="sd">            data (np.ndarray): Hintergrunddaten (n_samples, n_features).</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            Self (GaussianImputer): The fitted imputer instance.</span>
+<span class="sd">            Self (GaussianImputer): Die gefittete Imputer-Instanz.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cat_features</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="s2">&quot;Gaussian imputer does not support categorical features. &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;Found categorical feature indices: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_cat_features</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="s2">&quot;Gaussian Imputer unterstützt keine kategorialen features.&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Gefundene Indizes kategorialer features: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_cat_features</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="p">)</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
-        <span class="c1"># Compute the mean vector (mu) and covariance matrix (cov_mat)</span>
+        <span class="c1"># Berechne den Mittelwert-Vektor (mu) und die Kovarianzmatrix (cov_mat)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_mu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
         <span class="n">cov_mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cov</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">rowvar</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
-        <span class="c1"># Ensure the covariance matrix is positive definite (like R&#39;s nearPD)</span>
+        <span class="c1"># Sicherstellen, dass die Kovarianzmatrix positiv definit ist (ähnlich wie R&#39;s nearPD)</span>
         <span class="n">min_eigenvalue</span> <span class="o">=</span> <span class="mf">1e-6</span>
         <span class="n">eigvals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigvalsh</span><span class="p">(</span><span class="n">cov_mat</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">eigvals</span> <span class="o">&lt;=</span> <span class="n">min_eigenvalue</span><span class="p">):</span>
-            <span class="c1"># Regularize the covariance matrix slightly (diagonal loading)</span>
+            <span class="c1"># Kovarianzmatrix leicht regularisieren (Diagonal loading)</span>
             <span class="n">cov_mat</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">cov_mat</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="p">(</span><span class="n">min_eigenvalue</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">eigvals</span><span class="p">)</span> <span class="o">+</span> <span class="mf">1e-6</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_cov_mat</span> <span class="o">=</span> <span class="n">cov_mat</span>
@@ -391,20 +393,20 @@
 <div class="viewcode-block" id="GaussianImputer.value_function">
 <a class="viewcode-back" href="../../api/shapiq_student.gaussian.html#shapiq_student.gaussian.GaussianImputer.value_function">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">value_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coalitions</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Computes the model predictions for each coalition via conditional Gaussian sampling.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Berechnet die Modell Predictions für jede coalition mittels conditional Gaussian Sampling.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            coalitions (np.ndarray): Boolean array (n_subsets, n_features),</span>
-<span class="sd">                                     where True means the feature is present.</span>
+<span class="sd">            coalitions (np.ndarray): Boolesches Array (n_subsets, n_features),</span>
+<span class="sd">                                     wobei True bedeutet, dass das feature vorhanden ist.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            np.ndarray: Predicted values for each coalition (n_subsets,).</span>
+<span class="sd">            np.ndarray: Predicted Werte für jede coalition (n_subsets,).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">n_coalitions</span><span class="p">,</span> <span class="n">n_features</span> <span class="o">=</span> <span class="n">coalitions</span><span class="o">.</span><span class="n">shape</span>
 
         <span class="n">mu</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mu</span>
         <span class="n">cov</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cov_mat</span>
-        <span class="n">n_samples</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample_size</span>  <span class="c1"># or any desired MC sample size</span>
+        <span class="n">n_samples</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample_size</span>  <span class="c1"># Oder beliebige gewünschte MC-Samplegröße</span>
 
         <span class="c1"># Standard normal samples</span>
         <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">()</span>
@@ -412,7 +414,7 @@
 
         <span class="n">x_explain</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_x</span>  <span class="c1"># shape (1, n_features)</span>
 
-        <span class="c1"># Run conditional sampling</span>
+        <span class="c1"># conditional sampling durchführen</span>
         <span class="n">imputed_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prepare_data_gaussian_py</span><span class="p">(</span>
             <span class="n">MC_samples_mat</span><span class="o">=</span><span class="n">MC_samples</span><span class="p">,</span>
             <span class="n">x_explain_mat</span><span class="o">=</span><span class="n">x_explain</span><span class="p">,</span>
@@ -421,15 +423,15 @@
             <span class="n">cov_mat</span><span class="o">=</span><span class="n">cov</span><span class="p">,</span>
         <span class="p">)</span>  <span class="c1"># shape: (n_samples, n_coalitions, n_features)</span>
 
-        <span class="c1"># Flatten for prediction</span>
+        <span class="c1"># Flatten für Prediction</span>
         <span class="n">flat_input</span> <span class="o">=</span> <span class="n">imputed_data</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_features</span><span class="p">)</span>
         <span class="n">predictions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">flat_input</span><span class="p">)</span>
 
-        <span class="c1"># Reshape and average predictions per coalition</span>
+        <span class="c1"># Reshape und average predictions per coalition</span>
         <span class="n">predictions</span> <span class="o">=</span> <span class="n">predictions</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">n_samples</span><span class="p">,</span> <span class="n">n_coalitions</span><span class="p">)</span>
         <span class="n">avg_predictions</span> <span class="o">=</span> <span class="n">predictions</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
-        <span class="c1"># Handle empty coalitions (all features False)</span>
+        <span class="c1"># Leere coalitions behandeln (alle features False)</span>
         <span class="n">empty_coalitions</span> <span class="o">=</span> <span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">coalitions</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
         <span class="n">avg_predictions</span><span class="p">[</span><span class="n">empty_coalitions</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">empty_prediction</span>
 
@@ -444,17 +446,17 @@
         <span class="n">mu</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
         <span class="n">cov_mat</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Performs conditional Gaussian imputation for all coalitions.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Führt conditional Gaussian Imputation für alle coalitions durch.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            MC_samples_mat (np.ndarray): Monte Carlo samples of shape (n_samples, n_features).</span>
-<span class="sd">            x_explain_mat (np.ndarray): Input instances to explain (n_explain, n_features).</span>
-<span class="sd">            S (np.ndarray): Coalition indicator matrix (n_coalitions, n_features).</span>
-<span class="sd">            mu (np.ndarray): Mean vector of the background distribution.</span>
-<span class="sd">            cov_mat (np.ndarray): Covariance matrix of the background distribution.</span>
+<span class="sd">            MC_samples_mat (np.ndarray): Monte-Carlo-Samples der Shape (n_samples, n_features).</span>
+<span class="sd">            x_explain_mat (np.ndarray): Eingabedaten zum Erklären (n_explain, n_features).</span>
+<span class="sd">            S (np.ndarray): Indikator-Matrix für coalitions (n_coalitions, n_features).</span>
+<span class="sd">            mu (np.ndarray): Mittelwertvektor der Hintergrundverteilung.</span>
+<span class="sd">            cov_mat (np.ndarray): Kovarianzmatrix der Hintergrundverteilung.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            np.ndarray: Imputed data of shape (n_samples, n_explain * n_coalitions, n_features).</span>
+<span class="sd">            np.ndarray: Imputierte Daten der Shape (n_samples, n_explain * n_coalitions, n_features).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">n_explain</span><span class="p">,</span> <span class="n">n_features</span> <span class="o">=</span> <span class="n">x_explain_mat</span><span class="o">.</span><span class="n">shape</span>
         <span class="n">n_MC_samples</span> <span class="o">=</span> <span class="n">MC_samples_mat</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
@@ -480,7 +482,7 @@
             <span class="n">cov_SbarS_cov_SS_inv</span> <span class="o">=</span> <span class="n">cov_SbarS</span> <span class="o">@</span> <span class="n">pinv</span><span class="p">(</span><span class="n">cov_SS</span><span class="p">)</span>
             <span class="n">cond_cov_Sbar_given_S</span> <span class="o">=</span> <span class="n">cov_SbarSbar</span> <span class="o">-</span> <span class="n">cov_SbarS_cov_SS_inv</span> <span class="o">@</span> <span class="n">cov_SSbar</span>
 
-            <span class="c1"># Ensure symmetry</span>
+            <span class="c1"># Symmetrie sicherstellen</span>
             <span class="n">cond_cov_Sbar_given_S</span> <span class="o">=</span> <span class="p">(</span><span class="n">cond_cov_Sbar_given_S</span> <span class="o">+</span> <span class="n">cond_cov_Sbar_given_S</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
 
             <span class="n">chol_cov</span> <span class="o">=</span> <span class="n">cholesky</span><span class="p">(</span><span class="n">cond_cov_Sbar_given_S</span><span class="p">)</span>
@@ -499,13 +501,13 @@
 <div class="viewcode-block" id="GaussianImputer.calc_empty_prediction">
 <a class="viewcode-back" href="../../api/shapiq_student.gaussian.html#shapiq_student.gaussian.GaussianImputer.calc_empty_prediction">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">calc_empty_prediction</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Estimates the model prediction when all features are missing.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Schätzt die Modellvorhersage, wenn alle features fehlen.</span>
 
-<span class="sd">        This is done by evaluating the model over the background data</span>
-<span class="sd">        and averaging the predictions.</span>
+<span class="sd">        Dies geschieht durch Auswertung des Modells über die Hintergrunddaten</span>
+<span class="sd">        und Mittelung der Prediction.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            float: The average prediction over the background data.</span>
+<span class="sd">            float: Die durchschnittliche Prediction über die Hintergrunddaten.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">empty_predictions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
         <span class="n">empty_prediction</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">empty_predictions</span><span class="p">))</span>

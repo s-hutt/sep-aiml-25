@@ -263,17 +263,17 @@
         <article role="main" id="furo-main-content">
           <section id="module-shapiq_student.copula">
 <span id="shapiq-student-copula"></span><h1>shapiq_student.copula<a class="headerlink" href="#module-shapiq_student.copula" title="Link to this heading">¶</a></h1>
-<p>Implementation of the Gaussian copula imputer.</p>
-<p>This module implements a gaussian conditional imputer using the Gaussian copula transformation.
-It enables imputing missing features in a feature coalition by modeling dependencies
-using a Gaussian copula approach, and generating conditional samples for SHAP or other feature
-attribution methods. (For conventional gaussian approach see gaussian.py)</p>
+<p>Implementierung des Gaussian Copula Imputers.</p>
+<p>Dieses Modul implementiert einen gaußschen konditionalen Imputer unter Verwendung der Gaussian Copula Transformation.
+Es ermöglicht das Imputieren fehlender features in einer feature coalition durch Modellierung von Abhängigkeiten
+mit einem Gaussian Copula Ansatz und das Erzeugen conditional samples für SHAP oder andere feature
+attribution methods. (Für den konventionellen gaußschen Ansatz siehe gaussian.py)</p>
 <p class="rubric">Classes</p>
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#shapiq_student.copula.GaussianCopulaImputer" title="shapiq_student.copula.GaussianCopulaImputer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GaussianCopulaImputer</span></code></a>(model, data[, x, ...])</p></td>
-<td><p>Gaussian copula-based conditional imputer for missing feature imputation.</p></td>
+<td><p>Gaussian Copula-basierter konditionaler Imputer zur fehlender features.</p></td>
 </tr>
 </tbody>
 </table>
@@ -282,61 +282,73 @@ attribution methods. (For conventional gaussian approach see gaussian.py)</p>
 <dt class="sig sig-object py" id="shapiq_student.copula.GaussianCopulaImputer">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">shapiq_student.copula.</span></span><span class="sig-name descname"><span class="pre">GaussianCopulaImputer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">categorical_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'gaussCopula'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/shapiq_student/copula.html#GaussianCopulaImputer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#shapiq_student.copula.GaussianCopulaImputer" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ConditionalImputer</span></code></p>
-<p>Gaussian copula-based conditional imputer for missing feature imputation.</p>
-<p>This class implements conditional sampling based on a Gaussian copula transformation.
-It is used for imputing missing features in a way that respects the dependence structure
-of the observed data. This is particularly useful in model explanation tasks such as
-computing SHAP values.</p>
+<p>Gaussian Copula-basierter konditionaler Imputer zur fehlender features.</p>
+<p>Diese Klasse implementiert conditional Sampling basierend auf einer Gaussian Copula Transformation.
+Sie wird verwendet, um fehlende features so zu imputieren, dass die dependence struktur
+der beobachteten Daten berücksichtigt wird. Dies ist besonders nützlich bei Modell-Erklärungsaufgaben wie
+der Berechnung von SHAP-Werten.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">Model</span></code>)</span>) – Predictive model to be explained.</p></li>
-<li><p><strong>data</strong> (<em>np.ndarray</em>) – Background data for modeling the joint distribution.</p></li>
-<li><p><strong>x</strong> (<em>np.ndarray</em><em> | </em><em>None</em>) – Data points to explain. If None, will be inferred.</p></li>
-<li><p><strong>sample_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – Number of Monte Carlo samples per coalition.</p></li>
-<li><p><strong>normalize</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a>) – Whether to normalize using the empty prediction.</p></li>
-<li><p><strong>categorical_features</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>] </em><em>| </em><em>None</em>) – Indices of categorical features (unsupported).</p></li>
-<li><p><strong>method</strong> (<em>Literal</em><em>[</em><em>&quot;gaussCopula&quot;</em><em>]</em>) – Must be “gaussCopula”.</p></li>
-<li><p><strong>random_state</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em> | </em><em>None</em>) – Random seed for reproducibility.</p></li>
+<li><p><strong>model</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">Model</span></code>)</span>) – Zu erklärendes Predictive modell.</p></li>
+<li><p><strong>data</strong> (<em>np.ndarray</em>) – Hintergrunddaten zur Modellierung der multivariaten Verteilung.</p></li>
+<li><p><strong>x</strong> (<em>np.ndarray</em><em> | </em><em>None</em>) – Zu erklärende Datenpunkte. Falls None, werden sie inferiert.</p></li>
+<li><p><strong>sample_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – Anzahl der Monte-Carlo-samples pro coalition.</p></li>
+<li><p><strong>normalize</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a>) – Ob mit der leeren Vorhersage normalisiert werden soll.</p></li>
+<li><p><strong>categorical_features</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>] </em><em>| </em><em>None</em>) – Indizes kategorialer features (nicht unterstützt).</p></li>
+<li><p><strong>method</strong> (<em>Literal</em><em>[</em><em>&quot;gaussCopula&quot;</em><em>]</em>) – Muss “gaussCopula” sein.</p></li>
+<li><p><strong>random_state</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em> | </em><em>None</em>) – Random seed für Reproduzierbarkeit.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.13)"><strong>ValueError</strong></a> – If an unsupported method is passed or if categorical features are provided.</p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.13)"><strong>ValueError</strong></a> – Wenn eine nicht unterstützte method übergeben wird oder kategoriale features vorhanden sind.</p>
 </dd>
 </dl>
-<p>Initialize the GaussianImputer.</p>
-<p>This class performs conditional imputation based on a multivariate Gaussian
-distribution fitted to the background data. It is primarily used for imputing
-missing features (as defined by coalitions) during model explanation tasks.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<em>callable</em>) – The predictive model to explain. Must support <cite>.predict()</cite> with 2D input.</p></li>
-<li><p><strong>data</strong> (<em>np.ndarray</em>) – Background dataset used to estimate the feature distribution (n_samples, n_features).</p></li>
-<li><p><strong>x</strong> (<em>np.ndarray</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – The instance(s) to explain. If not provided during initialization, can be set later.</p></li>
-<li><p><strong>sample_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>, </em><em>default=10</em>) – Number of Monte Carlo samples to generate per coalition.</p></li>
-<li><p><strong>conditional_budget</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>, </em><em>default=128</em>) – Reserved for future use or budget-aware strategies (not directly used here).</p></li>
-<li><p><strong>conditional_threshold</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em>, </em><em>default=0.05</em>) – Reserved for future use, such as feature pruning based on contribution (not used here).</p></li>
-<li><p><strong>normalize</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a><em>, </em><em>default=True</em>) – Whether to normalize output values by the empty prediction value.</p></li>
-<li><p><strong>categorical_features</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><em>list</em></a><em> of </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em> or </em><em>None</em><em>, </em><em>optional</em>) – Indices of categorical features. Gaussian imputation does not support categoricals.</p></li>
-<li><p><strong>method</strong> (<em>{'gaussConditional'}</em><em>, </em><em>default='gaussConditional'</em>) – The imputation method name. Only ‘gaussConditional’ is supported in this class.</p></li>
-<li><p><strong>random_state</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em> or </em><em>None</em><em>, </em><em>optional</em>) – Random seed for reproducibility.</p></li>
-<li><p><strong>Raises</strong></p></li>
-<li><p><strong>------</strong></p></li>
-<li><p><strong>ValueError</strong> – If any categorical features are provided or if the method is not ‘gaussConditional’.</p></li>
-</ul>
+<p>Initialisierung des GaussianImputers.</p>
+<p>Diese Klasse führt conditional Imputation basierend auf einer multivariaten
+Gaussian-Verteilung durch, die auf den Hintergrunddaten gefittet wird. Sie wird primär verwendet,
+um fehlende features (wie durch coalitions definiert) bei Modell-Erklärungsaufgaben zu imputieren.</p>
+<section id="parameter">
+<h2>Parameter<a class="headerlink" href="#parameter" title="Link to this heading">¶</a></h2>
+<dl class="simple">
+<dt>model<span class="classifier">callable</span></dt><dd><p>Das zu erklärende predictive model. Muss <cite>.predict()</cite> mit 2D-Input unterstützen.</p>
+</dd>
+<dt>data<span class="classifier">np.ndarray</span></dt><dd><p>Hintergrunddaten zur Schätzung der feature-Verteilung (n_samples, n_features).</p>
+</dd>
+<dt>x<span class="classifier">np.ndarray oder None, optional</span></dt><dd><p>Die zu erklärenden Instanzen. Falls nicht bei der Initialisierung angegeben, kann später gesetzt werden.</p>
+</dd>
+<dt>sample_size<span class="classifier">int, default=10</span></dt><dd><p>Anzahl der Monte-Carlo-samples, die pro coalition generiert werden.</p>
+</dd>
+<dt>conditional_budget<span class="classifier">int, default=128</span></dt><dd><p>Reserviert für zukünftige Nutzung oder budget-basierte Strategien (aktuell nicht verwendet).</p>
+</dd>
+<dt>conditional_threshold<span class="classifier">float, default=0.05</span></dt><dd><p>Reserviert für zukünftige Nutzung, z.B. feature pruning basierend auf Contribution (aktuell nicht verwendet).</p>
+</dd>
+<dt>normalize<span class="classifier">bool, default=True</span></dt><dd><p>Ob die Ausgaben mit der leeren Vorhersage normalisiert werden sollen.</p>
+</dd>
+<dt>categorical_features<span class="classifier">list[int] oder None, optional</span></dt><dd><p>Indizes kategorialer features. Gaussian-Imputation unterstützt keine Kategorischen.</p>
+</dd>
+<dt>method<span class="classifier">{‘gaussConditional’}, default=’gaussConditional’</span></dt><dd><p>Name der Imputationsmethode. Nur ‘gaussConditional’ wird in dieser Klasse unterstützt.</p>
+</dd>
+<dt>random_state<span class="classifier">int oder None, optional</span></dt><dd><p>Random seed zur Reproduzierbarkeit.</p>
+</dd>
+</dl>
+</section>
+<section id="raises">
+<h2>Raises:<a class="headerlink" href="#raises" title="Link to this heading">¶</a></h2>
+<dl class="simple">
+<dt>ValueError</dt><dd><p>Wenn kategoriale features angegeben werden oder die Methode ungleich ‘gaussConditional’ ist.</p>
 </dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="shapiq_student.copula.GaussianCopulaImputer.calc_empty_prediction">
 <span class="sig-name descname"><span class="pre">calc_empty_prediction</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/shapiq_student/copula.html#GaussianCopulaImputer.calc_empty_prediction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#shapiq_student.copula.GaussianCopulaImputer.calc_empty_prediction" title="Link to this definition">¶</a></dt>
-<dd><p>Runs the model on empty data points (all features missing) to get the empty prediction.</p>
+<dd><p>Führt das Modell auf leeren Datenpunkten (alle features fehlen) aus, um die leere Prediction zu erhalten.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></span></p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>The empty prediction.</p>
+<dd class="field-even"><p>Die leere Prediction.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -344,15 +356,15 @@ missing features (as defined by coalitions) during model explanation tasks.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="shapiq_student.copula.GaussianCopulaImputer.gaussian_transform">
 <span class="sig-name descname"><span class="pre">gaussian_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/shapiq_student/copula.html#GaussianCopulaImputer.gaussian_transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#shapiq_student.copula.GaussianCopulaImputer.gaussian_transform" title="Link to this definition">¶</a></dt>
-<dd><p>Applies Gaussian copula transformation to a feature vector.</p>
-<p>Converts a numeric feature to standard normal marginals using
-rank-based transformation.</p>
+<dd><p>Wendet die Gaussian Copula Transformation auf einen feature Vektor an.</p>
+<p>Wandelt ein numerisches feature mittels rank-basierter Transformation
+in standard normal verteilte Marginals um.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>x</strong> (<em>np.ndarray</em>) – Input 1D array (feature values).</p>
+<dd class="field-odd"><p><strong>x</strong> (<em>np.ndarray</em>) – Input 1D Array (feature Werte).</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Transformed array with standard normal marginals.</p>
+<dd class="field-even"><p>Transformiertes Array mit standard normal verteilten Marginals.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>np.ndarray</p>
@@ -363,24 +375,24 @@ rank-based transformation.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="shapiq_student.copula.GaussianCopulaImputer.gaussian_transform_separate">
 <span class="sig-name descname"><span class="pre">gaussian_transform_separate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">yx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_y</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/shapiq_student/copula.html#GaussianCopulaImputer.gaussian_transform_separate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#shapiq_student.copula.GaussianCopulaImputer.gaussian_transform_separate" title="Link to this definition">¶</a></dt>
-<dd><p>Transforms new data to standard normal space using rank information.</p>
-<p>Used to convert a new data point to Gaussian copula space, while referencing
-the rank distribution from a larger sample.</p>
+<dd><p>Transformiert neue Daten in den standard normal Raum mittels Ranginformationen.</p>
+<p>Wird verwendet, um einen neuen Datenpunkt in den Gaussian Copula Raum zu überführen,
+wobei die Rangverteilung einer größeren sampling als Referenz dient.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>yx</strong> (<em>np.ndarray</em>) – Combined array of new values and reference sample.</p></li>
-<li><p><strong>n_y</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – Number of elements in yx that belong to the new data.</p></li>
+<li><p><strong>yx</strong> (<em>np.ndarray</em>) – Kombiniertes Array aus neuen Werten und Referenzsampling.</p></li>
+<li><p><strong>n_y</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – Anzahl der Elemente in yx, die zu den neuen Daten gehören.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Transformed values for the new data portion.</p>
+<dd class="field-even"><p>Transformierte Werte für den neuen Datenanteil.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>np.ndarray</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.13)"><strong>ValueError</strong></a> – If n_y is not less than the total array length.</p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.13)"><strong>ValueError</strong></a> – Falls n_y nicht kleiner als die Gesamtlänge des Arrays ist.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -388,22 +400,22 @@ the rank distribution from a larger sample.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="shapiq_student.copula.GaussianCopulaImputer.init_background">
 <span class="sig-name descname"><span class="pre">init_background</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/shapiq_student/copula.html#GaussianCopulaImputer.init_background"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#shapiq_student.copula.GaussianCopulaImputer.init_background" title="Link to this definition">¶</a></dt>
-<dd><p>Initializes the background distribution using a Gaussian copula.</p>
-<p>Transforms the background data into Gaussian space using a rank-based transform.
-This transformation is used to compute the joint Gaussian distribution from
-which conditional samples can be drawn.</p>
+<dd><p>Initialisiert die Hintergrundverteilung mithilfe einer Gaussian Copula.</p>
+<p>Die Hintergrunddaten werden per rank-basierter Transformation in den Gaussian-Raum überführt.
+Diese Transformation dient dazu, die gemeinsame Gaussian-Verteilung zu bestimmen,
+aus der anschließend konditionale Samples gezogen werden können.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>data</strong> (<em>np.ndarray</em>) – Input data matrix of shape (n_samples, n_features).</p>
+<dd class="field-odd"><p><strong>data</strong> (<em>np.ndarray</em>) – Input-Datenmatrix der Form (n_samples, n_features).</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>The instance itself.</p>
+<dd class="field-even"><p>Die Instanz selbst.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="#shapiq_student.copula.GaussianCopulaImputer" title="shapiq_student.copula.GaussianCopulaImputer">GaussianCopulaImputer</a></p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.13)"><strong>ValueError</strong></a> – If categorical features are provided.</p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.13)"><strong>ValueError</strong></a> – Wenn kategoriale features angegeben werden.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -411,17 +423,17 @@ which conditional samples can be drawn.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="shapiq_student.copula.GaussianCopulaImputer.inv_gaussian_transform">
 <span class="sig-name descname"><span class="pre">inv_gaussian_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_train</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/shapiq_student/copula.html#GaussianCopulaImputer.inv_gaussian_transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#shapiq_student.copula.GaussianCopulaImputer.inv_gaussian_transform" title="Link to this definition">¶</a></dt>
-<dd><p>Inverse Gaussian copula transformation to original feature space.</p>
-<p>Converts Gaussianized data back to the original space using empirical quantiles.</p>
+<dd><p>Inverse Gaussian Copula Transformation zurück in den originalen feature space.</p>
+<p>Wandelt gaussianisierte Daten mittels empirischer Quantile zurück in den Originalraum.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>z</strong> (<em>np.ndarray</em>) – Gaussian samples to transform.</p></li>
-<li><p><strong>x_train</strong> (<em>np.ndarray</em>) – Training data for empirical distribution.</p></li>
+<li><p><strong>z</strong> (<em>np.ndarray</em>) – Gaussian samples zum Transformieren.</p></li>
+<li><p><strong>x_train</strong> (<em>np.ndarray</em>) – Trainingsdaten für die empirische Verteilung.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Transformed data in the original feature space.</p>
+<dd class="field-even"><p>Transformierte Daten im originalen feature space.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>np.ndarray</p>
@@ -432,23 +444,23 @@ which conditional samples can be drawn.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="shapiq_student.copula.GaussianCopulaImputer.quantile_type7">
 <span class="sig-name descname"><span class="pre">quantile_type7</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">probs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/shapiq_student/copula.html#GaussianCopulaImputer.quantile_type7"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#shapiq_student.copula.GaussianCopulaImputer.quantile_type7" title="Link to this definition">¶</a></dt>
-<dd><p>Computes quantiles using R’s type-7 interpolation method.</p>
-<p>This method is used to back-transform Gaussian samples to the original scale.</p>
+<dd><p>Berechnet Quantile mit R’s Type-7 Interpolationsmethode.</p>
+<p>Diese Methode wird verwendet, um Gaussian samples zurück auf die Originalskala zu transformieren.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>x</strong> (<em>np.ndarray</em>) – Sample from the original distribution.</p></li>
-<li><p><strong>probs</strong> (<em>np.ndarray</em>) – Probabilities in [0, 1] to compute quantiles for.</p></li>
+<li><p><strong>x</strong> (<em>np.ndarray</em>) – Sample aus der Originalverteilung.</p></li>
+<li><p><strong>probs</strong> (<em>np.ndarray</em>) – Wahrscheinlichkeiten in [0, 1], für die Quantile berechnet werden.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Quantile values corresponding to the given probabilities.</p>
+<dd class="field-even"><p>Quantilwerte entsprechend den angegebenen Wahrscheinlichkeiten.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>np.ndarray</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.13)"><strong>ValueError</strong></a> – If input array is empty.</p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.13)"><strong>ValueError</strong></a> – Falls das Input-Array leer ist.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -456,17 +468,17 @@ which conditional samples can be drawn.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="shapiq_student.copula.GaussianCopulaImputer.value_function">
 <span class="sig-name descname"><span class="pre">value_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coalitions</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/shapiq_student/copula.html#GaussianCopulaImputer.value_function"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#shapiq_student.copula.GaussianCopulaImputer.value_function" title="Link to this definition">¶</a></dt>
-<dd><p>Evaluates the value function for a set of feature coalitions.</p>
-<p>For each coalition, imputes missing features using conditional sampling under
-a Gaussian copula model, evaluates the model on imputed data, and averages
-the predictions.</p>
+<dd><p>Evaluiert die value function für eine Menge von feature coalitions.</p>
+<p>Für jede coalition werden fehlende features durch conditional sampling unter
+einem Gaussian Copula Modell imputiert, das Modell auf den imputierten Daten evaluiert
+und die averages Prediction.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>coalitions</strong> (<em>np.ndarray</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a><em>]</em>) – Array of shape (n_coalitions, n_features)
-indicating which features are present (True) or missing (False) in each coalition.</p>
+<dd class="field-odd"><p><strong>coalitions</strong> (<em>np.ndarray</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a><em>]</em>) – Array of shape (n_coalitions, n_features),
+das angibt, welche features in jeder coalition vorhanden (True) oder fehlend (False) sind.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Array of shape (n_coalitions,) with averaged model predictions.</p>
+<dd class="field-even"><p>Array of shape (n_coalitions,) mit averaged predictions.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>np.ndarray[<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)">float</a>]</p>
@@ -474,6 +486,7 @@ indicating which features are present (True) or missing (False) in each coalitio
 </dl>
 </dd></dl>
 
+</section>
 </dd></dl>
 
 </section>

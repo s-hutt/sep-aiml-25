@@ -1,9 +1,10 @@
-"""Implementation of the Gaussian conditional imputer using multivariate normal distributions.
+"""Implementierung des Gaussian Conditional Imputers mit multivariaten Normalverteilungen.
 
-This module defines the GaussianImputer class, which performs conditional imputation
-based on the multivariate Gaussian assumption. It is used in feature attribution methods
-such as SHAP, where imputing missing features conditionally is required for estimating
-model values in the presence of partial feature subsets (coalitions). (For gaussian Copula approach see copula.py)
+Dieses Modul definiert die Klasse GaussianImputer, die conditional Imputation
+auf Basis der multivariaten Gaussian-Annahme durchführt. Sie wird in Feature Attribution Methoden
+wie SHAP verwendet, wo das conditional Imputieren fehlender features
+zur Schätzung von Shapley Werten bei Teilmengen von features (coalitions) nötig ist.
+(Für den Gaussian Copula Ansatz siehe copula.py)
 """
 
 from __future__ import annotations
@@ -19,23 +20,23 @@ if TYPE_CHECKING:
 
 
 class GaussianImputer(ConditionalImputer):
-    """Conditional imputer based on multivariate Gaussian distributions.
+    """Conditional Imputer basierend auf multivariaten Gaussian-Verteilungen.
 
-    This imputer assumes a multivariate normal distribution over the features and
-    uses conditional Gaussian sampling to fill in missing features, depending on
-    which features are present (coalition sets).
+    Dieser Imputer nimmt eine multivariate Normalverteilung über die features an und
+    nutzt conditional Gaussian Sampling, um fehlende features abhängig davon
+    aufzufüllen, welche features vorhanden sind (coalition Sets).
 
     Args:
-        model: The predictive model to explain.
-        data (np.ndarray): Background data used to estimate the Gaussian distribution.
-        x (np.ndarray | None): Instances to explain (optional at init).
-        sample_size (int): Number of Monte Carlo samples per coalition. Default is 10.
-        conditional_budget (int): Not used directly here, reserved for compatibility.
-        conditional_threshold (float): Not used directly here, reserved for compatibility.
-        normalize (bool): Whether to normalize predictions by the empty prediction.
-        categorical_features (list[int] | None): Indices of categorical features. Not supported.
-        method (Literal["gaussConditional"]): Method identifier for this imputer.
-        random_state (int | None): Optional random seed for reproducibility.
+        model: Das zu erklärende Predictive Modell.
+        data (np.ndarray): Hintergrunddaten zur Schätzung der Gaussian-Verteilung.
+        x (np.ndarray | None): Zu erklärende Instanzen (optional bei Init).
+        sample_size (int): Anzahl der Monte-Carlo Samples pro coalition. Default ist 10.
+        conditional_budget (int): Wird hier nicht direkt verwendet, dient der Kompatibilität.
+        conditional_threshold (float): Wird hier nicht direkt verwendet, dient der Kompatibilität.
+        normalize (bool): Ob die Prediction anhand der leeren Prediction normalisiert werden.
+        categorical_features (list[int] | None): Indizes kategorialer features. Nicht unterstützt.
+        method (Literal["gaussConditional"]): Methodenkennung für diesen Imputer.
+        random_state (int | None): Optionaler Random Seed zur Reproduzierbarkeit.
     """
 
     def __init__(
@@ -52,23 +53,23 @@ class GaussianImputer(ConditionalImputer):
         method: Literal["gaussConditional"] = "gaussConditional",
         random_state: int | None = None,
     ) -> None:
-        """Initialize the GaussianImputer.
+        """Initialisiert den GaussianImputer.
 
         Args:
-            model: The predictive model to explain. Expected to have a `predict` method.
-            data (np.ndarray): Background data used to estimate the Gaussian distribution.
-            x (np.ndarray | None, optional): Data instances to explain. Defaults to None.
-            sample_size (int, optional): Number of Monte Carlo samples per coalition. Default is 10.
-            conditional_budget (int, optional): Budget parameter, reserved for compatibility. Default is 128.
-            conditional_threshold (float, optional): Threshold parameter, reserved for compatibility. Default is 0.05.
-            normalize (bool, optional): Whether to normalize predictions by the empty prediction. Default is True.
-            categorical_features (list[int] | None, optional): Indices of categorical features. Not supported by this imputer. Default is None.
-            method (Literal["gaussConditional"], optional): Method identifier for this imputer. Must be "gaussConditional". Default is "gaussConditional".
-            random_state (int | None, optional): Random seed for reproducibility. Default is None.
+            model: Das zu erklärende Predictive Modell. Erwartet eine `predict`-Methode.
+            data (np.ndarray): Hintergrunddaten zur Schätzung der Gaussian-Verteilung.
+            x (np.ndarray | None, optional): Zu erklärende Dateninstanzen. Defaults ist None.
+            sample_size (int, optional): Anzahl der Monte-Carlo Samples pro coalition. Defaults ist 10.
+            conditional_budget (int, optional): Budget-Parameter, dient der Kompatibilität. Defaults ist 128.
+            conditional_threshold (float, optional): Schwellenwert-Parameter, dient der Kompatibilität. Defaults ist 0.05.
+            normalize (bool, optional): Ob die Prediction anhand der leeren Prediction normalisiert werden soll. Defaults ist True.
+            categorical_features (list[int] | None, optional): Indizes kategorialer features. Nicht unterstützt. Defaults ist None.
+            method (Literal["gaussConditional"], optional): Methodenkennung für diesen Imputer. Muss "gaussConditional" sein. Defaults ist "gaussConditional".
+            random_state (int | None, optional): Random Seed zur Reproduzierbarkeit. Defaults ist None.
 
         Raises:
-            ValueError: If the method specified is not "gaussConditional".
-            ValueError: If categorical features are provided (not supported).
+            ValueError: Wenn die Methode nicht "gaussConditional" ist.
+            ValueError: Wenn kategoriale features übergeben werden (nicht unterstützt).
         """
         super().__init__(
             model=model,
@@ -79,14 +80,14 @@ class GaussianImputer(ConditionalImputer):
             random_state=random_state,
         )
         if method not in {"gaussConditional"}:
-            msg = "This contructor is for gaussianConditional imputers only."
+            msg = "Dieser Konstructor ist nur für gaussianConditional Imputer ausschließlich."
             raise ValueError(msg)
 
         self.method = method
         self.conditional_budget = conditional_budget
         self.conditional_threshold = conditional_threshold
 
-        # set empty value and normalization
+        # Leeren Wert und Normalisierung setzen
         self.empty_prediction: float = self.calc_empty_prediction()
         if normalize:
             self.normalization_value = self.empty_prediction
@@ -94,32 +95,33 @@ class GaussianImputer(ConditionalImputer):
             self.init_background(data)
 
     def init_background(self, data: np.ndarray) -> GaussianImputer:
-        """Initializes the background Gaussian distribution using the input data.
+        """Initialisiert die Hintergrund-Gaussian-Verteilung mit den Eingabedaten.
 
-        Computes the empirical mean and (regularized) covariance matrix from the background data.
+        Berechnet den empirischen Mittelwert und die (regularisierte) Kovarianzmatrix
+        aus den Hintergrunddaten.
 
         Args:
-            data (np.ndarray): Background dataset (n_samples, n_features).
+            data (np.ndarray): Hintergrunddaten (n_samples, n_features).
 
         Returns:
-            Self (GaussianImputer): The fitted imputer instance.
+            Self (GaussianImputer): Die gefittete Imputer-Instanz.
         """
         if self._cat_features:
             msg = (
-                "Gaussian imputer does not support categorical features. "
-                f"Found categorical feature indices: {self._cat_features}"
+                "Gaussian Imputer unterstützt keine kategorialen features."
+                f"Gefundene Indizes kategorialer features: {self._cat_features}"
             )
             raise ValueError(msg)
 
-        # Compute the mean vector (mu) and covariance matrix (cov_mat)
+        # Berechne den Mittelwert-Vektor (mu) und die Kovarianzmatrix (cov_mat)
         self._mu = np.mean(data, axis=0)
         cov_mat = np.cov(data, rowvar=False)
 
-        # Ensure the covariance matrix is positive definite (like R's nearPD)
+        # Sicherstellen, dass die Kovarianzmatrix positiv definit ist (ähnlich wie R's nearPD)
         min_eigenvalue = 1e-6
         eigvals = np.linalg.eigvalsh(cov_mat)
         if np.any(eigvals <= min_eigenvalue):
-            # Regularize the covariance matrix slightly (diagonal loading)
+            # Kovarianzmatrix leicht regularisieren (Diagonal loading)
             cov_mat += np.eye(cov_mat.shape[0]) * (min_eigenvalue - np.min(eigvals) + 1e-6)
 
         self._cov_mat = cov_mat
@@ -127,20 +129,20 @@ class GaussianImputer(ConditionalImputer):
         return self
 
     def value_function(self, coalitions: np.ndarray) -> np.ndarray:
-        """Computes the model predictions for each coalition via conditional Gaussian sampling.
+        """Berechnet die Modell Predictions für jede coalition mittels conditional Gaussian Sampling.
 
         Args:
-            coalitions (np.ndarray): Boolean array (n_subsets, n_features),
-                                     where True means the feature is present.
+            coalitions (np.ndarray): Boolesches Array (n_subsets, n_features),
+                                     wobei True bedeutet, dass das feature vorhanden ist.
 
         Returns:
-            np.ndarray: Predicted values for each coalition (n_subsets,).
+            np.ndarray: Predicted Werte für jede coalition (n_subsets,).
         """
         n_coalitions, n_features = coalitions.shape
 
         mu = self._mu
         cov = self._cov_mat
-        n_samples = self.sample_size  # or any desired MC sample size
+        n_samples = self.sample_size  # Oder beliebige gewünschte MC-Samplegröße
 
         # Standard normal samples
         rng = np.random.default_rng()
@@ -148,7 +150,7 @@ class GaussianImputer(ConditionalImputer):
 
         x_explain = self._x  # shape (1, n_features)
 
-        # Run conditional sampling
+        # conditional sampling durchführen
         imputed_data = self._prepare_data_gaussian_py(
             MC_samples_mat=MC_samples,
             x_explain_mat=x_explain,
@@ -157,15 +159,15 @@ class GaussianImputer(ConditionalImputer):
             cov_mat=cov,
         )  # shape: (n_samples, n_coalitions, n_features)
 
-        # Flatten for prediction
+        # Flatten für Prediction
         flat_input = imputed_data.reshape(-1, n_features)
         predictions = self.predict(flat_input)
 
-        # Reshape and average predictions per coalition
+        # Reshape und average predictions per coalition
         predictions = predictions.reshape(n_samples, n_coalitions)
         avg_predictions = predictions.mean(axis=0)
 
-        # Handle empty coalitions (all features False)
+        # Leere coalitions behandeln (alle features False)
         empty_coalitions = ~np.any(coalitions, axis=1)
         avg_predictions[empty_coalitions] = self.empty_prediction
 
@@ -179,17 +181,17 @@ class GaussianImputer(ConditionalImputer):
         mu: np.ndarray,
         cov_mat: np.ndarray,
     ) -> np.ndarray:
-        """Performs conditional Gaussian imputation for all coalitions.
+        """Führt conditional Gaussian Imputation für alle coalitions durch.
 
         Args:
-            MC_samples_mat (np.ndarray): Monte Carlo samples of shape (n_samples, n_features).
-            x_explain_mat (np.ndarray): Input instances to explain (n_explain, n_features).
-            S (np.ndarray): Coalition indicator matrix (n_coalitions, n_features).
-            mu (np.ndarray): Mean vector of the background distribution.
-            cov_mat (np.ndarray): Covariance matrix of the background distribution.
+            MC_samples_mat (np.ndarray): Monte-Carlo-Samples der Shape (n_samples, n_features).
+            x_explain_mat (np.ndarray): Eingabedaten zum Erklären (n_explain, n_features).
+            S (np.ndarray): Indikator-Matrix für coalitions (n_coalitions, n_features).
+            mu (np.ndarray): Mittelwertvektor der Hintergrundverteilung.
+            cov_mat (np.ndarray): Kovarianzmatrix der Hintergrundverteilung.
 
         Returns:
-            np.ndarray: Imputed data of shape (n_samples, n_explain * n_coalitions, n_features).
+            np.ndarray: Imputierte Daten der Shape (n_samples, n_explain * n_coalitions, n_features).
         """
         n_explain, n_features = x_explain_mat.shape
         n_MC_samples = MC_samples_mat.shape[0]
@@ -215,7 +217,7 @@ class GaussianImputer(ConditionalImputer):
             cov_SbarS_cov_SS_inv = cov_SbarS @ pinv(cov_SS)
             cond_cov_Sbar_given_S = cov_SbarSbar - cov_SbarS_cov_SS_inv @ cov_SSbar
 
-            # Ensure symmetry
+            # Symmetrie sicherstellen
             cond_cov_Sbar_given_S = (cond_cov_Sbar_given_S + cond_cov_Sbar_given_S.T) / 2
 
             chol_cov = cholesky(cond_cov_Sbar_given_S)
@@ -232,13 +234,13 @@ class GaussianImputer(ConditionalImputer):
         return result_cube
 
     def calc_empty_prediction(self) -> float:
-        """Estimates the model prediction when all features are missing.
+        """Schätzt die Modellvorhersage, wenn alle features fehlen.
 
-        This is done by evaluating the model over the background data
-        and averaging the predictions.
+        Dies geschieht durch Auswertung des Modells über die Hintergrunddaten
+        und Mittelung der Prediction.
 
         Returns:
-            float: The average prediction over the background data.
+            float: Die durchschnittliche Prediction über die Hintergrunddaten.
         """
         empty_predictions = self.predict(self.data)
         empty_prediction = float(np.mean(empty_predictions))

@@ -110,12 +110,16 @@ class TestImputers:
         x_test, _ = data_test
         categorical_features = [0]
 
-        with pytest.raises(ValueError, match="Gaussian Copula Imputer unterstützt keine kategorialen features."):
+        with pytest.raises(
+            ValueError, match="Gaussian Copula Imputer unterstützt keine kategorialen features."
+        ):
             GaussianCopulaImputer(
                 model=dummy_model, data=x_test, categorical_features=categorical_features
             )
 
-        with pytest.raises(ValueError, match="Gaussian Imputer unterstützt keine kategorialen features."):
+        with pytest.raises(
+            ValueError, match="Gaussian Imputer unterstützt keine kategorialen features."
+        ):
             GaussianImputer(
                 model=dummy_model, data=x_test, categorical_features=categorical_features
             )
@@ -138,7 +142,9 @@ class TestImputers:
     def test_quantile_type7_empty_array(self):
         """Test if exception are correctly handled."""
         dummy = GaussianCopulaImputer(model=lambda x: x, data=np.ones((5, 2)))
-        with pytest.raises(ValueError, match="Quantil kann mit leerem Array nicht berechnet werden."):
+        with pytest.raises(
+            ValueError, match="Quantil kann mit leerem Array nicht berechnet werden."
+        ):
             dummy.quantile_type7(np.array([]), probs=np.array([0.1, 0.5]))
 
     def test_quantile_type7_single_element(self):

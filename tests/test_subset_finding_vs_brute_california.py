@@ -13,7 +13,7 @@ import time
 
 from shapiq import Explainer
 from sklearn.datasets import fetch_california_housing
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 
 from shapiq_student.brute_force import brute_force_find_extrema
@@ -30,12 +30,12 @@ def test_subset_finding_vs_brute_california():
     y = y.loc[X.index]
     X_train, _, y_train, _ = train_test_split(X, y, test_size=0.2, random_state=1)
 
-    model = RandomForestRegressor().fit(X_train, y_train)
+    model = LinearRegression().fit(X_train, y_train)
 
     explainer = Explainer(
         model=model.predict,
         data=X_train.to_numpy(),
-        index="k-SII",
+        index="STII",
         max_order=MAX_ORDER,
     )
     x0 = X_train.to_numpy()[0]

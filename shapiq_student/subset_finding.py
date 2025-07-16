@@ -43,7 +43,7 @@ def subset_finding(interaction_values: InteractionValues, max_size: int) -> Inte
 
     if max_size == 0:
         e0 = interaction_values.dict_values.get((), 0.0)
-        return InteractionValues(
+        result = InteractionValues(
             values=np.array([e0]),
             index=interaction_values.index,
             max_order=0,
@@ -54,6 +54,11 @@ def subset_finding(interaction_values: InteractionValues, max_size: int) -> Inte
             estimation_budget=None,
             baseline_value=interaction_values.baseline_value,
         )
+        result._s_min = set()  # noqa: SLF001
+        result._s_max = set()  # noqa: SLF001
+        result._v_min = e0  # noqa: SLF001
+        result._v_max = e0  # noqa: SLF001
+        return result
 
     features = list(range(interaction_values.n_players))
     interactions = interaction_values.dict_values

@@ -33,11 +33,11 @@ def test_subset_finding_max_size_negative(dummy_iv):
 
 def test_subset_finding_max_size_too_large(dummy_iv):
     """Testet, ob max_size > n_players korrekt abgefangen wird."""
-    with pytest.raises(ValueError, match="cannot exceed"):
+    with pytest.raises(ValueError, match=r"max_size cannot exceed number of players."):
         subset_finding(dummy_iv, max_size=10)
 
 
 def test_subset_finding_max_size_wrong_type(dummy_iv):
     """Testet, ob falscher Typ für max_size zu TypeError führt."""
     with pytest.raises(TypeError, match="must be an integer"):
-        subset_finding(dummy_iv, max_size="gt")  # type: ignore[arg-type]
+        subset_finding(dummy_iv, max_size="gt")

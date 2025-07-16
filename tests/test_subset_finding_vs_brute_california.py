@@ -60,10 +60,10 @@ def test_subset_finding_vs_brute_california():
     beam_output = subset_finding(interaction_values=interaction_values, max_size=MAX_ORDER)
     end_beam = time.perf_counter()
     beam_time = end_beam - start_beam
-    s_min = beam_output._s_min  # noqa: SLF001
-    s_max = beam_output._s_max  # noqa: SLF001
-    val_min = beam_output._v_min  # noqa: SLF001
-    val_max = beam_output._v_max  # noqa: SLF001
+    s_min = beam_output.s_min
+    s_max = beam_output.s_max
+    val_min = beam_output.v_min
+    val_max = beam_output.v_max
 
     logging.info("Brute-Force max: %s → %.3f", set(S_max_b), val_max_b)
     logging.info("Brute-Force min: %s → %.3f", set(S_min_b), val_min_b)

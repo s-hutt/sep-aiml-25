@@ -202,131 +202,151 @@ class KNNExplainer(Explainer):
         )
 
     @staticmethod
-    def discretize_array(arr: np.ndarray, b: int = 3) -> np.ndarray:
+    def discretize_array(arr: np.ndarray, b: int = 3) -> np.ndarray:  # b=3 wie im Paper
         """Diskretisieren, um ähnliche Stufen zu erhalten."""
-        return np.round(arr * (2**b - 1)) / (2**b - 1)
+        return np.round(arr * (2**b - 1)) / (2**b - 1)  # fragen welche spezifische formel
 
-    def _compute_possible_sums(
-        self, weight_levels: np.ndarray, k: int
-    ) -> tuple[list[float], dict[float, int]]:
-        possible_sums = sorted(
-            {
-                sum(comb)
-                for r in range(k)
-                for comb in combinations_with_replacement(weight_levels, r)
-            }
-        )
-        return possible_sums, {s: idx for idx, s in enumerate(possible_sums)}
-
-    def _compute_f_i(
+    def compute_f_i(
         self,
         disc_weight: np.ndarray,
         z_i: int,
         m_star: int,
         k: int,
-        possible_sums: list[float],
-        sum_to_index: dict[float, int],
-        num_sums: int,
+        w_k: list[float],
+        s_to_index: dict[float, int],
     ) -> np.ndarray:
-        f_i = np.zeros((m_star, k, num_sums))
+        """."""
+        f = np.zeros((m_star, k - 1, len(w_k)))  # F=0 initsialisieren
         for m in range(m_star):
-            if m != z_i:
-                s_idx = sum_to_index[disc_weight[m]]
-                f_i[m, 0, s_idx] = 1
+            w_m = disc_weight[m]
+            for s_index, s in enumerate(w_k):
+                if s == w_m:  # Fragen
+                    f[m, 0, s_index] = 1  # 0 für ell=1, Basisfall
+        # Rekursion
+        for ell in range(2, k):
+            for m in range(ell, m_star):
+                if m == z_i:
+                    continue  # m ohne i
+                w_m = disc_weight[m]
+                for s_idx, s in enumerate(w_k):
+                    s_prev = s - w_m
+                    if s_prev in s_to_index:
+                        idx_prev = s_to_index[s_prev]
+                        f[m, ell - 1, s_idx] = np.sum(f[:m, ell - 2, idx_prev])
 
-        for level in range(1, k - 1):
-            f_prev = np.sum(f_i[0:level, level - 1, :], axis=0)
-            for m in range(m_star):
-                if m != z_i:
-                    w_m = disc_weight[m]
-                    for s in possible_sums:
-                        s_prev = s - w_m
-                        if s_prev in sum_to_index:
-                            f_i[m, level, sum_to_index[s]] = f_prev[sum_to_index[s_prev]]
-        return f_i
+        return f
 
-    def _compute_g_i(
+    def compute_g_i(
         self,
         disc_weight: np.ndarray,
         z_i: int,
         k: int,
         m_star: int,
         f_i: np.ndarray,
-        possible_sums: list[float],
-        sum_to_index: dict[float, int],
-        y_test: int,
+        w_k: list[float],
+        s_to_index: dict[float, int],
+        y_val: int,
     ) -> np.ndarray:
+        """."""
         g_i = np.zeros(k)
-        g_i[0] = 1.0 if disc_weight[z_i] < 0 else 0.0
-        for level in range(1, k):
-            g_level = 0.0
+
+        if disc_weight[z_i] < 0:
+            g_i[0] = 1.0
+
+        for ell in range(1, k):
+            total = 0.0
             for m in range(m_star):
-                if m != z_i:
-                    lower, upper = (
-                        (min(-disc_weight[z_i], 0), max(-disc_weight[z_i], 0))
-                        if self.y_train[m] == y_test
-                        else (min(0, -disc_weight[z_i]), max(0, -disc_weight[z_i]))
-                    )
-                    for s in possible_sums:
-                        if lower <= s <= upper and s in sum_to_index:
-                            g_level += f_i[m, level, sum_to_index[s]]
-            g_i[level] = g_level
+                if m == z_i:
+                    continue  # i nicht mitzählen
+                w_i = disc_weight[z_i]
+
+                # relevante s-Werte je nach Labelgleichheit
+                if self.y_train[m] == y_val:  # kippt ergebniss wenn innerhalb grenzen
+                    lower = min(-w_i, 0)  # statt if schleife schneller gelöst
+                    upper = max(-w_i, 0)
+                else:
+                    lower = min(0, -w_i)
+                    upper = max(0, -w_i)
+
+                # Summe über alle s in [lower, upper]
+                for s in w_k:
+                    if lower <= s <= upper and s in s_to_index:
+                        s_idx = s_to_index[s]
+                        total += f_i[m, ell, s_idx]
+
+            g_i[ell] = total
+
         return g_i
 
-    def weighted_knn_shapley(
-        self: KNNExplainer, x_test: np.ndarray, y_test: int
-    ) -> InteractionValues:
+    def compute_r_i(  # nicht optimierte version, theorem 8
+        self,
+        f_i: np.ndarray,
+        disc_weight: np.ndarray,
+        w_k: list[float],
+        s_to_index: dict[float, int],
+        z_i: int,
+        k: int,
+        m_star: int,
+    ) -> np.ndarray:
+        """."""
+        r_i = np.zeros(m_star)
+
+        for m in range(max(z_i + 1, k), m_star):  # punkte nach z_i
+            r_val = 0.0
+            w_i = disc_weight[z_i]
+            w_m = disc_weight[m]
+
+            lower = min(-w_i, -w_m)
+            upper = max(-w_i, -w_m)
+            relevant_s = [s for s in w_k if lower <= s <= upper]
+
+            for t in range(m):
+                for s in relevant_s:
+                    if s in s_to_index:
+                        idx_s = s_to_index[s]
+                        r_val += f_i[t, k - 1 - 1, idx_s]  # -1 weil Index bei 0 beginnt
+
+            r_i[m] = r_val
+        return r_i
+
+    def weighted_knn_shapley(self, x_test: np.ndarray, y_test: int) -> InteractionValues:
         """Berechnet gewichtete  KNN-Shapley-Werte für x_test."""
         k = self.k
         distances = np.linalg.norm(self.x_train - x_test, axis=1)
         sorted_indices = np.argsort(distances)
         sorted_distances = distances[sorted_indices]
 
-        w = np.exp(-self.alpha * sorted_distances**2)
+        w = np.exp(-self.alpha * sorted_distances**2)  # RBF-Kernel-Gewicht mit Skalierungsfaktor
         weight = (2 * (self.y_train[sorted_indices] == y_test) - 1) * w
         disc_weight = self.discretize_array(weight, b=3)
 
         n = len(self.x_train)
         shapley_values = np.zeros(n)
         m_star = self.m_star if self.m_star is not None else int(math.sqrt(n))
-        weight_levels = np.unique(disc_weight)
+        mstar_set = sorted_indices[:m_star]
+        weight_levels = np.unique(disc_weight)  # Gewichtsstufen nach diskretisieren
 
-        possible_sums, sum_to_index = self._compute_possible_sums(weight_levels, k)
-        num_sums = len(possible_sums)
+        # Berechne  W(k) für s <- W(k)
+        w_k = sorted(
+            {
+                round(sum(comb), 6)
+                for ell in range(1, k)  # Subsets der Länge 1 bis k - 1
+                for comb in combinations_with_replacement(weight_levels, ell)
+            }
+        )
+        # Mappe jede Summe auf einen eindeutigen Index (damit wir später in F damit arbeiten können)
+        s_to_index = {s: idx for idx, s in enumerate(w_k)}
 
-        for z_i in range(n):
-            xi_label = self.y_train[z_i]
-            f_i = self._compute_f_i(
-                disc_weight, z_i, m_star, k, possible_sums, sum_to_index, num_sums
-            )
+        for z_i in mstar_set:
+            f_i = self.compute_f_i(disc_weight, z_i, m_star, k, w_k, s_to_index)
 
-            r_0 = np.sum(np.delete(f_i[:, k - 2, :], z_i, axis=0), axis=0)
-            r_i_m = 0.0
-            for m in range(max(z_i + 1, k + 1), m_star):
-                if m != z_i:
-                    lower, upper = (
-                        (
-                            min(-disc_weight[z_i], -disc_weight[m]),
-                            max(-disc_weight[z_i], -disc_weight[m]),
-                        )
-                        if xi_label == y_test
-                        else (
-                            min(-disc_weight[m], -disc_weight[z_i]),
-                            max(-disc_weight[m], -disc_weight[z_i]),
-                        )
-                    )
-                    for s in possible_sums:
-                        if lower <= s <= upper and s in sum_to_index:
-                            r_i_m += r_0[sum_to_index[s]]
-                    r_0 += f_i[m, k - 2, :]
+            r_i = self.compute_r_i(f_i, disc_weight, w_k, s_to_index, z_i, k, m_star)
 
-            g_i = self._compute_g_i(
-                disc_weight, z_i, k, m_star, f_i, possible_sums, sum_to_index, y_test
-            )
+            g_i = self.compute_g_i(disc_weight, z_i, k, m_star, f_i, w_k, s_to_index, y_test)
 
             g_sum = sum(g_i[level] / math.comb(m_star - 1, level) for level in range(k))
             sign_u = 1 if weight[z_i] < 0 else 0
-            shapley_values[z_i] = sign_u * ((1 / m_star) * g_sum + r_i_m)
+            shapley_values[z_i] = sign_u * ((1 / m_star) * g_sum + r_i[z_i])
 
         return InteractionValues(
             values=shapley_values,

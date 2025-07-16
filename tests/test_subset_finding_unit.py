@@ -50,10 +50,10 @@ def test_subset_finding_with_order3_interactions():
 
     result = subset_finding(iv, max_size=2)
 
-    s_min = result._s_min  # noqa: SLF001
-    s_max = result._s_max  # noqa: SLF001
-    v_min = result._v_min  # noqa: SLF001
-    v_max = result._v_max  # noqa: SLF001
+    s_min = result.s_min
+    s_max = result.s_max
+    v_min = result.v_min
+    v_max = result.v_max
 
     logging.info("Subset (Order 2) max: %s → %.2f", sorted(s_max), v_max)
     logging.info("Subset (Order 2) min: %s → %.2f", sorted(s_min), v_min)

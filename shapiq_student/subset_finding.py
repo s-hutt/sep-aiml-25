@@ -1,6 +1,6 @@
 """Heuristischer Koalitionsfinder auf Basis der Beam-Search-Strategie.
 
-Die Funktion `subset_finding(...)` bestimmt approximativ die Koalition der Größe `l` (max_size),
+Die Funktion `subset_finding` bestimmt approximativ die Koalition der Größe `l` (max_size),
 die jeweils den höchsten (`S_max`) und niedrigsten (`S_min`) Interaktionswert gemäß einer
 gegebenen Interaktionsstruktur aufweist. Die Rückgabe erfolgt als `InteractionValues`-Objekt.
 
@@ -9,7 +9,7 @@ Besonderheiten:
 - Unterstützt beliebige Interaktionswerte bis zu einem maximalen
   Ordnungsterm (z.B. bis Dreifachinteraktionen).
 - Spezialfälle wie l=0, N=l, ungültige Werte oder Typfehler werden explizit behandelt.
-- In der Rückgabe sind zusätzlich Metadaten `_s_min`, `_s_max`, `_v_min`, `_v_max` hinterlegt,
+- In der Rückgabe sind zusätzlich die Attribute s_min, s_max, v_min, v_max hinterlegt,
   um auch außerhalb des reinen Werte-Dictionaries gezielt auf die Extremkoalitionen zugreifen
   zu können.
 
@@ -43,7 +43,7 @@ def subset_finding(interaction_values: InteractionValues, max_size: int) -> Inte
 
     if max_size == 0:
         e0 = interaction_values.dict_values.get((), 0.0)
-        return InteractionValues(
+        result = InteractionValues(
             values=np.array([e0]),
             index=interaction_values.index,
             max_order=0,
@@ -54,6 +54,11 @@ def subset_finding(interaction_values: InteractionValues, max_size: int) -> Inte
             estimation_budget=None,
             baseline_value=interaction_values.baseline_value,
         )
+        result.s_min = set()
+        result.s_max = set()
+        result.v_min = e0
+        result.v_max = e0
+        return result
 
     features = list(range(interaction_values.n_players))
     interactions = interaction_values.dict_values
@@ -99,9 +104,9 @@ def subset_finding(interaction_values: InteractionValues, max_size: int) -> Inte
         baseline_value=interaction_values.baseline_value,
     )
 
-    result._s_min = S_min  # noqa: SLF001
-    result._s_max = S_max  # noqa: SLF001
-    result._v_min = v_min  # noqa: SLF001
-    result._v_max = v_max  # noqa: SLF001
+    result.s_min = S_min
+    result.s_max = S_max
+    result.v_min = v_min
+    result.v_max = v_max
 
     return result

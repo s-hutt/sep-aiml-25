@@ -45,16 +45,17 @@ class KNNExplainer(Explainer):
         self.y_train = labels
         self.k = k
         self.tau = tau
-        self.alpha = alpha
+        self.alpha = alpha  # Exponent für Weighted-KNN-Shapley
         self.class_index = class_index
         self.m_star = m_star
 
         if method is None:
-            if hasattr(model, "radius") and model.radius is not None:
-                method = "threshold_knn_shapley"
-            elif hasattr(model, "weights") and model.weights == "distance":
+            # Automatische Erkennung für KNeighborsClassifier
+            if hasattr(model, "weights") and model.weights == "distance":
                 method = "weighted_knn_shapley"
             else:
+                # Standard KNN-Shapley als Default
+                # threshold_knn_shapley muss explizit gewählt werden
                 method = "KNN-Shapley"
 
         self.method = method
@@ -80,7 +81,7 @@ class KNNExplainer(Explainer):
                 ]  # selber generieren, Nutzer hat nichts angegeben
 
         if self.method == "KNN-Shapley":
-            return self.knn_shapley_standard(x, y_test)
+            return self.standard_knn_shapley(x, y_test)
 
         if self.method == "threshold_knn_shapley":
             return self.threshold_knn_shapley(x, y_test)
@@ -93,36 +94,45 @@ class KNNExplainer(Explainer):
         msg = "Method not supported"
         raise ValueError(msg)
 
-    def knn_shapley_standard(self, x_test: np.ndarray, y_test: np.ndarray) -> InteractionValues:
-        """Exakte Standard KNN-Shapley Berechnung nach Jia et al. (2019), Theorem 1."""
+    def standard_knn_shapley(self, x_test: np.ndarray, y_test: np.ndarray) -> InteractionValues:
+        """Exakte Standard KNN-Shapley Berechnung nach Jia et al. (2019), Theorem 1 - Formel (7)."""
         n = len(self.x_train)
         shapley_values = np.zeros(n)
 
+        # Distanzen berechnen und Indizes sortieren (aufsteigend nach Distanz)
         distances = np.linalg.norm(self.x_train - x_test, axis=1)
         sorted_indices: np.ndarray = np.argsort(distances).astype(int)
 
-        idx_last = int(
-            sorted_indices[-1]
-        )  # Rekursion beginnend ab letztem Punkt in sortierter Liste
+        # Initialisierung: letzter Punkt in sortierter Liste (i = N), entspricht alpha_N
+        idx_last = int(sorted_indices[-1])
         label_last = self.y_train[idx_last]
-        shapley_values[idx_last] = int(label_last == y_test) / self.k
+        shapley_values[idx_last] = (
+            int(label_last == y_test) / n
+        )  # gemäß Formel (6): s_{alpha_N} = 1/N * 1[y = y_test]
 
-        for i in range(n - 2, -1, -1):
+        # Rekursion rückwärts gemäß Formel (7)
+        for i in range(n - 2, -1, -1):  # i ∈ {N-2, ..., 0}
             idx_i = sorted_indices[i]
             idx_next = sorted_indices[i + 1]
 
             label_i = self.y_train[idx_i]
             label_next = self.y_train[idx_next]
 
-            # berechnet Marginalbeitrag
-            delta = (int(label_i == y_test) - int(label_next == y_test)) / min(self.k, i + 1)
+            i_pos = i + 1  # Theorem 1 ist 1-basiert, Python 0-basiert ⇒ i+1 ∈ {1, ..., N-1}
+
+            # Formel (7): s_{alpha_i} = s_{alpha_{i+1}} + (1[y_i = y_test] - 1[y_{i+1} = y_test]) / K * min(K, i+1)/ (i+1)
+            delta = (
+                (int(label_i == y_test) - int(label_next == y_test))
+                / self.k
+                * (min(self.k, i_pos) / i_pos)
+            )
             shapley_values[idx_i] = shapley_values[idx_next] + delta
 
         return InteractionValues(
             values=shapley_values,
             index="SV",
             max_order=1,
-            n_players=len(self.x_train),
+            n_players=n,
             min_order=1,
             baseline_value=0.0,
         )
@@ -220,7 +230,7 @@ class KNNExplainer(Explainer):
         f = np.zeros((m_star, k - 1, len(w_k)))  # F=0 initsialisieren
         # for m in range(m_star):
         for m in range(m_star):
-            if m == z_i:  # Zusätzlich
+            if m == z_i:
                 continue
 
             w_m = disc_weight[m]
@@ -321,7 +331,8 @@ class KNNExplainer(Explainer):
         """Berechnet gewichtete  KNN-Shapley-Werte für x_test."""
         k = self.k
         distances = np.linalg.norm(self.x_train - x_test, axis=1)
-        w = np.exp(-self.alpha * distances**2)
+
+        w = np.exp(-self.alpha * distances**2)  # RBF-Kernel-Gewicht mit Skalierungsfaktor
         weight = (2 * (self.y_train == y_test) - 1) * w
         sorted_indices = np.argsort(distances)
 
@@ -346,14 +357,15 @@ class KNNExplainer(Explainer):
 
         for j, z_i in enumerate(mstar_set):
             f_i = self.compute_f_i(disc_weight, j, m_star, k, w_k, s_to_index)
+
             r_i = self.compute_r_i(f_i, disc_weight, w_k, s_to_index, j, k, m_star)
+
             g_i = self.compute_g_i(disc_weight, j, k, m_star, f_i, w_k, s_to_index, y_test)
 
             sign_u = 1 if weight[z_i] > 0 else -1 if weight[z_i] < 0 else 0
             phi = 0.0
             for ell in range(k):
                 phi += g_i[ell] / (n * math.comb(n - 1, ell))
-
             for m in range(max(j + 1, k + 1), m_star):
                 denom = m * math.comb(m - 1, k)
                 if denom != 0:

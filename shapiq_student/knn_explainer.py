@@ -50,11 +50,12 @@ class KNNExplainer(Explainer):
         self.m_star = m_star
 
         if method is None:
-            if hasattr(model, "radius") and model.radius is not None:
-                method = "threshold_knn_shapley"
-            elif hasattr(model, "weights") and model.weights == "distance":
+            # Automatische Erkennung für KNeighborsClassifier
+            if hasattr(model, "weights") and model.weights == "distance":
                 method = "weighted_knn_shapley"
             else:
+                # Standard KNN-Shapley als Default
+                # threshold_knn_shapley muss explizit gewählt werden
                 method = "KNN-Shapley"
 
         self.method = method

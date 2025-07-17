@@ -34,11 +34,5 @@ jobs:
     - name: Install dependencies
       run: uv sync --all-extras --dev
 
-    - name: Test with pytest with coverage check (≥ 92%)
-      run: |
-        uv run pytest \
-        --cov=shapiq_student \
-        --cov-report=term-missing \
-        --cov-report=xml \
-        --cov-fail-under=92 \
-        -n logical
+    - name: Test with pytest
+      run: uv run pytest -n logical

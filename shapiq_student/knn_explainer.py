@@ -36,6 +36,7 @@ class KNNExplainer(Explainer):
         tau: float = -0.5,
         alpha: float = 1.0,
         class_index: int | None = None,
+        m_star: int | None = None,
     ) -> None:
         """Initialisiert den KNNExplainer mit Modell, Trainingsdaten und Parameter."""
         super().__init__(model, data=data, labels=labels, max_order=1)
@@ -46,6 +47,7 @@ class KNNExplainer(Explainer):
         self.tau = tau
         self.alpha = alpha
         self.class_index = class_index
+        self.m_star = m_star
 
         if method is None:
             if hasattr(model, "radius") and model.radius is not None:
@@ -125,17 +127,18 @@ class KNNExplainer(Explainer):
             baseline_value=0.0,
         )
 
-    def function_a1(self, z_i: int, c_tau: int, c_tau_plus: int, x_test_label: int) -> float:
+    def function_a1(self, z_i: int, c_tau: int, c_tau_plus: int, y_test: int) -> float:
         """Gibt an, ob z_i bei der Vorhersage hilft oder stört - abhängig vom Label."""
-        if self.y_train[z_i] == x_test_label:
+        if self.y_train[z_i] == y_test:
             return (1 / c_tau) - (c_tau_plus) / (c_tau * (c_tau - 1))
 
         return -(c_tau_plus) / (c_tau * (c_tau - 1))
 
-    def function_a2(self, c_tau: int, c: int) -> float:
+    @staticmethod
+    def function_a2(c_tau: int, c: int) -> float:
         """Schätzt, wie oft zᵢ statistisch nötig ist, um in zufälligen Subsets genügend Nachbarn im Radius zu erreichen."""
         # Wie stark verändert sich die Nachbarschaft, wenn wir zᵢ zu random Subsets hinzufügen?
-        # Wenn zᵢ oft gebraucht wird, um ein gutes Subset zu bilden ⇒ großer A₂-Wert -> analytischh statt Monte carlo
+        # Wenn zᵢ oft gebraucht wird, um ein gutes Subset zu bilden ⇒ großer A₂-Wert -> analytisch statt Monte carlo
 
         a2 = 0.0
         for k in range(c + 1):
@@ -143,13 +146,13 @@ class KNNExplainer(Explainer):
 
         return a2 - 1
 
-    def correction_term(self, z_i: int, c_tau: int, x_test_label: int) -> float:
+    def correction_term(self, z_i: int, c_tau: int, y_test: int) -> float:
         """Liefert sinnvollen Shapleywert , auch wenn Nachbarschaft zu klein ist und gleicht somit bei >2 auch den Shapley-Wert von zᵢ aus, um seinen direkten Einfluss unabhängig von anderen zu berücksichtigen."""
         if c_tau == 0:
             return 0.0
 
         C = len(np.unique(self.y_train))  # Klassen
-        indicator = int(self.y_train[z_i] == x_test_label)
+        indicator = int(self.y_train[z_i] == y_test)
         return (indicator - 1 / C) / c_tau
 
     def threshold_knn_shapley(self, x_test: np.ndarray, y_test: int) -> InteractionValues:
@@ -169,9 +172,7 @@ class KNNExplainer(Explainer):
         # effizienter C Vektor -> Zuerst CD dann für jeden Trainingspunkt : CD-zi (immer passend 1 abziehen)
         c_all = len(self.x_train)  # alle Punkte mit z_i
         c_tau_all = len(neighbours)  # Alle Nachbarn inklusive z_i
-        c_tau_plus_all = np.sum(
-            self.y_train[neighbours] == y_test
-        )  # ctauall, die gleiches Label wie xtest haben
+        c_tau_plus_all = np.sum(self.y_train[neighbours] == y_test)
 
         for z_i in range(n):
             if z_i not in neighbours:
@@ -188,7 +189,7 @@ class KNNExplainer(Explainer):
                         c_tau, c
                     ) + self.correction_term(z_i, c_tau, y_test)
                 else:
-                    shapley = self.correction_term(z_i, c_tau, y_test)
+                    shapley = self.correction_term(z_i, c_tau, y_test)  # Zu wenige Nachbarn
 
                 shapley_values[z_i] = shapley
 
@@ -217,7 +218,11 @@ class KNNExplainer(Explainer):
     ) -> np.ndarray:
         """."""
         f = np.zeros((m_star, k - 1, len(w_k)))  # F=0 initsialisieren
+        # for m in range(m_star):
         for m in range(m_star):
+            if m == z_i:  # Zusätzlich
+                continue
+
             w_m = disc_weight[m]
             for s_index, s in enumerate(w_k):
                 if s == w_m:  # Fragen
@@ -272,7 +277,7 @@ class KNNExplainer(Explainer):
                 for s in w_k:
                     if lower <= s <= upper and s in s_to_index:
                         s_idx = s_to_index[s]
-                        total += f_i[m, ell, s_idx]
+                        total += f_i[m, ell - 1, s_idx]
 
             g_i[ell] = total
 
@@ -301,6 +306,9 @@ class KNNExplainer(Explainer):
             relevant_s = [s for s in w_k if lower <= s <= upper]
 
             for t in range(m):
+                if t == z_i:
+                    continue
+
                 for s in relevant_s:
                     if s in s_to_index:
                         idx_s = s_to_index[s]
@@ -313,11 +321,10 @@ class KNNExplainer(Explainer):
         """Berechnet gewichtete  KNN-Shapley-Werte für x_test."""
         k = self.k
         distances = np.linalg.norm(self.x_train - x_test, axis=1)
+        w = np.exp(-self.alpha * distances**2)
+        weight = (2 * (self.y_train == y_test) - 1) * w
         sorted_indices = np.argsort(distances)
-        sorted_distances = distances[sorted_indices]
 
-        w = np.exp(-self.alpha * sorted_distances**2)  # RBF-Kernel-Gewicht mit Skalierungsfaktor
-        weight = (2 * (self.y_train[sorted_indices] == y_test) - 1) * w
         disc_weight = self.discretize_array(weight, b=3)
 
         n = len(self.x_train)
@@ -337,20 +344,26 @@ class KNNExplainer(Explainer):
         # Mappe jede Summe auf einen eindeutigen Index (damit wir später in F damit arbeiten können)
         s_to_index = {s: idx for idx, s in enumerate(w_k)}
 
-        for z_i in mstar_set:
-            f_i = self.compute_f_i(disc_weight, z_i, m_star, k, w_k, s_to_index)
+        for j, z_i in enumerate(mstar_set):
+            f_i = self.compute_f_i(disc_weight, j, m_star, k, w_k, s_to_index)
+            r_i = self.compute_r_i(f_i, disc_weight, w_k, s_to_index, j, k, m_star)
+            g_i = self.compute_g_i(disc_weight, j, k, m_star, f_i, w_k, s_to_index, y_test)
 
-            r_i = self.compute_r_i(f_i, disc_weight, w_k, s_to_index, z_i, k, m_star)
+            sign_u = 1 if weight[z_i] > 0 else -1 if weight[z_i] < 0 else 0
+            phi = 0.0
+            for ell in range(k):
+                phi += g_i[ell] / (n * math.comb(n - 1, ell))
 
-            g_i = self.compute_g_i(disc_weight, z_i, k, m_star, f_i, w_k, s_to_index, y_test)
+            for m in range(max(j + 1, k + 1), m_star):
+                denom = m * math.comb(m - 1, k)
+                if denom != 0:
+                    phi += r_i[m] / denom
 
-            g_sum = sum(g_i[level] / math.comb(m_star - 1, level) for level in range(k))
-            sign_u = 1 if weight[z_i] < 0 else 0
-            shapley_values[z_i] = sign_u * ((1 / m_star) * g_sum + r_i[z_i])
+            shapley_values[z_i] = sign_u * phi
 
         return InteractionValues(
             values=shapley_values,
-            index=None,
+            index="SV",
             max_order=1,
             n_players=len(self.x_train),
             min_order=1,

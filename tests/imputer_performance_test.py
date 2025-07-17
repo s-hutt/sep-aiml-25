@@ -297,6 +297,4 @@ class TestImputersPerformance:
 
         x_explain_gauss_copula = X_test[100]
 
-        _ = explainer_gauss_copula.explain(
-            x_explain_gauss_copula, random_state=0
-        )
+        _ = explainer_gauss_copula.explain(x_explain_gauss_copula, random_state=0)

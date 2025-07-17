@@ -68,10 +68,6 @@ class GaussianCopulaImputer(ConditionalImputer):
             Die zu erklärenden Instanzen. Falls nicht bei der Initialisierung angegeben, kann später gesetzt werden.
         sample_size : int, default=10
             Anzahl der Monte-Carlo-samples, die pro coalition generiert werden.
-        conditional_budget : int, default=128
-            Reserviert für zukünftige Nutzung oder budget-basierte Strategien (aktuell nicht verwendet).
-        conditional_threshold : float, default=0.05
-            Reserviert für zukünftige Nutzung, z.B. feature pruning basierend auf Contribution (aktuell nicht verwendet).
         normalize : bool, default=True
             Ob die Ausgaben mit der leeren Vorhersage normalisiert werden sollen.
         categorical_features : list[int] oder None, optional

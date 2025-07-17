@@ -277,13 +277,11 @@ class TestImputersPerformance:
             # attributes of the imputer
             imputer=gaussian_imputer,
             sample_size=100,
-            conditional_budget=32,
-            conditional_threshold=0.04,
         )
 
         x_explain_gauss = X_test[100]
 
-        _ = explainer_gauss.explain(x_explain_gauss, budget=2**n_features, random_state=0)
+        _ = explainer_gauss.explain(x_explain_gauss, random_state=0)
 
         # Now testing the Copula imputers
         explainer_gauss_copula = shapiq.TabularExplainer(
@@ -295,12 +293,10 @@ class TestImputersPerformance:
             # attributes of the imputer
             imputer=gaussian_copula_imputer,
             sample_size=100,
-            conditional_budget=32,
-            conditional_threshold=0.04,
         )
 
         x_explain_gauss_copula = X_test[100]
 
         _ = explainer_gauss_copula.explain(
-            x_explain_gauss_copula, budget=2**n_features, random_state=0
+            x_explain_gauss_copula, random_state=0
         )

@@ -46,8 +46,6 @@ class GaussianImputer(ConditionalImputer):
         x: np.ndarray | None = None,
         *,
         sample_size: int = 10,
-        conditional_budget: int = 128,
-        conditional_threshold: float = 0.05,
         normalize: bool = True,
         categorical_features: list[int] | None = None,
         method: Literal["gaussConditional"] = "gaussConditional",
@@ -84,8 +82,6 @@ class GaussianImputer(ConditionalImputer):
             raise ValueError(msg)
 
         self.method = method
-        self.conditional_budget = conditional_budget
-        self.conditional_threshold = conditional_threshold
 
         # Leeren Wert und Normalisierung setzen
         self.empty_prediction: float = self.calc_empty_prediction()

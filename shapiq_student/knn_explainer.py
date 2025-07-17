@@ -7,9 +7,8 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from sklearn.neighbors import KNeighborsClassifier
 
-from collections import defaultdict
+from itertools import combinations_with_replacement
 import math
-from math import comb
 
 import numpy as np
 from shapiq.explainer import Explainer
@@ -37,8 +36,7 @@ class KNNExplainer(Explainer):
         tau: float = -0.5,
         alpha: float = 1.0,
         class_index: int | None = None,
-        M_star: int | None = None,
-        bits: int = 3,
+        m_star: int | None = None,
     ) -> None:
         """Initialisiert den KNNExplainer mit Modell, Trainingsdaten und Parameter."""
         super().__init__(model, data=data, labels=labels, max_order=1)
@@ -49,8 +47,7 @@ class KNNExplainer(Explainer):
         self.tau = tau
         self.alpha = alpha  # Exponent für Weighted-KNN-Shapley
         self.class_index = class_index
-        self.M_star = M_star
-        self.bits = bits
+        self.m_star = m_star
 
         if method is None:
             if hasattr(model, "radius") and model.radius is not None:
@@ -86,7 +83,7 @@ class KNNExplainer(Explainer):
             return self.standard_knn_shapley(x, y_test)
 
         if self.method == "threshold_knn_shapley":
-            return self.threshold_knn_shapley(x, y_test)  # y_test nicht nötig, macht predict intern
+            return self.threshold_knn_shapley(x, y_test)
 
         if self.method == "weighted_knn_shapley":
             return self.weighted_knn_shapley(
@@ -215,166 +212,164 @@ class KNNExplainer(Explainer):
             baseline_value=0.0,
         )
 
-    def compute_discretized_weights(self, dists: np.ndarray, W: int) -> np.ndarray:
-        """Berechnet diskretisierte Gewichte basierend auf normierten Distanzen."""
-        max_d, min_d = dists[-1], dists[0]
-        norm_weights = (max_d - dists) / (max_d - min_d + 1e-8)
-        bins = np.linspace(0, 1, W)
-        return bins[np.digitize(norm_weights, bins) - 1]
+    @staticmethod
+    def discretize_array(arr: np.ndarray, b: int = 3) -> np.ndarray:  # b=3 wie im Paper
+        """Diskretisieren, um ähnliche Stufen zu erhalten."""
+        return np.round(arr * (2**b - 1)) / (2**b - 1)  # fragen welche spezifische formel
 
-    # F initialisieren & berechnen (Theorem 17 - rekursive Zählung der gewichteten Subsets)
-    # ruff: noqa: C901
-    def compute_f_table(
-        self, i: int, M_star: int, K: int, signed_weights: np.ndarray, W_vals: np.ndarray, N: int
-    ) -> dict:
-        """Berechnet die F-Tabelle gemäß Theorem 17 aus Wang et al. (2024).
-
-        Die Funktion zählt rekursiv die Anzahl gewichteter Subsets mit Gewichtssummen s,
-        unter Ausschluss des aktuellen Punktes i. Für ell ≥ K wird zusätzlich der Faktor
-        binomial(N-m, ell-K) berücksichtigt (siehe Theorem 17).
-        """
-        F = defaultdict(int)
-        for m in range(M_star):
-            if m == i:
+    def compute_f_i(
+        self,
+        disc_weight: np.ndarray,
+        z_i: int,
+        m_star: int,
+        k: int,
+        w_k: list[float],
+        s_to_index: dict[float, int],
+    ) -> np.ndarray:
+        """."""
+        f = np.zeros((m_star, k - 1, len(w_k)))  # F=0 initsialisieren
+        for m in range(m_star):
+            if m == z_i:
                 continue
-            wm = signed_weights[m]
-            F[(m, 1, round(wm, 6))] = 1
 
-        for ell in range(2, K):
-            for m in range(M_star):
-                if m == i:
-                    continue
-                wm = signed_weights[m]
-                for s in W_vals:
-                    total = 0
-                    for t in range(m):
-                        s_prev = round(s - wm, 6)
-                        total += F.get((t, ell - 1, s_prev), 0)
-                    F[(m, ell, s)] = total
+            w_m = disc_weight[m]
+            for s_index, s in enumerate(w_k):
+                if s == w_m:  # Fragen
+                    f[m, 0, s_index] = 1  # 0 für ell=1, Basisfall
+        # Rekursion
+        for ell in range(2, k):
+            for m in range(ell, m_star):
+                if m == z_i:
+                    continue  # m ohne i
+                w_m = disc_weight[m]
+                for s_idx, s in enumerate(w_k):
+                    s_prev = s - w_m
+                    if s_prev in s_to_index:
+                        idx_prev = s_to_index[s_prev]
+                        f[m, ell - 1, s_idx] = np.sum(f[:m, ell - 2, idx_prev])
 
-        # Für ell ≥ K trägt nur m > i bei (Theorem 17: F[m, ell, s] = 0 für m < i)
-        for ell in range(K, N):
-            for m in range(i + 1, M_star):
-                for s in W_vals:
-                    total = 0
-                    for t in range(m):
-                        total += F.get((t, K - 1, s), 0)
-                    F[(m, ell, s)] = total * comb(N - m, ell - K)
+        return f
 
-        return F
-
-    # R berechnen gemäß Definition 10 (basierend auf Struktur aus Theorem 8 + Bedingung aus Theorem 2)
-    def compute_r_table(
+    def compute_g_i(
         self,
-        i: int,
-        M_star: int,
-        K: int,
-        signed_weights: np.ndarray,
-        y_train: np.ndarray,
-        y_test: int,
-        F: dict,
-        W_vals: np.ndarray,
-    ) -> dict[int, int]:
-        """Berechnet die R-Tabelle gemäß Definition 10 aus Wang et al. (2024).
+        disc_weight: np.ndarray,
+        z_i: int,
+        k: int,
+        m_star: int,
+        f_i: np.ndarray,
+        w_k: list[float],
+        s_to_index: dict[float, int],
+        y_val: int,
+    ) -> np.ndarray:
+        """."""
+        g_i = np.zeros(k)
 
-        Die Funktion akkumuliert für jedes m > i alle Subsets mit K gewichteten Nachbarn,
-        deren gewichtete Summe in einen bestimmten Bereich fällt. Dabei wird nach Labelgleichheit
-        differenziert. Die Zählung basiert auf F und berücksichtigt die Fallunterscheidung in Theorem 8.
-        """
-        R = defaultdict(int)
-        R_accum = defaultdict(int)
-        for s in W_vals:
-            R_accum[s] = sum(F.get((t, K - 1, s), 0) for t in range(min(i, M_star)))
+        if disc_weight[z_i] < 0:
+            g_i[0] = 1.0
 
-        for m in range(max(i + 1, K + 1), M_star + 1):
-            wi = signed_weights[i]
-            R_val = 0
-            for s in W_vals:
-                if (y_train[i] == y_test and -wi <= s < 0) or (
-                    y_train[i] != y_test and 0 <= s < -wi
-                ):
-                    R_val += R_accum[s]
-            R[m] = R_val
-            for s in W_vals:
-                R_accum[s] += F.get((m, K - 1, s), 0)
-        return R
+        for ell in range(1, k):
+            total = 0.0
+            for m in range(m_star):
+                if m == z_i:
+                    continue  # i nicht mitzählen
+                w_i = disc_weight[z_i]
 
-    # G tilde berechnen (Definition 10 - über F, gemäß Theorem 6)
-    def compute_g_tilde(
+                # relevante s-Werte je nach Labelgleichheit
+                if self.y_train[m] == y_val:  # kippt ergebniss wenn innerhalb grenzen
+                    lower = min(-w_i, 0)  # statt if schleife schneller gelöst
+                    upper = max(-w_i, 0)
+                else:
+                    lower = min(0, -w_i)
+                    upper = max(0, -w_i)
+
+                # Summe über alle s in [lower, upper]
+                for s in w_k:
+                    if lower <= s <= upper and s in s_to_index:
+                        s_idx = s_to_index[s]
+                        total += f_i[m, ell - 1, s_idx]
+
+            g_i[ell] = total
+
+        return g_i
+
+    def compute_r_i(  # nicht optimierte version, theorem 8
         self,
-        i: int,
-        M_star: int,
-        K: int,
-        signed_weights: np.ndarray,
-        y_train: np.ndarray,
-        y_test: int,
-        F: dict,
-        W_vals: np.ndarray,
-    ) -> dict[int, int]:
-        """Berechnet die G̃-Tabelle gemäß Definition 10 und Theorem 6 aus Wang et al. (2024).
+        f_i: np.ndarray,
+        disc_weight: np.ndarray,
+        w_k: list[float],
+        s_to_index: dict[float, int],
+        z_i: int,
+        k: int,
+        m_star: int,
+    ) -> np.ndarray:
+        """."""
+        r_i = np.zeros(m_star)
 
-        Für jede l < K wird über alle Trainingspunkte m ≠ i die Anzahl gültiger gewichteter Subsets summiert,
-        deren Gewichtssumme innerhalb eines zulässigen Intervalls liegt. Dabei wird über F gezählt
-        und abhängig vom Label von zᵢ differenziert (positiv oder negativ gewichtete Beiträge).
-        """
-        G_tilde = defaultdict(int)
-        for ell in range(K):
-            G_val = 0
-            for m in range(M_star):
-                if m == i:
+        for m in range(max(z_i + 1, k), m_star):  # punkte nach z_i
+            r_val = 0.0
+            w_i = disc_weight[z_i]
+            w_m = disc_weight[m]
+
+            lower = min(-w_i, -w_m)
+            upper = max(-w_i, -w_m)
+            relevant_s = [s for s in w_k if lower <= s <= upper]
+
+            for t in range(m):
+                if t == z_i:
                     continue
-                wi = signed_weights[i]
-                for s_raw in W_vals:
-                    s = round(s_raw, 6)
-                    if (y_train[i] == y_test and -wi <= s < 0) or (
-                        y_train[i] != y_test and 0 <= s < -wi
-                    ):
-                        G_val += F.get((m, ell, s), 0)
-            G_tilde[ell] = G_val
-        return G_tilde
 
-    # SV berechnen gemäß Definition 10 (strukturähnlich zu Theorem 8, aber auf M* begrenzt)
-    def weighted_knn_shapley(self, x: np.ndarray, y_test: int) -> InteractionValues:
-        """Berechnet approximative Shapley-Werte gemäß Definition 10 (Wang et al., 2024).
+                for s in relevant_s:
+                    if s in s_to_index:
+                        idx_s = s_to_index[s]
+                        r_val += f_i[t, k - 1 - 1, idx_s]  # -1 weil Index bei 0 beginnt
 
-        Die Methode verwendet gewichtete Nachbarn mit diskretisierten Distanzen und zählt
-        über rekursive Tabellen F, R und G̃ den Beitrag jedes Trainingspunkts zum Vorhersageergebnis.
-        M* legt fest, wie viele Punkte in der Approximation berücksichtigt werden (standardmäßig √N).
-        Die Rückgabe erfolgt als InteractionValues-kompatibler Vektor für die Integration in shapiq.
-        """
-        x_train = self.x_train
-        y_train = self.y_train
-        K = self.k
-        N = len(x_train)
-        M_star = (
-            self.M_star if hasattr(self, "M_star") and self.M_star is not None else int(np.sqrt(N))
+            r_i[m] = r_val
+        return r_i
+
+    def weighted_knn_shapley(self, x_test: np.ndarray, y_test: int) -> InteractionValues:
+        """Berechnet gewichtete  KNN-Shapley-Werte für x_test."""
+        k = self.k
+        distances = np.linalg.norm(self.x_train - x_test, axis=1)
+        w = np.exp(-self.alpha * distances**2)  # RBF-Kernel-Gewicht mit Skalierungsfaktor
+        weight = (2 * (self.y_train == y_test) - 1) * w
+        sorted_indices = np.argsort(distances)
+
+        disc_weight = self.discretize_array(weight, b=3)
+
+        n = len(self.x_train)
+        shapley_values = np.zeros(n)
+        m_star = self.m_star if self.m_star is not None else int(math.sqrt(n))
+        mstar_set = sorted_indices[:m_star]
+        weight_levels = np.unique(disc_weight)  # Gewichtsstufen nach diskretisieren
+
+        # Berechne  W(k) für s <- W(k)
+        w_k = sorted(
+            {
+                round(sum(comb), 6)
+                for ell in range(1, k)  # Subsets der Länge 1 bis k - 1
+                for comb in combinations_with_replacement(weight_levels, ell)
+            }
         )
+        # Mappe jede Summe auf einen eindeutigen Index (damit wir später in F damit arbeiten können)
+        s_to_index = {s: idx for idx, s in enumerate(w_k)}
 
-        bits = self.bits if hasattr(self, "bits") else 3
-        W = 2**bits
-        W_vals = np.round(np.linspace(0, 1, W), 6)
+        for j, z_i in enumerate(mstar_set):
+            f_i = self.compute_f_i(disc_weight, j, m_star, k, w_k, s_to_index)
 
-        dists = np.linalg.norm(x_train - x, axis=1)
-        sorted_idx = np.argsort(dists)
-        dists = dists[sorted_idx]
+            r_i = self.compute_r_i(f_i, disc_weight, w_k, s_to_index, j, k, m_star)
 
-        weights = self.compute_discretized_weights(dists, W)
-        signed_weights = np.where(y_train == y_test, weights, -weights)
+            g_i = self.compute_g_i(disc_weight, j, k, m_star, f_i, w_k, s_to_index, y_test)
 
-        shapley_values = np.zeros(N)
-
-        for i in range(N):
-            F = self.compute_f_table(i, M_star, K, signed_weights, W_vals, N)
-            R = self.compute_r_table(i, M_star, K, signed_weights, y_train, y_test, F, W_vals)
-            G_tilde = self.compute_g_tilde(i, M_star, K, signed_weights, y_train, y_test, F, W_vals)
-
-            sign = 1 if weights[i] > 0 else -1 if weights[i] < 0 else 0
+            sign_u = 1 if weight[z_i] > 0 else -1 if weight[z_i] < 0 else 0
             phi = 0.0
-            for ell in range(K):
-                phi += G_tilde[ell] / (N * comb(N - 1, ell))
-            for m in range(max(i + 1, K + 1), M_star + 1):
-                phi += R[m] / (m * comb(m - 1, K))
-            shapley_values[i] = sign * phi
+            for ell in range(k):
+                phi += g_i[ell] / (n * math.comb(n - 1, ell))
+            for m in range(max(j + 1, k + 1), m_star):
+                denom = m * math.comb(m - 1, k)
+                if denom != 0:
+                    phi += r_i[m] / denom
+
+            shapley_values[z_i] = sign_u * phi
 
         return InteractionValues(
             values=shapley_values,

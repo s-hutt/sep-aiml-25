@@ -3,6 +3,12 @@ This changelog is to be updated with each important change to the codebase.
 
 ## Development
 
+## 0.4.4 (2025-07-17)
+
+### Fix
+
+- **ci**: make coverage test a sperate workflow. (#35)
+
 ## 0.4.3 (2025-07-15)
 
 ### Fix

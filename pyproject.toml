@@ -26,6 +26,7 @@ test = [
     "pytest-cov>=6.0.0",
     "pytest-xdist>=3.6.1",
     "coverage",
+    "xgboost",
 ]
 lint = [
     "ruff>=0.11.2",
@@ -60,7 +61,10 @@ dev = [
 output-format = "full"
 line-length = 100
 target-version = "py310"
-src = ["tests", "shapiq_student", "docs", "tests_grading"]
+src = ["tests", "shapiq_student", "tests_grading"]
+exclude = [
+    "docs/source"
+]
 [tool.ruff.lint]
 select = [
     "ALL"
@@ -120,10 +124,6 @@ exclude = [
     "INP",  # inports can be different
     "N",  # type hints are excludes in tests
 ]
-"docs/source/conf.py" = [
-    "INP001", # conf.py doesn't belong to a python package
-    "A001", # `copyright` is a keyword in sphinx, cannot be renamed
-]
 [tool.ruff.lint.pydocstyle]
 convention = "google"
 [tool.ruff.lint.isort]
@@ -156,7 +156,7 @@ strict_optional = true
 # commitizen stuff
 [tool.commitizen]
 name = "cz_conventional_commits"
-version = "0.3.3"
+version = "0.4.4"
 version_files = ["shapiq_student/__init__.py"]
 update_changelog_on_bump = true
 changelog_file = "CHANGELOG.md"

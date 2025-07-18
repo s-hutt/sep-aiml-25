@@ -223,8 +223,6 @@
     "    # attributes of the imputer\n",
     "    imputer=gaussian_imputer,\n",
     "    sample_size=100,\n",
-    "    conditional_budget=32,\n",
-    "    conditional_threshold=0.04,\n",
     ")"
    ],
    "id": "e86945431d4cd786",
@@ -462,8 +460,6 @@
     "    # attributes of the imputer\n",
     "    imputer=gaussian_copula_imputer,\n",
     "    sample_size=100,\n",
-    "    conditional_budget=32,\n",
-    "    conditional_threshold=0.04,\n",
     ")"
    ],
    "id": "8f0a7007dcc60456",

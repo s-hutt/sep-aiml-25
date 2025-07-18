@@ -3,6 +3,12 @@ This changelog is to be updated with each important change to the codebase.
 
 ## Development
 
+## 0.4.5 (2025-07-18)
+
+### Fix
+
+- **imputer**: Remove the unnecessary attibutes that only meaningful for the generative conditional imputer. (#37)
+
 ## 0.4.4 (2025-07-17)
 
 ### Fix

@@ -277,8 +277,6 @@ class TestImputersPerformance:
             # attributes of the imputer
             imputer=gaussian_imputer,
             sample_size=100,
-            conditional_budget=32,
-            conditional_threshold=0.04,
         )
 
         x_explain_gauss = X_test[100]
@@ -295,8 +293,6 @@ class TestImputersPerformance:
             # attributes of the imputer
             imputer=gaussian_copula_imputer,
             sample_size=100,
-            conditional_budget=32,
-            conditional_threshold=0.04,
         )
 
         x_explain_gauss_copula = X_test[100]

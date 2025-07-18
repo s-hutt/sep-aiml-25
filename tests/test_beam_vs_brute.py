@@ -16,7 +16,7 @@ from shapiq.datasets import load_bike_sharing
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
 
-from shapiq_student.evaluation import compare_methods_robust
+from shapiq_student.evaluation_utils import compare_methods_robust
 
 
 def test_beam_vs_brute_on_bike_sharing():

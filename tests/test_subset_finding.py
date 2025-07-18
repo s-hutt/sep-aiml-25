@@ -6,7 +6,7 @@ import logging
 
 import pytest
 
-from shapiq_student.evaluation import compare_methods_robust, find_best_and_worst_subsets
+from shapiq_student.evaluation_utils import compare_methods_robust, find_best_and_worst_subsets
 
 logger = logging.getLogger(__name__)
 

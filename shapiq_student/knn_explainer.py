@@ -34,7 +34,6 @@ class KNNExplainer(Explainer):
         method: str | None = None,  # Basisexplainer falls nichts angegeben wird
         k: int = 5,
         tau: float = -0.5,
-        alpha: float = 1.0,
         class_index: int | None = None,
         m_star: int | None = None,
     ) -> None:
@@ -45,17 +44,16 @@ class KNNExplainer(Explainer):
         self.y_train = labels
         self.k = k
         self.tau = tau
-        self.alpha = alpha  # Exponent für Weighted-KNN-Shapley
         self.class_index = class_index
         self.m_star = m_star
 
         if method is None:
             # Automatische Erkennung für KNeighborsClassifier
-            if hasattr(model, "weights") and model.weights == "distance":
+            if hasattr(model, "radius") and model.radius is not None:
+                method = "threshold_knn_shapley"
+            elif hasattr(model, "weights") and model.weights == "distance":
                 method = "weighted_knn_shapley"
             else:
-                # Standard KNN-Shapley als Default
-                # threshold_knn_shapley muss explizit gewählt werden
                 method = "KNN-Shapley"
 
         self.method = method
@@ -71,14 +69,28 @@ class KNNExplainer(Explainer):
             raise ValueError(msg)
 
     def explain_function(self, x: np.ndarray, y_test: int | None = None) -> InteractionValues:
-        """Je nach ausgewählter Methode wird passender Explainer aufgerufen."""
+        """Berechnet Shapley-Werte mittels der gewählten Methode.
+
+        Führt Input-Validierung durch und ruft die entsprechende Methode auf.
+        Bei y_test=None wird automatisch vorhergesagt oder class_index verwendet.
+        """
+        # Input validation
+        if not isinstance(x, np.ndarray):
+            x = np.array(x)
+
+        single_sample = 1
+        TWO_D = 2
+        BATCH_ONE = 1
+        if x.ndim == single_sample:
+            x = x.reshape(1, -1)
+        elif x.ndim == TWO_D and x.shape[0] == BATCH_ONE:
+            x = x.flatten()
+
         if y_test is None:
             if self.class_index is not None:
                 y_test = self.class_index
             else:
-                y_test = self.model.predict(x.reshape(1, -1))[
-                    0
-                ]  # selber generieren, Nutzer hat nichts angegeben
+                y_test = self.model.predict(x.reshape(1, -1))[0]
 
         if self.method == "KNN-Shapley":
             return self.standard_knn_shapley(x, y_test)
@@ -87,15 +99,17 @@ class KNNExplainer(Explainer):
             return self.threshold_knn_shapley(x, y_test)
 
         if self.method == "weighted_knn_shapley":
-            return self.weighted_knn_shapley(
-                x, y_test
-            )  # evtl später auch optional y_test übergeben
+            return self.weighted_knn_shapley(x, y_test)
 
         msg = "Method not supported"
         raise ValueError(msg)
 
-    def standard_knn_shapley(self, x_test: np.ndarray, y_test: np.ndarray) -> InteractionValues:
-        """Exakte Standard KNN-Shapley Berechnung nach Jia et al. (2019), Theorem 1 - Formel (7)."""
+    def standard_knn_shapley(self, x_test: np.ndarray, y_test: int) -> InteractionValues:
+        """Berechnet exakte KNN-Shapley-Werte nach Jia et al. (2019) Theorem 1.
+
+        Implementiert die rekursive Formel (7) für effiziente Shapley-Berechnung
+        basierend auf Distanz-sortierter Reihenfolge der Trainingspunkte.
+        """
         n = len(self.x_train)
         shapley_values = np.zeros(n)
 
@@ -138,7 +152,11 @@ class KNNExplainer(Explainer):
         )
 
     def function_a1(self, z_i: int, c_tau: int, c_tau_plus: int, y_test: int) -> float:
-        """Gibt an, ob z_i bei der Vorhersage hilft oder stört - abhängig vom Label."""
+        """Berechnet A₁-Term aus Theorem 13 (Wang et al. 2024) für Threshold KNN-Shapley.
+
+        Misst direkten Einfluss von z_i auf Vorhersagequalität basierend auf
+        Label-Übereinstimmung und Nachbarschafts-Komposition.
+        """
         if self.y_train[z_i] == y_test:
             return (1 / c_tau) - (c_tau_plus) / (c_tau * (c_tau - 1))
 
@@ -146,9 +164,13 @@ class KNNExplainer(Explainer):
 
     @staticmethod
     def function_a2(c_tau: int, c: int) -> float:
-        """Schätzt, wie oft zᵢ statistisch nötig ist, um in zufälligen Subsets genügend Nachbarn im Radius zu erreichen."""
+        """Berechnet A₂-Term aus Theorem 13 (Wang et al. 2024) für Threshold KNN-Shapley.
+
+        Schätzt analytisch die Wahrscheinlichkeit, dass z_i in zufälligen Subsets
+        benötigt wird für ausreichende Nachbarschaft. Ersetzt Monte-Carlo-Sampling.
+        """
         # Wie stark verändert sich die Nachbarschaft, wenn wir zᵢ zu random Subsets hinzufügen?
-        # Wenn zᵢ oft gebraucht wird, um ein gutes Subset zu bilden ⇒ großer A₂-Wert -> analytisch statt Monte carlo
+        # Wenn zᵢ oft gebraucht wird, um ein gutes Subset zu bilden ⇒ großer A₂-Wert
 
         a2 = 0.0
         for k in range(c + 1):
@@ -157,7 +179,11 @@ class KNNExplainer(Explainer):
         return a2 - 1
 
     def correction_term(self, z_i: int, c_tau: int, y_test: int) -> float:
-        """Liefert sinnvollen Shapleywert , auch wenn Nachbarschaft zu klein ist und gleicht somit bei >2 auch den Shapley-Wert von zᵢ aus, um seinen direkten Einfluss unabhängig von anderen zu berücksichtigen."""
+        """Korrekturterm für Threshold KNN-Shapley bei c_tau < 2 (Wang et al. 2024).
+
+        Fallback-Strategie für zu wenige Nachbarn mit uniform verteilter
+        Baseline-Vorhersage basierend auf Klassenverteilung.
+        """
         if c_tau == 0:
             return 0.0
 
@@ -167,33 +193,33 @@ class KNNExplainer(Explainer):
 
     def threshold_knn_shapley(self, x_test: np.ndarray, y_test: int) -> InteractionValues:
         """Berechnet die analytischen Shapley-Werte für x_test nach Theorem 13 der Threshold-KNN-Methode (Wang et al., 2024)."""
-        # analytisch
-        # Implementiert auf Basis von Theorem 13 aus: Wang et al. (2024)
-
         tau = self.tau  # Radius/Threshold
         n = len(self.x_train)
         shapley_values = np.zeros(n)  # Wird noch später mit echten Shapley Werten befüllt
 
         cos_similarity = cosine_similarity(self.x_train, x_test.reshape(1, -1)).flatten()
         distances = -cos_similarity
+
         neighbours = np.where(distances <= tau)[0]
         min_neighbours = 2
 
-        # effizienter C Vektor -> Zuerst CD dann für jeden Trainingspunkt : CD-zi (immer passend 1 abziehen)
+        # effizienter C Vektor -> Zuerst C(D) dann für jeden Trainingspunkt : CD-z_i
         c_all = len(self.x_train)  # alle Punkte mit z_i
         c_tau_all = len(neighbours)  # Alle Nachbarn inklusive z_i
         c_tau_plus_all = np.sum(self.y_train[neighbours] == y_test)
 
         for z_i in range(n):
+            # Außerhalb tau alle Shapleywerte 0
             if z_i not in neighbours:
-                shapley_values[z_i] = 0  # Außerhalb tau alle Shapleywerte 0
+                shapley_values[z_i] = 0
 
             else:
-                c = c_all - 1  # Jetzt ohne z_i
+                # Jetzt ohne z_i
+                c = c_all - 1
                 c_tau = c_tau_all - 1
                 c_tau_plus = c_tau_plus_all - 1 if self.y_train[z_i] == y_test else c_tau_plus_all
 
-                # Bedingung , dass ctau >= 2 und gesamte Formel Theorem 13, genug Nachbarn
+                # Bedingung , dass ctau >= 2/ genug Nachbarn i, Radius -> Gesamte Formel Theorem 13( a1 * a2 * Korrekturterm)
                 if c_tau >= min_neighbours:
                     shapley = self.function_a1(z_i, c_tau, c_tau_plus, y_test) * self.function_a2(
                         c_tau, c
@@ -214,9 +240,14 @@ class KNNExplainer(Explainer):
 
     @staticmethod
     def discretize_array(arr: np.ndarray, b: int = 3) -> np.ndarray:  # b=3 wie im Paper
-        """Diskretisieren, um ähnliche Stufen zu erhalten."""
+        """Diskretisiert RBF-Kernel-Gewichte für Weighted KNN-Shapley (Wang et al. 2024).
+
+        Reduziert kontinuierliche Gewichte auf 2^b diskrete Stufen zur
+        Kombinatorik-Reduktion. Standard b=3 ergibt 8 Gewichtsstufen.
+        """
         return np.round(arr * (2**b - 1)) / (2**b - 1)  # fragen welche spezifische formel
 
+    # ruff: noqa: C901
     def compute_f_i(
         self,
         disc_weight: np.ndarray,
@@ -226,28 +257,39 @@ class KNNExplainer(Explainer):
         w_k: list[float],
         s_to_index: dict[float, int],
     ) -> np.ndarray:
-        """."""
+        """Berechnet F-Tabelle gemäß Theorem 17 (Wang et al. 2024) für Weighted KNN-Shapley.
+
+        Zählt rekursiv Anzahl gewichteter Subsets mit Gewichtssummen s,
+        unter Ausschluss des aktuellen Punktes i.
+        """
         f = np.zeros((m_star, k - 1, len(w_k)))  # F=0 initsialisieren
-        # for m in range(m_star):
+
         for m in range(m_star):
             if m == z_i:
                 continue
 
             w_m = disc_weight[m]
             for s_index, s in enumerate(w_k):
-                if s == w_m:  # Fragen
+                if s == w_m:
                     f[m, 0, s_index] = 1  # 0 für ell=1, Basisfall
         # Rekursion
         for ell in range(2, k):
+            f0 = np.zeros(len(w_k))  # geändert optimiert
+            for t in range(m_star):
+                if t == z_i:
+                    continue
+                f0 += f[t, ell - 2, :]
+
             for m in range(ell, m_star):
                 if m == z_i:
                     continue  # m ohne i
                 w_m = disc_weight[m]
+
                 for s_idx, s in enumerate(w_k):
                     s_prev = s - w_m
                     if s_prev in s_to_index:
                         idx_prev = s_to_index[s_prev]
-                        f[m, ell - 1, s_idx] = np.sum(f[:m, ell - 2, idx_prev])
+                        f[m, ell - 1, s_idx] = f0[idx_prev]
 
         return f
 
@@ -262,7 +304,11 @@ class KNNExplainer(Explainer):
         s_to_index: dict[float, int],
         y_val: int,
     ) -> np.ndarray:
-        """."""
+        """Berechnet G-Tabelle nach Definition 10 und Theorem 6 (Wang et al. 2024).
+
+        Summiert Subset-Konfigurationen für Vorhersage-Änderungen durch
+        Hinzufügen von z_i mit Label-spezifischen Gewichtsbereichen.
+        """
         g_i = np.zeros(k)
 
         if disc_weight[z_i] < 0:
@@ -296,6 +342,8 @@ class KNNExplainer(Explainer):
     def compute_r_i(  # nicht optimierte version, theorem 8
         self,
         f_i: np.ndarray,
+        y_train: np.ndarray,
+        y_test: int,
         disc_weight: np.ndarray,
         w_k: list[float],
         s_to_index: dict[float, int],
@@ -303,36 +351,54 @@ class KNNExplainer(Explainer):
         k: int,
         m_star: int,
     ) -> np.ndarray:
-        """."""
+        """Berechnet R-Tabelle gemäß Theorem 8 (Wang et al. 2024) für Weighted KNN-Shapley.
+
+        Akkumuliert für große Subsets (m > k+1) die Beiträge von z_i zur
+        KNN-Vorhersage-Änderung, differenziert nach Labelgleichheit.
+        """
         r_i = np.zeros(m_star)
 
-        for m in range(max(z_i + 1, k), m_star):  # punkte nach z_i
+        r0 = np.zeros(len(w_k))
+        t_max = max(z_i + 1, k + 1)
+        for t in range(t_max):
+            if t == z_i:
+                continue
+
+            r0 += f_i[t, k - 2, :]  # Python index
+
+        for m in range(t_max, m_star):  # punkte nach z_i
             r_val = 0.0
             w_i = disc_weight[z_i]
             w_m = disc_weight[m]
 
-            lower = min(-w_i, -w_m)
-            upper = max(-w_i, -w_m)
-            relevant_s = [s for s in w_k if lower <= s <= upper]
+            if y_train[m] == y_test:
+                lower = -w_i
+                upper = -w_m
+            else:
+                lower = -w_m
+                upper = -w_i
 
-            for t in range(m):
-                if t == z_i:
-                    continue
+                for s in w_k:
+                    if lower <= s <= upper and s in s_to_index:
+                        r_val += r0[s_to_index[s]]
 
-                for s in relevant_s:
-                    if s in s_to_index:
-                        idx_s = s_to_index[s]
-                        r_val += f_i[t, k - 1 - 1, idx_s]  # -1 weil Index bei 0 beginnt
+                r_i[m] = r_val
 
-            r_i[m] = r_val
+                r0 += f_i[m, k - 2, :]
+
         return r_i
 
     def weighted_knn_shapley(self, x_test: np.ndarray, y_test: int) -> InteractionValues:
-        """Berechnet gewichtete  KNN-Shapley-Werte für x_test."""
+        """Berechnet Weighted KNN-Shapley-Werte nach Wang et al. (2024).
+
+        Implementiert exakte Methode mit RBF-Kernel-Gewichtung und dynamic programming
+        (F-, G-, R-Tabellen). Nutzt Diskretisierung für effiziente Berechnung.
+        """
         k = self.k
         distances = np.linalg.norm(self.x_train - x_test, axis=1)
 
-        w = np.exp(-self.alpha * distances**2)  # RBF-Kernel-Gewicht mit Skalierungsfaktor
+        # Gewichte nach Weighted KNN-Shapley Paper: RBF/Gaussian Kernel
+        w = np.exp(-(distances**2))  # RBF-Kernel ohne zusätzlichen Alpha-Parameter
         weight = (2 * (self.y_train == y_test) - 1) * w
         sorted_indices = np.argsort(distances)
 
@@ -358,7 +424,9 @@ class KNNExplainer(Explainer):
         for j, z_i in enumerate(mstar_set):
             f_i = self.compute_f_i(disc_weight, j, m_star, k, w_k, s_to_index)
 
-            r_i = self.compute_r_i(f_i, disc_weight, w_k, s_to_index, j, k, m_star)
+            r_i = self.compute_r_i(
+                f_i, self.y_train, y_test, disc_weight, w_k, s_to_index, j, k, m_star
+            )
 
             g_i = self.compute_g_i(disc_weight, j, k, m_star, f_i, w_k, s_to_index, y_test)
 
@@ -366,7 +434,7 @@ class KNNExplainer(Explainer):
             phi = 0.0
             for ell in range(k):
                 phi += g_i[ell] / (n * math.comb(n - 1, ell))
-            for m in range(max(j + 1, k + 1), m_star):
+            for m in range(max(j + 1, k + 1), m_star):  # statt zi
                 denom = m * math.comb(m - 1, k)
                 if denom != 0:
                     phi += r_i[m] / denom

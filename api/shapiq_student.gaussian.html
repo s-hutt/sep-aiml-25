@@ -6,7 +6,7 @@
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="shapiq_student.knn_explainer" href="shapiq_student.knn_explainer.html" /><link rel="prev" title="shapiq_student.copula" href="shapiq_student.copula.html" />
 
     <link rel="shortcut icon" href="../_static/shapiq.ico"/><!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
-        <title>shapiq_student.gaussian - shapiq_student 0.4.4 documentation</title>
+        <title>shapiq_student.gaussian - shapiq_student 0.4.5 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -168,7 +168,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../index.html"><div class="brand">shapiq_student 0.4.4 documentation</div></a>
+      <a href="../index.html"><div class="brand">shapiq_student 0.4.5 documentation</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -294,8 +294,6 @@ aufzufüllen, welche features vorhanden sind (coalition Sets).</p>
 <li><p><strong>data</strong> (<em>np.ndarray</em>) – Hintergrunddaten zur Schätzung der Gaussian-Verteilung.</p></li>
 <li><p><strong>x</strong> (<em>np.ndarray</em><em> | </em><em>None</em>) – Zu erklärende Instanzen (optional bei Init).</p></li>
 <li><p><strong>sample_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – Anzahl der Monte-Carlo Samples pro coalition. Default ist 10.</p></li>
-<li><p><strong>conditional_budget</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – Wird hier nicht direkt verwendet, dient der Kompatibilität.</p></li>
-<li><p><strong>conditional_threshold</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Wird hier nicht direkt verwendet, dient der Kompatibilität.</p></li>
 <li><p><strong>normalize</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a>) – Ob die Prediction anhand der leeren Prediction normalisiert werden.</p></li>
 <li><p><strong>categorical_features</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>] </em><em>| </em><em>None</em>) – Indizes kategorialer features. Nicht unterstützt.</p></li>
 <li><p><strong>method</strong> (<em>Literal</em><em>[</em><em>&quot;gaussConditional&quot;</em><em>]</em>) – Methodenkennung für diesen Imputer.</p></li>
@@ -311,8 +309,6 @@ aufzufüllen, welche features vorhanden sind (coalition Sets).</p>
 <li><p><strong>data</strong> (<em>np.ndarray</em>) – Hintergrunddaten zur Schätzung der Gaussian-Verteilung.</p></li>
 <li><p><strong>x</strong> (<em>np.ndarray</em><em> | </em><em>None</em><em>, </em><em>optional</em>) – Zu erklärende Dateninstanzen. Defaults ist None.</p></li>
 <li><p><strong>sample_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>, </em><em>optional</em>) – Anzahl der Monte-Carlo Samples pro coalition. Defaults ist 10.</p></li>
-<li><p><strong>conditional_budget</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>, </em><em>optional</em>) – Budget-Parameter, dient der Kompatibilität. Defaults ist 128.</p></li>
-<li><p><strong>conditional_threshold</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em>, </em><em>optional</em>) – Schwellenwert-Parameter, dient der Kompatibilität. Defaults ist 0.05.</p></li>
 <li><p><strong>normalize</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a><em>, </em><em>optional</em>) – Ob die Prediction anhand der leeren Prediction normalisiert werden soll. Defaults ist True.</p></li>
 <li><p><strong>categorical_features</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>] </em><em>| </em><em>None</em><em>, </em><em>optional</em>) – Indizes kategorialer features. Nicht unterstützt. Defaults ist None.</p></li>
 <li><p><strong>method</strong> (<em>Literal</em><em>[</em><em>&quot;gaussConditional&quot;</em><em>]</em><em>, </em><em>optional</em>) – Methodenkennung für diesen Imputer. Muss “gaussConditional” sein. Defaults ist “gaussConditional”.</p></li>
@@ -456,7 +452,7 @@ wobei True bedeutet, dass das feature vorhanden ist.</p>
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=90733dfc"></script>
+</div><script src="../_static/documentation_options.js?v=340bb9e5"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/furo.js?v=5fa4622c"></script>

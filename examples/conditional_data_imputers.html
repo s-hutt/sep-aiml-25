@@ -6,7 +6,7 @@
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Coalition-Finding Algorithmus" href="coalition_finding_algorithmus.html" /><link rel="prev" title="KNN-Shapley" href="KNN_shapley.html" />
 
     <link rel="shortcut icon" href="../_static/shapiq.ico"/><!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
-        <title>Conditional Data Imputers - shapiq_student 0.4.4 documentation</title>
+        <title>Conditional Data Imputers - shapiq_student 0.4.5 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -169,7 +169,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../index.html"><div class="brand">shapiq_student 0.4.4 documentation</div></a>
+      <a href="../index.html"><div class="brand">shapiq_student 0.4.5 documentation</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -264,14 +264,16 @@
         <article role="main" id="furo-main-content">
           <section id="Conditional-Data-Imputers">
 <h1>Conditional Data Imputers<a class="headerlink" href="#Conditional-Data-Imputers" title="Link to this heading">¶</a></h1>
-<p>This example notebook demonstrates the usage and performance of <code class="docutils literal notranslate"><span class="pre">GaussianImputer</span></code> and <code class="docutils literal notranslate"><span class="pre">GaussianCopulaImputer</span></code> in the context of conditional imputation of Shapley interaction values and model-agnostic explanations. Two Conditional imputations modules are implemented as part of the <code class="docutils literal notranslate"><span class="pre">student_shapiq</span></code> package.</p>
+<p>Dieses Beispiel-Notebook demonstriert die Nutzung und Performance von <code class="docutils literal notranslate"><span class="pre">GaussianImputer</span></code> und <code class="docutils literal notranslate"><span class="pre">GaussianCopulaImputer</span></code> im Kontext der conditional Imputation von Shapley Interactions und modellagnostischer Erklärungen.</p>
+<p>Zwei Module zur conditional Imputation sind als Teil des <code class="docutils literal notranslate"><span class="pre">student_shapiq</span></code>-Pakets implementiert.</p>
 <section id="Gaussian-Imputer">
 <h2>Gaussian Imputer<a class="headerlink" href="#Gaussian-Imputer" title="Link to this heading">¶</a></h2>
-<p>For nice-behaving unimodal data, a natural approach is to assume that <span class="math notranslate nohighlight">\(x\)</span> stems from a multivariate Gaussian distribution with mean <span class="math notranslate nohighlight">\(µ\)</span> and covariance matrix <span class="math notranslate nohighlight">\(Σ\)</span>. In the present context, this method was first suggested by <a class="reference external" href="https://doi.org/10.1016/j.artint.2021.103502">(Aas et al. (2021))</a>.</p>
+<p>Für well-behaving unimodale Daten bietet es sich an, anzunehmen, dass <span class="math notranslate nohighlight">\(x\)</span> aus einer multivariaten Gaussian-Verteilung mit Mittelwert <span class="math notranslate nohighlight">\(µ\)</span> und Kovarianzmatrix <span class="math notranslate nohighlight">\(Σ\)</span> stammt.</p>
+<p>Im vorliegenden Kontext wurde dieser Ansatz erstmals vorgeschlagen von <a class="reference external" href="https://doi.org/10.1016/j.artint.2021.103502">(Aas et al. (2021))</a>.</p>
 </section>
 <section id="Gaussian-Copula-Imputer">
 <h2>Gaussian Copula Imputer<a class="headerlink" href="#Gaussian-Copula-Imputer" title="Link to this heading">¶</a></h2>
-<p>A generalization of the gaussian approach, also proposed by <a class="reference external" href="https://doi.org/10.1016/j.artint.2021.103502">(Aas et al. (2021))</a>, is to use a Gaussian copula. That is, to represent the marginals of the features by their empirical distributions and then model the dependence structure by a Gaussian distribution.</p>
+<p>Eine Verallgemeinerung des Gaussian-Ansatzes, ebenfalls vorgeschlagen von <a class="reference external" href="https://doi.org/10.1016/j.artint.2021.103502">(Aas et al. (2021))</a>, ist die Verwendung einer Gaussian Copula. Dabei werden die Marginalverteilungen der features durch ihre empirischen Verteilungen dargestellt, während die Abhängigkeitsstruktur durch eine Gaussian-Verteilung modelliert wird.</p>
 </section>
 <section id="Import-Modules">
 <h2>Import Modules<a class="headerlink" href="#Import-Modules" title="Link to this heading">¶</a></h2>
@@ -301,10 +303,10 @@
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 shapiq version: 1.3.0
-shapiq_student version: 0.4.2
+shapiq_student version: 0.4.5
 </pre></div></div>
 </div>
-<p>We firstly use California housing dataset for demonstration. Dataset can be found at <a class="reference external" href="https://www.kaggle.com/datasets/camnugent/california-housing-prices">https://www.kaggle.com/datasets/camnugent/california-housing-prices</a></p>
+<p>Zunächst verwenden wir das California Housing Dataset zur Demonstration. Das Dataset ist verfügbar unter <a class="reference external" href="https://www.kaggle.com/datasets/camnugent/california-housing-prices">https://www.kaggle.com/datasets/camnugent/california-housing-prices</a></p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
@@ -334,9 +336,9 @@ Feature names:
 </pre></div></div>
 </div>
 </section>
-<section id="Train-a-Model">
-<h2>Train a Model<a class="headerlink" href="#Train-a-Model" title="Link to this heading">¶</a></h2>
-<p>We train a random forest regressor on the California housing dataset to explain the model with conditional imputation. The model achieves a relatively good fit in terms of the <span class="math notranslate nohighlight">\(R^2\)</span> score.</p>
+<section id="Trainiere-ein-Modell">
+<h2>Trainiere ein Modell<a class="headerlink" href="#Trainiere-ein-Modell" title="Link to this heading">¶</a></h2>
+<p>Wir trainieren einen Random Forest Regressor auf dem California Housing Dataset, um das Modell mittels conditional Imputation zu erklären. Das Modell erreicht eine relativ gute Anpassung gemessen am <span class="math notranslate nohighlight">\(R^2\)</span>-Score.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
@@ -364,13 +366,13 @@ Test  R2: 0.7462
 </pre></div></div>
 </div>
 </section>
-<section id="Using-multivariate-Gaussian-or-Gaussian-Copula-Imputer-for-Explanations">
-<h2>Using multivariate Gaussian or Gaussian Copula Imputer for Explanations<a class="headerlink" href="#Using-multivariate-Gaussian-or-Gaussian-Copula-Imputer-for-Explanations" title="Link to this heading">¶</a></h2>
-<p>Both Multivariate Gaussian and Gaussian Copula Imputers use the joint distribution of features to estimate missing values, but in different ways. The Multivariate Gaussian Imputer assumes all variables follow a joint Gaussian distribution, modeling both marginals and dependencies parametrically.</p>
+<section id="Verwendung-des-multivariaten-Gaussian--und-Gaussian-Copula-Imputers-für-Erklärungen">
+<h2>Verwendung des multivariaten Gaussian- und Gaussian Copula Imputers für Erklärungen<a class="headerlink" href="#Verwendung-des-multivariaten-Gaussian--und-Gaussian-Copula-Imputers-für-Erklärungen" title="Link to this heading">¶</a></h2>
+<p>Sowohl der Multivariate Gaussian als auch der Gaussian Copula Imputer nutzen die gemeinsame Verteilung der features, um fehlende Werte zu schätzen – jedoch auf unterschiedliche Weise. Der Multivariate Gaussian Imputer geht davon aus, dass alle Variablen einer gemeinsamen Gaussian-Verteilung folgen, wobei sowohl die Marginals als auch die Abhängigkeiten parametrisch modelliert werden.</p>
 <section id="Gausian-Multivariate">
 <h3>Gausian Multivariate<a class="headerlink" href="#Gausian-Multivariate" title="Link to this heading">¶</a></h3>
-<p>A classic and beneficial property of this assumption is that the conditional distributions are also multivariate Gaussian. That is, if</p>
-<p><span class="math notranslate nohighlight">\(p(x) = p(x_S,x_{\overline{S}}) = \mathcal{N}_M(µ,Σ)\)</span>, where <span class="math notranslate nohighlight">\(µ = [µ_S,µ_{\overline{S}}]^T\)</span> and</p>
+<p>Eine klassische und nützliche Eigenschaft dieser Annahme ist, dass auch die bedingten Verteilungen multivariate Gaussian-Verteilungen sind. Das heißt, wenn</p>
+<p><span class="math notranslate nohighlight">\(p(x) = p(x_S,x_{\overline{S}}) = \mathcal{N}_M(µ,Σ)\)</span>, wobei <span class="math notranslate nohighlight">\(µ = [µ_S,µ_{\overline{S}}]^T\)</span> und</p>
 <div class="math-wrapper docutils container">
 <div class="math notranslate nohighlight">
 \[\begin{split}\Sigma = \begin{bmatrix}
@@ -378,8 +380,8 @@ Test  R2: 0.7462
 \Sigma_{\overline{S},S} &amp; \Sigma_{\overline{S},\overline{S}}
 \end{bmatrix}\end{split}\]</div>
 </div>
-<p>then, <span class="math notranslate nohighlight">\(p(x_\overline{S}|x_S = x^{∗}_S) = \mathcal{N}_{|\overline{S}|}(µ_{\overline{S}|S},Σ_{\overline{S}|S})\)</span>, where <span class="math notranslate nohighlight">\(µ_{\overline{S}|S} = µ_{\overline{S}} + Σ_{\overline{S}S}Σ_{SS}^{-1}(x^{∗}_S − µ_S)\)</span> and <span class="math notranslate nohighlight">\(Σ_{\overline{S}|S} = Σ_{\overline{SS}}-Σ_{\overline{S}S}Σ_{SS}^{-1}Σ_{S\overline{S}}\)</span>. The parameters <span class="math notranslate nohighlight">\(µ\)</span> and <span class="math notranslate nohighlight">\(Σ\)</span> are easily estimated using, respectively, the sample mean and covariance matrix of the training data.</p>
-<p>We initialize multivariate gaussian or gaussian copula imputer and pass it to the explainer. We firstly wrap the function with a predict function, so it can work with the shapiq API.</p>
+<p>dann, <span class="math notranslate nohighlight">\(p(x_\overline{S}|x_S = x^{∗}_S) = \mathcal{N}_{|\overline{S}|}(µ_{\overline{S}|S},Σ_{\overline{S}|S})\)</span>, wobei <span class="math notranslate nohighlight">\(µ_{\overline{S}|S} = µ_{\overline{S}} + Σ_{\overline{S}S}Σ_{SS}^{-1}(x^{∗}_S − µ_S)\)</span> und <span class="math notranslate nohighlight">\(Σ_{\overline{S}|S} = Σ_{\overline{SS}}-Σ_{\overline{S}S}Σ_{SS}^{-1}Σ_{S\overline{S}}\)</span>. Die Parameter <span class="math notranslate nohighlight">\(µ\)</span> und <span class="math notranslate nohighlight">\(Σ\)</span> werden jeweils einfach mit dem Samplemittelwert und der Kovarianzmatrix der Trainingsdaten geschätzt.</p>
+<p>Wir initialisieren den Multivariate Gaussian- oder Gaussian Copula Imputer und übergeben ihn an den Explainer. Zunächst kapseln wir die Funktion in eine Predict-Funktion, damit sie mit der shapiq-API kompatibel ist.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
@@ -410,7 +412,7 @@ Test  R2: 0.7462
 </pre></div>
 </div>
 </div>
-<p>Next, select we an instance to be explained.</p>
+<p>Als Nächstes wählen wir eine Instanz aus, die erklärt werden soll.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
@@ -437,7 +439,7 @@ Longitude    -117.670000
 dtype: float64
 </pre></div></div>
 </div>
-<p>Call an <code class="docutils literal notranslate"><span class="pre">explain()</span></code> interface setting <code class="docutils literal notranslate"><span class="pre">random_state</span></code> for reproducible approximation.</p>
+<p>Rufe die <code class="docutils literal notranslate"><span class="pre">explain()</span></code> Funktion auf und setze <code class="docutils literal notranslate"><span class="pre">random_state</span></code> für eine reproduzierbare Approximation.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
@@ -456,20 +458,20 @@ InteractionValues(
     index=SII, max_order=2, min_order=0, estimated=False, estimation_budget=256,
     n_players=8, baseline_value=2.0654183865546734,
     Top 10 interactions:
-        (0, 2): 0.4007919397455912
-        (5,): 0.28988860024749524
-        (6,): 0.23356350605291934
-        (0, 4): 0.23215442452692148
-        (4,): -0.1711650522079124
-        (1, 2): -0.3456754150743492
-        (0, 1): -0.3707204884864466
-        (1, 4): -0.37120095560968663
-        (6, 7): -0.37832009536956246
-        (0,): -0.5504741515701727
+        (0, 4): 0.5862863824721904
+        (0, 2): 0.2683290158589801
+        (5,): 0.26404718360442564
+        (2, 3): -0.14514186462383347
+        (1, 5): -0.16933356970892624
+        (1, 2): -0.2607578698977585
+        (1, 4): -0.26720822000067357
+        (0, 1): -0.3083362656910496
+        (4,): -0.33943402756100494
+        (0,): -0.36065233392643414
 )
 </pre></div></div>
 </div>
-<p>Visualize the explanation.</p>
+<p>Veranschauliche die Explanation.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
@@ -530,14 +532,14 @@ InteractionValues(
 </section>
 <section id="Gaussian-Copula">
 <h3>Gaussian Copula<a class="headerlink" href="#Gaussian-Copula" title="Link to this heading">¶</a></h3>
-<p>A generalization of the <em>gaussian</em> approach, which is, to represent the marginals of the features by their empirical distributions and then model the dependence structure by a Gaussian distribution. This <em>copula</em> approach generates the <span class="math notranslate nohighlight">\(K\)</span> conditional Monte Carlo samples <span class="math notranslate nohighlight">\(x_{\overline{S}}^{(k)} \sim p(x_{\overline{S}}|x_S = x^{*}_{S})\)</span> with the following routine:</p>
+<p>Eine Verallgemeinerung des <em>Gaussian</em>-Ansatzes besteht darin, die Marginals der features durch ihre empirischen Verteilungen zu repräsentieren und anschließend die Abhängigkeitsstruktur durch eine Gaussian-Verteilung zu modellieren. Dieser <em>Copula</em>-Ansatz erzeugt die <span class="math notranslate nohighlight">\(K\)</span> bedingten Monte-Carlo-Samples. <span class="math notranslate nohighlight">\(x_{\overline{S}}^{(k)} \sim p(x_{\overline{S}}|x_S = x^{*}_{S})\)</span> mit der folgenden Prozedur:</p>
 <ol class="arabic simple">
-<li><p>Convert each marginal <span class="math notranslate nohighlight">\(x_j\)</span> of the feature distribution <span class="math notranslate nohighlight">\(x\)</span> to a Gaussian distributed variable <span class="math notranslate nohighlight">\(v_j\)</span> by <span class="math notranslate nohighlight">\(v_j = Φ^{-1}(\hat{F}(x_j))\)</span>, where <span class="math notranslate nohighlight">\(\hat{F}(x_j)\)</span> is the empirical distribution function of <span class="math notranslate nohighlight">\(x_j\)</span>.</p></li>
-<li><p>Assume that <span class="math notranslate nohighlight">\(v\)</span> is distributed according to a <em>multivariate Gaussian</em>, and sample from the conditional distribution <span class="math notranslate nohighlight">\(p(v_{\overline{S}}|v_{S} = v^{∗}_S)\)</span> using the method described for the gaussian approach.</p></li>
-<li><p>Convert the marginals <span class="math notranslate nohighlight">\(v_j\)</span> in the conditional distribution to the original distribution using <span class="math notranslate nohighlight">\(\hat{x}_j = \hat{F}^{−1}_j(Φ(v_j))\)</span>.</p></li>
+<li><p>Konvertiere jede marginale Verteilung <span class="math notranslate nohighlight">\(x_j\)</span> der Feature-Verteilung <span class="math notranslate nohighlight">\(x\)</span> in eine normalverteilte Variable <span class="math notranslate nohighlight">\(v_j\)</span> mittels <span class="math notranslate nohighlight">\(v_j = Φ^{-1}(\hat{F}(x_j))\)</span>, wobei <span class="math notranslate nohighlight">\(\hat{F}(x_j)\)</span> die empirische Verteilungsfunktion von <span class="math notranslate nohighlight">\(x_j\)</span> ist.</p></li>
+<li><p>Nimm an, dass <span class="math notranslate nohighlight">\(v\)</span> einer multivariaten Normalverteilung folgt, und sampling aus der bedingten Verteilung <span class="math notranslate nohighlight">\(p(v_{\overline{S}} \mid v_S = v^{∗}_S)\)</span> mittels der im Gaussian-Ansatz beschriebenen Methode.</p></li>
+<li><p>Wandle die Marginalverteilungen <span class="math notranslate nohighlight">\(v_j\)</span> aus der bedingten Verteilung zurück in den ursprünglichen Raum um mittels <span class="math notranslate nohighlight">\(\hat{x}_j = \hat{F}^{−1}_j(Φ(v_j))\)</span>.</p></li>
 </ol>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">PredictWrapper</span><span class="p">:</span>
@@ -567,7 +569,7 @@ InteractionValues(
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">x_explain_copula</span> <span class="o">=</span> <span class="n">X_test</span><span class="p">[</span><span class="mi">100</span><span class="p">]</span>
@@ -599,7 +601,7 @@ InteractionValues(
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">shapiq</span><span class="o">.</span><span class="n">network_plot</span><span class="p">(</span>
@@ -618,7 +620,7 @@ InteractionValues(
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">shapiq</span><span class="o">.</span><span class="n">stacked_bar_plot</span><span class="p">(</span>
@@ -637,7 +639,7 @@ InteractionValues(
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">shapiq</span><span class="o">.</span><span class="n">stacked_bar_plot</span><span class="p">(</span>
@@ -655,9 +657,9 @@ InteractionValues(
 <img alt="../_images/examples_conditional_data_imputers_26_0.png" src="../_images/examples_conditional_data_imputers_26_0.png" />
 </div>
 </div>
-<p>Let’s compute the global explanations of both <code class="docutils literal notranslate"><span class="pre">GaussianImputer</span></code> and <code class="docutils literal notranslate"><span class="pre">GaussianCopulaImputer</span></code> using bar plot to have a better grasp of the performance.</p>
+<p>Lassen Sie uns die globalen Erklärungen von <code class="docutils literal notranslate"><span class="pre">GaussianImputer</span></code> und <code class="docutils literal notranslate"><span class="pre">GaussianCopulaImputer</span></code> mithilfe eines Balkendiagramms darstellen, um ein besseres Verständnis ihrer Leistungsfähigkeit zu erhalten.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tqdm.asyncio</span><span class="w"> </span><span class="kn">import</span> <span class="n">tqdm</span>
@@ -675,11 +677,11 @@ InteractionValues(
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-100%|██████████| 20/20 [00:01&lt;00:00, 12.39it/s]
+100%|██████████| 20/20 [00:01&lt;00:00, 12.56it/s]
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">shapiq</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">bar_plot</span><span class="p">(</span><span class="n">explanations_gaussian</span><span class="p">,</span> <span class="n">feature_names</span><span class="o">=</span><span class="n">feature_names</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -694,7 +696,7 @@ InteractionValues(
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">explanations_copula</span> <span class="o">=</span> <span class="p">[]</span>
@@ -710,11 +712,11 @@ InteractionValues(
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-100%|██████████| 20/20 [00:02&lt;00:00,  6.69it/s]
+100%|██████████| 20/20 [00:02&lt;00:00,  6.84it/s]
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">shapiq</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">bar_plot</span><span class="p">(</span><span class="n">explanations_copula</span><span class="p">,</span> <span class="n">feature_names</span><span class="o">=</span><span class="n">feature_names</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -730,12 +732,12 @@ InteractionValues(
 </div>
 </section>
 </section>
-<section id="Analysis">
-<h2>Analysis<a class="headerlink" href="#Analysis" title="Link to this heading">¶</a></h2>
-<p>There are two intuitive ways to observe the improvement achieved by the <code class="docutils literal notranslate"><span class="pre">GaussianCopulaImputer</span></code>:</p>
+<section id="Analyse">
+<h2>Analyse<a class="headerlink" href="#Analyse" title="Link to this heading">¶</a></h2>
+<p>Ein zentraler Vorteil des <code class="docutils literal notranslate"><span class="pre">GaussianCopulaImputer</span></code> ergibt sich aus seiner Fähigkeit, nicht-Gaussian-verteilte Randverteilungen adäquat zu modellieren. Während der <code class="docutils literal notranslate"><span class="pre">GaussianImputer</span></code> vollständig auf der Annahme basiert, dass alle Features einer multivariaten Normalverteilung folgen – was in realen Datensätzen wie dem California Housing-Datensatz selten der Fall ist. Es gibt zwei intuitive Perspektiven, die Verbesserung durch den <code class="docutils literal notranslate"><span class="pre">GaussianCopulaImputer</span></code> zu erkennen:</p>
 <ol class="arabic simple">
-<li><p>The <code class="docutils literal notranslate"><span class="pre">GaussianCopulaImputer</span></code> produces a clearer network plot compared to the <code class="docutils literal notranslate"><span class="pre">GaussianImputer</span></code>, indicating a better capture of feature interactions. This improvement is also reflected in the global explanations bar plot, where positively contributing features are more coherently clustered when using the <code class="docutils literal notranslate"><span class="pre">GaussianCopulaImputer</span></code>.</p></li>
-<li><p>In the global explanations bar plot, the <code class="docutils literal notranslate"><span class="pre">GaussianImputer</span></code> shows a positive interaction between <code class="docutils literal notranslate"><span class="pre">HouseAge</span></code> and <code class="docutils literal notranslate"><span class="pre">AveRooms</span></code>, which is likely inaccurate. In contrast, this interaction does not appear when using the <code class="docutils literal notranslate"><span class="pre">GaussianCopulaImputer</span></code>, suggesting a more reliable representation of the underlying relationships.</p></li>
+<li><p>Der <code class="docutils literal notranslate"><span class="pre">GaussianCopulaImputer</span></code> erzeugt ein klareres Netzwerkdiagramm im Vergleich zum <code class="docutils literal notranslate"><span class="pre">GaussianImputer</span></code>, was auf eine bessere Erfassung der Feature-Interaktionen hindeutet. Diese Verbesserung zeigt sich ebenfalls im Balkendiagramm der globalen Erklärungen, wo positiv beitragende Features beim <code class="docutils literal notranslate"><span class="pre">GaussianCopulaImputer</span></code> kohärenter gruppiert erscheinen.</p></li>
+<li><p>Im Balkendiagramm der globalen Erklärungen zeigt der <code class="docutils literal notranslate"><span class="pre">GaussianImputer</span></code> eine positive Interaktion zwischen <code class="docutils literal notranslate"><span class="pre">HouseAge</span></code> und <code class="docutils literal notranslate"><span class="pre">AveRooms</span></code>, die vermutlich nicht realistisch ist. Diese Interaktion verschwindet beim Einsatz des <code class="docutils literal notranslate"><span class="pre">GaussianCopulaImputer</span></code>, was auf eine zuverlässigere Darstellung der zugrunde liegenden Zusammenhänge schließen lässt.</p></li>
 </ol>
 </section>
 </section>
@@ -799,13 +801,13 @@ InteractionValues(
 <li><a class="reference internal" href="#Gaussian-Imputer">Gaussian Imputer</a></li>
 <li><a class="reference internal" href="#Gaussian-Copula-Imputer">Gaussian Copula Imputer</a></li>
 <li><a class="reference internal" href="#Import-Modules">Import Modules</a></li>
-<li><a class="reference internal" href="#Train-a-Model">Train a Model</a></li>
-<li><a class="reference internal" href="#Using-multivariate-Gaussian-or-Gaussian-Copula-Imputer-for-Explanations">Using multivariate Gaussian or Gaussian Copula Imputer for Explanations</a><ul>
+<li><a class="reference internal" href="#Trainiere-ein-Modell">Trainiere ein Modell</a></li>
+<li><a class="reference internal" href="#Verwendung-des-multivariaten-Gaussian--und-Gaussian-Copula-Imputers-für-Erklärungen">Verwendung des multivariaten Gaussian- und Gaussian Copula Imputers für Erklärungen</a><ul>
 <li><a class="reference internal" href="#Gausian-Multivariate">Gausian Multivariate</a></li>
 <li><a class="reference internal" href="#Gaussian-Copula">Gaussian Copula</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#Analysis">Analysis</a></li>
+<li><a class="reference internal" href="#Analyse">Analyse</a></li>
 </ul>
 </li>
 </ul>
@@ -817,7 +819,7 @@ InteractionValues(
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=90733dfc"></script>
+</div><script src="../_static/documentation_options.js?v=340bb9e5"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/furo.js?v=5fa4622c"></script>

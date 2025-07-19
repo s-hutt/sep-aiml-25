@@ -31,8 +31,6 @@ class GaussianImputer(ConditionalImputer):
         data (np.ndarray): Hintergrunddaten zur Schätzung der Gaussian-Verteilung.
         x (np.ndarray | None): Zu erklärende Instanzen (optional bei Init).
         sample_size (int): Anzahl der Monte-Carlo Samples pro coalition. Default ist 10.
-        conditional_budget (int): Wird hier nicht direkt verwendet, dient der Kompatibilität.
-        conditional_threshold (float): Wird hier nicht direkt verwendet, dient der Kompatibilität.
         normalize (bool): Ob die Prediction anhand der leeren Prediction normalisiert werden.
         categorical_features (list[int] | None): Indizes kategorialer features. Nicht unterstützt.
         method (Literal["gaussConditional"]): Methodenkennung für diesen Imputer.
@@ -58,8 +56,6 @@ class GaussianImputer(ConditionalImputer):
             data (np.ndarray): Hintergrunddaten zur Schätzung der Gaussian-Verteilung.
             x (np.ndarray | None, optional): Zu erklärende Dateninstanzen. Defaults ist None.
             sample_size (int, optional): Anzahl der Monte-Carlo Samples pro coalition. Defaults ist 10.
-            conditional_budget (int, optional): Budget-Parameter, dient der Kompatibilität. Defaults ist 128.
-            conditional_threshold (float, optional): Schwellenwert-Parameter, dient der Kompatibilität. Defaults ist 0.05.
             normalize (bool, optional): Ob die Prediction anhand der leeren Prediction normalisiert werden soll. Defaults ist True.
             categorical_features (list[int] | None, optional): Indizes kategorialer features. Nicht unterstützt. Defaults ist None.
             method (Literal["gaussConditional"], optional): Methodenkennung für diesen Imputer. Muss "gaussConditional" sein. Defaults ist "gaussConditional".

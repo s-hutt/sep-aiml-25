@@ -14,3 +14,5 @@ __all__ = [
     "GaussianImputer",
     "GaussianCopulaImputer",
 ]
+
+from .subset_finding import subset_finding

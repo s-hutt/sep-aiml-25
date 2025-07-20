@@ -4,7 +4,7 @@ from .copula import GaussianCopulaImputer
 from .gaussian import GaussianImputer
 from .knn_explainer import KNNExplainer
 
-__version__ = "0.5.1"
+__version__ = "0.6.0"
 
 __all__ = [
     # version

@@ -156,7 +156,7 @@ strict_optional = true
 # commitizen stuff
 [tool.commitizen]
 name = "cz_conventional_commits"
-version = "0.5.1"
+version = "0.6.0"
 version_files = ["shapiq_student/__init__.py"]
 update_changelog_on_bump = true
 changelog_file = "CHANGELOG.md"

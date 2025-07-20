@@ -3,6 +3,12 @@ This changelog is to be updated with each important change to the codebase.
 
 ## Development
 
+## 0.6.0 (2025-07-20)
+
+### Feat
+
+- removed the ruff check for TODO comments. finished the introduction page (#43)
+
 ## 0.5.1 (2025-07-20)
 
 ### Fix

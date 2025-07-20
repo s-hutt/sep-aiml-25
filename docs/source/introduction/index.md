@@ -1,5 +1,5 @@
 # What is this project about?
-shapiq-student is a `Group 2` project for the Softwareentwicklungspraktikum:
+Package `shapiq-student` is a Group 2 project for the Softwareentwicklungspraktikum:
 Game Theoretic Explainable Artificial Intelligence (SoSe 2025). It serves as
 an extension of the existing Python library, [`shapiq`](https://github.com/mmschlk/shapiq),
 a library for explaining machine learning models with Shapley interactions.
@@ -20,5 +20,5 @@ The documentation page is created with Sphinx with theme furo and published via 
 * `tests_grading/` Contains tests for final examination.
 
 ### Extra
-To ensure a modern Python project codebase, this project incorporates package and project manager [`uv`](https://docs.astral.sh/uv/), [`Ruff`](https://docs.astral.sh/ruff/) for linting,
+To ensure a modern Python project codebase, this project incorporates package and project manager [`uv`](https://docs.astral.sh/uv/), linting tool [`Ruff`](https://docs.astral.sh/ruff/),
 static type checking tool [`mypy`](https://mypy.readthedocs.io/en/stable/), and [`Commitizen`](https://commitizen-tools.github.io/commitizen/) for release management.

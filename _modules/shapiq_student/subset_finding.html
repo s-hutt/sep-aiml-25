@@ -255,17 +255,120 @@
         </div>
         <article role="main" id="furo-main-content">
           <h1>Source code for shapiq_student.subset_finding</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Subset finding module for selecting relevant features based on interaction values.&quot;&quot;&quot;</span>
+<span></span><span class="sd">&quot;&quot;&quot;Heuristischer Koalitionsfinder auf Basis der Beam-Search-Strategie.</span>
+
+<span class="sd">Die Funktion `subset_finding` bestimmt approximativ die Koalition der Größe `l` (max_size),</span>
+<span class="sd">die jeweils den höchsten (`S_max`) und niedrigsten (`S_min`) Interaktionswert gemäß einer</span>
+<span class="sd">gegebenen Interaktionsstruktur aufweist. Die Rückgabe erfolgt als `InteractionValues`-Objekt.</span>
+
+<span class="sd">Besonderheiten:</span>
+<span class="sd">- Die Suche basiert auf einem heuristischen Beam-Search-Verfahren mit begrenztem Suchpfad.</span>
+<span class="sd">- Unterstützt beliebige Interaktionswerte bis zu einem maximalen</span>
+<span class="sd">  Ordnungsterm (z.B. bis Dreifachinteraktionen).</span>
+<span class="sd">- Spezialfälle wie l=0, N=l, ungültige Werte oder Typfehler werden explizit behandelt.</span>
+<span class="sd">- In der Rückgabe sind zusätzlich die Attribute s_min, s_max, v_min, v_max hinterlegt,</span>
+<span class="sd">  um auch außerhalb des reinen Werte-Dictionaries gezielt auf die Extremkoalitionen zugreifen</span>
+<span class="sd">  zu können.</span>
+
+<span class="sd">Voraussetzung:</span>
+<span class="sd">- Als Eingabe dient ein vollständiges `InteractionValues`-Objekt, wie es z.B. aus der Bibliothek</span>
+<span class="sd">  `shapiq` erzeugt wird.</span>
+<span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">shapiq</span><span class="w"> </span><span class="kn">import</span> <span class="n">InteractionValues</span>
 
-<div class="viewcode-block" id="run_subset_finding">
-<a class="viewcode-back" href="../../api/shapiq_student.subset_finding.html#shapiq_student.subset_finding.run_subset_finding">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">run_subset_finding</span><span class="p">(</span><span class="n">interaction_values</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span> <span class="n">max_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Placeholder for run_subset_finding implementation.&quot;&quot;&quot;</span>
-    <span class="n">_</span> <span class="o">=</span> <span class="n">interaction_values</span><span class="p">,</span> <span class="n">max_size</span>
-    <span class="k">return</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
+<span class="kn">from</span><span class="w"> </span><span class="nn">shapiq_student.beam_finder</span><span class="w"> </span><span class="kn">import</span> <span class="n">BeamCoalitionFinder</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">shapiq_student.evaluation</span><span class="w"> </span><span class="kn">import</span> <span class="n">evaluate_interaction_coalition</span>
+
+
+<div class="viewcode-block" id="subset_finding">
+<a class="viewcode-back" href="../../api/shapiq_student.subset_finding.html#shapiq_student.subset_finding">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">subset_finding</span><span class="p">(</span><span class="n">interaction_values</span><span class="p">:</span> <span class="n">InteractionValues</span><span class="p">,</span> <span class="n">max_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InteractionValues</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Findet S_max,l und S_min,l für eine Koalition der Größe max_size mittels Beam Search.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">max_size</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;max_size must be an integer.&quot;</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">max_size</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;max_size must be non-negative.&quot;</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">max_size</span> <span class="o">&gt;</span> <span class="n">interaction_values</span><span class="o">.</span><span class="n">n_players</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;max_size cannot exceed number of players.&quot;</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">max_size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">e0</span> <span class="o">=</span> <span class="n">interaction_values</span><span class="o">.</span><span class="n">dict_values</span><span class="o">.</span><span class="n">get</span><span class="p">((),</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">InteractionValues</span><span class="p">(</span>
+            <span class="n">values</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">e0</span><span class="p">]),</span>
+            <span class="n">index</span><span class="o">=</span><span class="n">interaction_values</span><span class="o">.</span><span class="n">index</span><span class="p">,</span>
+            <span class="n">max_order</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">min_order</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">n_players</span><span class="o">=</span><span class="n">interaction_values</span><span class="o">.</span><span class="n">n_players</span><span class="p">,</span>
+            <span class="n">interaction_lookup</span><span class="o">=</span><span class="p">{():</span> <span class="mi">0</span><span class="p">},</span>
+            <span class="n">estimated</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">estimation_budget</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">baseline_value</span><span class="o">=</span><span class="n">interaction_values</span><span class="o">.</span><span class="n">baseline_value</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">s_min</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">s_max</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">v_min</span> <span class="o">=</span> <span class="n">e0</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">v_max</span> <span class="o">=</span> <span class="n">e0</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="n">features</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">interaction_values</span><span class="o">.</span><span class="n">n_players</span><span class="p">))</span>
+    <span class="n">interactions</span> <span class="o">=</span> <span class="n">interaction_values</span><span class="o">.</span><span class="n">dict_values</span>
+    <span class="n">max_order</span> <span class="o">=</span> <span class="n">interaction_values</span><span class="o">.</span><span class="n">max_order</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate</span><span class="p">(</span><span class="n">S</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">e</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">evaluate_interaction_coalition</span><span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">max_order</span><span class="p">)</span>
+
+    <span class="n">finder</span> <span class="o">=</span> <span class="n">BeamCoalitionFinder</span><span class="p">(</span>
+        <span class="n">features</span><span class="o">=</span><span class="n">features</span><span class="p">,</span>
+        <span class="n">interactions</span><span class="o">=</span><span class="n">interactions</span><span class="p">,</span>
+        <span class="n">evaluate_fn</span><span class="o">=</span><span class="n">evaluate</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">S_max</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">finder</span><span class="o">.</span><span class="n">find_max</span><span class="p">(</span><span class="n">max_size</span><span class="p">)</span>
+    <span class="n">S_min</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">finder</span><span class="o">.</span><span class="n">find_min</span><span class="p">(</span><span class="n">max_size</span><span class="p">)</span>
+
+    <span class="n">v_min</span> <span class="o">=</span> <span class="n">evaluate</span><span class="p">(</span><span class="n">S_min</span><span class="p">,</span> <span class="n">interactions</span><span class="p">)</span>
+    <span class="n">v_max</span> <span class="o">=</span> <span class="n">evaluate</span><span class="p">(</span><span class="n">S_max</span><span class="p">,</span> <span class="n">interactions</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">S_min</span> <span class="o">==</span> <span class="n">S_max</span><span class="p">:</span>
+        <span class="n">sorted_key</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">S_min</span><span class="p">))</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">v_min</span><span class="p">])</span>
+        <span class="n">interaction_lookup</span> <span class="o">=</span> <span class="p">{</span><span class="n">sorted_key</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">selected_items</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">(</span><span class="nb">frozenset</span><span class="p">(</span><span class="n">S_min</span><span class="p">),</span> <span class="n">v_min</span><span class="p">),</span>
+            <span class="p">(</span><span class="nb">frozenset</span><span class="p">(</span><span class="n">S_max</span><span class="p">),</span> <span class="n">v_max</span><span class="p">),</span>
+        <span class="p">]</span>
+        <span class="n">sorted_items</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">selected_items</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">v</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">sorted_items</span><span class="p">])</span>
+        <span class="n">interaction_lookup</span> <span class="o">=</span> <span class="p">{</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">k</span><span class="p">)):</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">_</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sorted_items</span><span class="p">)}</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="n">InteractionValues</span><span class="p">(</span>
+        <span class="n">values</span><span class="o">=</span><span class="n">values</span><span class="p">,</span>
+        <span class="n">index</span><span class="o">=</span><span class="n">interaction_values</span><span class="o">.</span><span class="n">index</span><span class="p">,</span>
+        <span class="n">max_order</span><span class="o">=</span><span class="n">max_size</span><span class="p">,</span>
+        <span class="n">min_order</span><span class="o">=</span><span class="n">max_size</span><span class="p">,</span>
+        <span class="n">n_players</span><span class="o">=</span><span class="n">interaction_values</span><span class="o">.</span><span class="n">n_players</span><span class="p">,</span>
+        <span class="n">interaction_lookup</span><span class="o">=</span><span class="n">interaction_lookup</span><span class="p">,</span>
+        <span class="n">estimated</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">estimation_budget</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">baseline_value</span><span class="o">=</span><span class="n">interaction_values</span><span class="o">.</span><span class="n">baseline_value</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">result</span><span class="o">.</span><span class="n">s_min</span> <span class="o">=</span> <span class="n">S_min</span>
+    <span class="n">result</span><span class="o">.</span><span class="n">s_max</span> <span class="o">=</span> <span class="n">S_max</span>
+    <span class="n">result</span><span class="o">.</span><span class="n">v_min</span> <span class="o">=</span> <span class="n">v_min</span>
+    <span class="n">result</span><span class="o">.</span><span class="n">v_max</span> <span class="o">=</span> <span class="n">v_max</span>
+
+    <span class="k">return</span> <span class="n">result</span></div>
 
 </pre></div>
         </article>

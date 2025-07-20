@@ -10,6 +10,7 @@
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css?v=2aa19091" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
     
@@ -180,7 +181,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -255,7 +256,7 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
@@ -263,6 +264,390 @@
         <article role="main" id="furo-main-content">
           <section id="Coalition-Finding-Algorithmus">
 <h1>Coalition-Finding Algorithmus<a class="headerlink" href="#Coalition-Finding-Algorithmus" title="Link to this heading">¶</a></h1>
+<p>Dieses Notebook demonstriert die Nutzung des Algorithmus <code class="docutils literal notranslate"><span class="pre">subset_finding</span></code>, um Koalitionen von Features mit dem höchsten bzw. niedrigsten aggregierten Interaktionswert zu identifizieren.</p>
+<p>Als Grundlage dienen Interaktionswerte, die auf einem erklärbaren Modell basieren und mit Hilfe von Indizes wie <code class="docutils literal notranslate"><span class="pre">k-SII</span></code>, <code class="docutils literal notranslate"><span class="pre">STII</span></code> oder <code class="docutils literal notranslate"><span class="pre">FSII</span></code> berechnet wurden.</p>
+<p>Der zugrundeliegende Algorithmus basiert auf einem heuristischen Beam Search, der durch gezielte Vorauswahl vielversprechende Teilkoalitionen eine effiziente Suche in großen Feature-Räumen ermöglicht.</p>
+<section id="Vorbereitung:-Imports">
+<h2>Vorbereitung: Imports<a class="headerlink" href="#Vorbereitung:-Imports" title="Link to this heading">¶</a></h2>
+<p>Wir beginnen mit dem Import aller relevanten Module für die Modellierung und die Datenaufbereitung.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[183]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="c1">#Modell-Erklärbarkeit mit shapiq</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">shapiq</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">shapiq.plot.si_graph</span><span class="w"> </span><span class="kn">import</span> <span class="n">si_graph_plot</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">shapiq</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_bike_sharing</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">shapiq</span><span class="w"> </span><span class="kn">import</span> <span class="n">Explainer</span>
+
+<span class="c1"># Scikit-Learn: Datenaufbereitung und Modelle</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.model_selection</span><span class="w"> </span><span class="kn">import</span> <span class="n">train_test_split</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.ensemble</span><span class="w"> </span><span class="kn">import</span> <span class="n">RandomForestRegressor</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Datensatz-und-Regressionsmodell">
+<h2>Datensatz und Regressionsmodell<a class="headerlink" href="#Datensatz-und-Regressionsmodell" title="Link to this heading">¶</a></h2>
+<p>In diesem Beispiel verwenden wir den <code class="docutils literal notranslate"><span class="pre">bike_sharing</span></code>-Datensatz, der stündliche Fahrradverleihzahlen und zugehörige Kontextinformationen wie Temperatur, Luftfeuchtigkeit oder Uhrzeit enthält.</p>
+<p>Wir trainieren ein Regressionsmodell, das die Ausleihzahl vorhersagt. Standardmäßig verwenden wir hier einen Random Forest Regressor – andere Alternativen wären z. B. <code class="docutils literal notranslate"><span class="pre">LinearRegression</span></code>, <code class="docutils literal notranslate"><span class="pre">KNeighborsRegressor</span></code> oder <code class="docutils literal notranslate"><span class="pre">DecisionTreeRegressor</span></code>.</p>
+<p>Anschließend berechnen wir Interaktionswerte mithilfe des <code class="docutils literal notranslate"><span class="pre">k-SII</span></code>-Index. Diese Werte dienen als Grundlage für die nachfolgende Koalitionsanalyse.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[100]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="c1"># DataFrame laden (für Spaltennamen + Bearbeitung)</span>
+<span class="n">X_df</span><span class="p">,</span> <span class="n">y_df</span> <span class="o">=</span> <span class="n">load_bike_sharing</span><span class="p">(</span><span class="n">to_numpy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<span class="c1"># Spaltennamen für readable-Funktion sichern</span>
+<span class="n">column_names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">X_df</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+
+<span class="c1"># In NumPy-Array umwandeln für Modell &amp; Explainer</span>
+<span class="n">X</span> <span class="o">=</span> <span class="n">X_df</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">y_df</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+
+<span class="c1"># Train-Test-Split</span>
+<span class="n">X_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+
+<span class="c1"># Modelltraining</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">RandomForestRegressor</span><span class="p">(</span><span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+<span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+
+<span class="c1"># Anzeige der ersten 10 Zeilen</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">X_df</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">10</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+       hour    temp  feel_temp  humidity  windspeed  year  month  holiday  \
+0 -1.000000 -0.8125  -0.683918  0.600000  -1.300268  -1.0   -1.0      0.0
+1 -0.916667 -0.8750  -0.736714  0.566667  -1.300268  -1.0   -1.0      0.0
+2 -0.833333 -0.8750  -0.736714  0.566667  -1.300268  -1.0   -1.0      0.0
+3 -0.750000 -0.8125  -0.683918  0.400000  -1.300268  -1.0   -1.0      0.0
+4 -0.666667 -0.8125  -0.683918  0.400000  -1.300268  -1.0   -1.0      0.0
+5 -0.583333 -0.8125  -0.789163  0.400000  -0.699732  -1.0   -1.0      0.0
+6 -0.500000 -0.8750  -0.736714  0.566667  -1.300268  -1.0   -1.0      0.0
+7 -0.416667 -0.9375  -0.789163  0.766667  -1.300268  -1.0   -1.0      0.0
+8 -0.333333 -0.8125  -0.683918  0.400000  -1.300268  -1.0   -1.0      0.0
+9 -0.250000 -0.5625  -0.473428  0.433333  -1.300268  -1.0   -1.0      0.0
+
+   weekday  workingday  season  weather
+0     0.75        -1.0     1.0      0.0
+1     0.75        -1.0     1.0      0.0
+2     0.75        -1.0     1.0      0.0
+3     0.75        -1.0     1.0      0.0
+4     0.75        -1.0     1.0      0.0
+5     0.75        -1.0     1.0      2.0
+6     0.75        -1.0     1.0      0.0
+7     0.75        -1.0     1.0      0.0
+8     0.75        -1.0     1.0      0.0
+9     0.75        -1.0     1.0      0.0
+</pre></div></div>
+</div>
+</section>
+<section id="Interaktionswerte-berechnen">
+<h2>Interaktionswerte berechnen<a class="headerlink" href="#Interaktionswerte-berechnen" title="Link to this heading">¶</a></h2>
+<p>Um sinnvolle Koalitionen identifizieren zu können, benötigen wir sogenannte Interaktionswerte. Diese quantifizieren den Beitrag einzelner oder kombinierter Features zur Vorhersage eines Modells.</p>
+<p>Wir verwenden dazu den <code class="docutils literal notranslate"><span class="pre">Explainer</span></code> aus der <code class="docutils literal notranslate"><span class="pre">shapiq</span></code>-Bibliothek mit dem Index <code class="docutils literal notranslate"><span class="pre">k-SII</span></code> (Shapley Interaction Index). Dabei legen wir die maximale Interaktionsordnung (<code class="docutils literal notranslate"><span class="pre">max_order</span></code>) auf 3 fest – d. h. es werden Einzel-, Paar- und Dreifachinteraktionen berücksichtigt.</p>
+<p>Die Erklärung erfolgt für einen einzelnen Datenpunkt aus dem Trainingsdatensatz.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[147]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Initilisieren des Explainer mit dem trainierten Modell</span>
+<span class="n">explainer</span> <span class="o">=</span> <span class="n">Explainer</span><span class="p">(</span>
+    <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">,</span>
+    <span class="n">data</span><span class="o">=</span><span class="n">X_train</span><span class="p">,</span>
+    <span class="n">index</span><span class="o">=</span><span class="s2">&quot;k-SII&quot;</span><span class="p">,</span>
+    <span class="n">max_order</span><span class="o">=</span><span class="mi">3</span>
+<span class="p">)</span>
+
+<span class="c1"># Erklärung berechenen für den ersten Trainingspunkt</span>
+<span class="n">x0</span> <span class="o">=</span> <span class="n">X_train</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">explanation</span> <span class="o">=</span> <span class="n">explainer</span><span class="o">.</span><span class="n">explain</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">budget</span><span class="o">=</span><span class="mi">1024</span><span class="p">)</span>
+
+<span class="c1"># Ausgabe der Feature-Namen</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Namen der Features: &quot;</span><span class="p">,</span> <span class="n">column_names</span><span class="p">)</span>
+
+<span class="c1"># Ausgabe der erklärten Interaktionen</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">explanation</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Namen der Features:  [&#39;hour&#39;, &#39;temp&#39;, &#39;feel_temp&#39;, &#39;humidity&#39;, &#39;windspeed&#39;, &#39;year&#39;, &#39;month&#39;, &#39;holiday&#39;, &#39;weekday&#39;, &#39;workingday&#39;, &#39;season&#39;, &#39;weather&#39;]
+InteractionValues(
+    index=k-SII, max_order=3, min_order=0, estimated=True, estimation_budget=1024,
+    n_players=12, baseline_value=190.86463629737608,
+    Top 10 interactions:
+        (): 190.86463629737608
+        (0,): 49.59720689238005
+        (3,): 41.9209203473807
+        (10,): 36.01807897513865
+        (8,): 35.96723060016985
+        (4,): 34.23474330150334
+        (11,): 33.57921258256394
+        (7,): 33.41947324135769
+        (1, 2): -28.626906158442388
+        (1,): -29.77594718633472
+)
+</pre></div></div>
+</div>
+</section>
+<section id="Koalitionsfindung-mit-Beam-Search-(Theorie)">
+<h2>Koalitionsfindung mit Beam Search (Theorie)<a class="headerlink" href="#Koalitionsfindung-mit-Beam-Search-(Theorie)" title="Link to this heading">¶</a></h2>
+<p>Der Algorithmus <code class="docutils literal notranslate"><span class="pre">subset_finding</span></code> nutzt eine heuristische Beam Search zur effizienten Koalitionssuche.</p>
+<p>Ziel ist es, unter allen möglichen Koalitionen der Größe <span class="math notranslate nohighlight">\(l\)</span> diejenigen zu finden, die den höchsten oder niedrigsten Gesamtbeitrag zur Vorhersage eines Modells leisten – gemessen an den sogenannten Interaktionswerten. Dabei bezeichnen wir mit <span class="math notranslate nohighlight">\(S_\text{max}\)</span> die Koalition der Größe <span class="math notranslate nohighlight">\(l\)</span>, die den höchsten aggregierten Interaktionswert erzielt, und mit <span class="math notranslate nohighlight">\(S_\text{min}\)</span> diejenige mit dem niedrigsten.</p>
+<section id="Wie-wird-eine-Koalition-bewertet?">
+<h3>Wie wird eine Koalition bewertet?<a class="headerlink" href="#Wie-wird-eine-Koalition-bewertet?" title="Link to this heading">¶</a></h3>
+<p>Jede Koalition <span class="math notranslate nohighlight">\(S\)</span> besteht aus einer Teilmenge von Features, z. B. <span class="math notranslate nohighlight">\(S = \{A, B\}\)</span>. Zur Bewertung wird der gesamte Einfluss dieser Feature-Kombination auf das Modell aggregiert:</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\begin{split}\hat{\nu}_e(S) = e_0 + \sum_{i \in S} e_{\{i\}} + \sum_{\substack{i,j \in S \\ i &lt; j}} e_{\{i,j\}} + \sum_{\substack{T \subseteq S \\ |T| &gt; 2}} e_T\end{split}\]</div>
+</div>
+<p>Dabei gilt:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(e_0\)</span>: Basiswert ohne Features (leere Koalition)</p></li>
+<li><p><span class="math notranslate nohighlight">\(e_{\{i\}}\)</span>: Beitrag des einzelnen Features <span class="math notranslate nohighlight">\(i\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(e_{\{i,j\}}\)</span>: Beitrag des Zusammenspiels von zwei Features</p></li>
+<li><p><span class="math notranslate nohighlight">\(e_T\)</span>: höherwertige Interaktionen (drei oder mehr)</p></li>
+</ul>
+<p>Je höher der Wert <span class="math notranslate nohighlight">\(\hat{\nu}_e(S)\)</span>, desto stärker der Einfluss der Koalition auf die Vorhersage (positiv oder negativ).</p>
+</section>
+<section id="Beispiel">
+<h3>Beispiel<a class="headerlink" href="#Beispiel" title="Link to this heading">¶</a></h3>
+<p>Gegeben sei eine Feature-Menge <span class="math notranslate nohighlight">\(N = \{A, B, C\}\)</span> mit folgenden Interaktionen:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(e_{\{A\}} = 1.0\)</span>, <span class="math notranslate nohighlight">\(e_{\{B\}} = -0.5\)</span>, <span class="math notranslate nohighlight">\(e_{\{A,B\}} = 0.3\)</span>, <span class="math notranslate nohighlight">\(e_0 = 0.0\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(e_{\{C,B\}} = -0.2\)</span>, <span class="math notranslate nohighlight">\(e_{\{C\}} = -0.1\)</span>, <span class="math notranslate nohighlight">\(e_{\{A,C\}} = 0.2\)</span>, <span class="math notranslate nohighlight">\(e_{\{A,B,C\}} = 0.6\)</span></p></li>
+</ul>
+<p>Dann ergibt sich für die Koalition <span class="math notranslate nohighlight">\(S = \{A, B\}\)</span>:</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\hat{\nu}_e(\{A,B\}) = 0.0 + 1.0 - 0.5 + 0.3 = 0.8\]</div>
+</div>
+</section>
+<section id="Wie-findet-der-Algorithmus-solche-Koalitionen-effizient?">
+<h3>Wie findet der Algorithmus solche Koalitionen effizient?<a class="headerlink" href="#Wie-findet-der-Algorithmus-solche-Koalitionen-effizient?" title="Link to this heading">¶</a></h3>
+<p>Statt alle möglichen Kombinationen zu prüfen, was bei vielen Features sehr aufwändig wäre, geht der Algorithmus schrittweise vor:</p>
+<ul class="simple">
+<li><p>Zuerst werden alle einzelnen Features als Startpunkte betrachtet</p></li>
+<li><p>In mehreren Runden werden die vielversprechendsten Kandidaten um je ein weiteres Feature erweitert</p></li>
+<li><p>In jeder Runde bleiben nur die am besten bewerteten Kombinationen erhalten, alle anderen werden verworfen</p></li>
+</ul>
+<p>Der Algorithmus besteht dabei aus zwei klar getrennten Phasen:</p>
+<ol class="arabic simple">
+<li><p><strong>Approximationsphase</strong>: In dieser Phase erfolgt die Bewertung der Koalitionen heuristisch. Höherwertige Interaktionen werden vorab anteilig auf die Einzelspieler verteilt. So kann der Algorithmus Koalitionen effizient vergleichen, ohne die vollständige Formel auszuwerten.</p></li>
+<li><p><strong>Genauigkeitsphase</strong>: Sobald die Anzahl der Kandidaten unter eine festgelegte Schwelle sinkt (die sogenannte Threshold-Beam-Breite), wird die Bewertung auf Basis der exakten Bewertungsfunktion durchgeführt – also unter Berücksichtigung aller vorhandenen Hyperkanten.</p></li>
+</ol>
+<p>Auf diese Weise lassen sich Koalitionen mit extremen Interaktionswerten effizient und präzise identifizieren.</p>
+</section>
+</section>
+<section id="Koalitionsfindung-mit-Beam-Search-(Anwendung)">
+<h2>Koalitionsfindung mit Beam Search (Anwendung)<a class="headerlink" href="#Koalitionsfindung-mit-Beam-Search-(Anwendung)" title="Link to this heading">¶</a></h2>
+<p>Wir wenden nun den Algorithmus <code class="docutils literal notranslate"><span class="pre">subset_finding</span></code> auf die berechneten Interaktionswerte an. Gesucht wird eine Koalition fester Größe (hier: <span class="math notranslate nohighlight">\(l = 3\)</span>) mit maximalem bzw. minimalem aggregierten Interaktionswert gemäß der zuvor erklärten Bewertungsfunktion.</p>
+<section id="Parameter-von-subset_finding:">
+<h3>Parameter von <code class="docutils literal notranslate"><span class="pre">subset_finding</span></code>:<a class="headerlink" href="#Parameter-von-subset_finding:" title="Link to this heading">¶</a></h3>
+<p>Die Funktion <code class="docutils literal notranslate"><span class="pre">subset_finding(...)</span></code> ist der zentrale Einstiegspunkt für die Koalitionsanalyse mittels Beam Search. Im Folgenden erläutern wir die beiden wichtigsten Parameter im Kontext unseres Beispiels:</p>
+<ul class="simple">
+<li><p><strong>``interaction_values:``</strong> Das <code class="docutils literal notranslate"><span class="pre">InteractionValues</span></code>-Objekt (hier <code class="docutils literal notranslate"><span class="pre">explanation</span></code>) enthält die erklärten Interaktionen des Modells für einen bestimmten Datenpunkt (<code class="docutils literal notranslate"><span class="pre">x0</span></code>). Diese wurden in unserem Beispiel zuvor mit dem <code class="docutils literal notranslate"><span class="pre">Explainer</span></code> aus der Bibliothek <code class="docutils literal notranslate"><span class="pre">shapiq</span></code> berechnet – unter Verwendung des <code class="docutils literal notranslate"><span class="pre">k-SII</span></code>-Indexes und einer maximalen Interaktionsordnung von 3. Das Objekt fasst alle Einzel-, Paar- und Dreifachinteraktionen zusammen und bildet somit die Bewertungsgrundlage für jede mögliche
+Koalition von Features.</p></li>
+<li><p><strong>``max_size:``</strong> Dieser Parameter legt die gewünschte Koalitionsgröße <code class="docutils literal notranslate"><span class="pre">l</span></code> fest, d. h. wie viele Features in den gesuchten Koalitionen enthalten sein sollen. In unserem Beispiel setzen wir <code class="docutils literal notranslate"><span class="pre">max_size=3</span></code>, um gezielt Dreierkombinationen zu analysieren. Das entspricht typischen Anwendungsfällen, in denen wir kompakte Gruppen von stark interagierenden Features identifizieren möchten. Dabei gilt: <code class="docutils literal notranslate"><span class="pre">max_size</span></code> muss eine ganze Zahl im Bereich $ 0 <span class="math">\leq `l
+:nbsphinx-math:</span>leq <a href="#id1"><span class="problematic" id="id2">`</span></a>|N| $ sein, wobei $ l $ die gewünschte Koalitionsgröße und $ |N| $ die Anzahl der Spieler (Features) bezeichnet. Negative Werte oder Koalitionsgrößen größer als die Gesamtanzahl der Features sind nicht zulässig.</p></li>
+</ul>
+<p><strong>Raises:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">TypeError</span></code> – Wenn <code class="docutils literal notranslate"><span class="pre">max_size</span></code> kein Integer ist.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ValueError</span></code> – Wenn <code class="docutils literal notranslate"><span class="pre">max_size</span></code> negativ ist oder größer als die Anzahl der Spieler (<code class="docutils literal notranslate"><span class="pre">n_players</span></code>) im <code class="docutils literal notranslate"><span class="pre">InteractionValues</span></code>-Objekt.</p></li>
+</ul>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[154]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Import des Koalitionsfindungs-Algorithmus</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">shapiq_student.subset_finding</span><span class="w"> </span><span class="kn">import</span> <span class="n">subset_finding</span>
+
+<span class="c1"># Suche nach Koalitionen der Größe 3</span>
+<span class="n">beam_result</span> <span class="o">=</span> <span class="n">subset_finding</span><span class="p">(</span><span class="n">interaction_values</span><span class="o">=</span><span class="n">explanation</span><span class="p">,</span> <span class="n">max_size</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">beam_result</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[154]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+InteractionValues(
+    index=k-SII, max_order=3, min_order=3, estimated=True, estimation_budget=None,
+    n_players=12, baseline_value=190.86463629737608
+)
+</pre></div></div>
+</div>
+</section>
+</section>
+<section id="Analyse-der-gefundenen-Koalitionen">
+<h2>Analyse der gefundenen Koalitionen<a class="headerlink" href="#Analyse-der-gefundenen-Koalitionen" title="Link to this heading">¶</a></h2>
+<p>Die Funktion <code class="docutils literal notranslate"><span class="pre">subset_finding</span></code> liefert zwei Koalitionen:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">s_max</span></code>: Die Koalition der Größe <code class="docutils literal notranslate"><span class="pre">l</span></code> (bzw. <code class="docutils literal notranslate"><span class="pre">max_size</span></code>), die den höchsten aggregierten Interaktionswert erzielt</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">s_min</span></code>: Die Koalition der Größe <code class="docutils literal notranslate"><span class="pre">l</span></code> (bzw. <code class="docutils literal notranslate"><span class="pre">max_size</span></code>), die den niedrigsten aggregierten Interaktionswert erzielt</p></li>
+</ul>
+<p>Zusätzlich gibt sie auch die zugehörigen aggregierten Interaktionswerte <code class="docutils literal notranslate"><span class="pre">v_max</span></code> und <code class="docutils literal notranslate"><span class="pre">v_min</span></code> zurück.</p>
+<p>Im Folgenden untersuchen wir die Koalitionen genauer – sowohl in numerischer Form (Index) als auch lesbar mit Spaltennamen.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[155]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Rohausgabe</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Koalition mit höchstem, aggregierten Interaktionswert (Index):&quot;</span><span class="p">,</span> <span class="n">beam_result</span><span class="o">.</span><span class="n">s_max</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Koalition mit niedrigstem, aggregierten Interaktionswert (Index):&quot;</span><span class="p">,</span> <span class="n">beam_result</span><span class="o">.</span><span class="n">s_min</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Interaktionswert der Koalition mit höchstem, aggregierten Interaktionswert:&quot;</span><span class="p">,</span> <span class="n">beam_result</span><span class="o">.</span><span class="n">v_max</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Interaktionswert der Koalition mit niedrigstem, aggregierten Interaktionswert:&quot;</span><span class="p">,</span> <span class="n">beam_result</span><span class="o">.</span><span class="n">v_min</span><span class="p">)</span>
+
+<span class="c1"># Spaltennamen aus dem ursprünglichen DataFrame laden (X_df stammt von oben)</span>
+<span class="n">column_names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">X_df</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+
+
+<span class="c1"># Funktion für lesbare Koalitionsdarstellung</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">readable</span><span class="p">(</span><span class="n">S</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="p">{</span><span class="n">column_names</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="n">S</span><span class="p">)}</span>
+
+
+<span class="c1"># Anzeige der Koalitionen in lesbarer Form</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Koalition mit höchstem, aggregierten Interaktionswert (Namen):&quot;</span><span class="p">,</span> <span class="n">readable</span><span class="p">(</span><span class="n">beam_result</span><span class="o">.</span><span class="n">s_max</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Koalition mit niedrigstem, aggregierten Interaktionswert (Namen):&quot;</span><span class="p">,</span> <span class="n">readable</span><span class="p">(</span><span class="n">beam_result</span><span class="o">.</span><span class="n">s_min</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Koalition mit höchstem, aggregierten Interaktionswert (Index): {0, 3, 4}
+Koalition mit niedrigstem, aggregierten Interaktionswert (Index): {1, 2, 9}
+Interaktionswert der Koalition mit höchstem, aggregierten Interaktionswert: 282.4412308976901
+Interaktionswert der Koalition mit niedrigstem, aggregierten Interaktionswert: 132.39900982684955
+Koalition mit höchstem, aggregierten Interaktionswert (Namen): {&#39;windspeed&#39;, &#39;hour&#39;, &#39;humidity&#39;}
+Koalition mit niedrigstem, aggregierten Interaktionswert (Namen): {&#39;temp&#39;, &#39;workingday&#39;, &#39;feel_temp&#39;}
+</pre></div></div>
+</div>
+<section id="Alternative:-Direkter-Zugriff-auf-Koalitionswerte-über-Lookup-Dictionary">
+<h3>Alternative: Direkter Zugriff auf Koalitionswerte über Lookup-Dictionary<a class="headerlink" href="#Alternative:-Direkter-Zugriff-auf-Koalitionswerte-über-Lookup-Dictionary" title="Link to this heading">¶</a></h3>
+<p>Neben den Attributen <code class="docutils literal notranslate"><span class="pre">s_max</span></code>, <code class="docutils literal notranslate"><span class="pre">s_min</span></code>, <code class="docutils literal notranslate"><span class="pre">v_max</span></code> und <code class="docutils literal notranslate"><span class="pre">v_min</span></code> können die in <code class="docutils literal notranslate"><span class="pre">InteractionValues</span></code> gespeicherten Koalitionen und deren aggregierte Interaktionswerte auch direkt über das Lookup-Dictionary ausgelesen werden.</p>
+<p>Das Attribut <code class="docutils literal notranslate"><span class="pre">interaction_lookup</span></code> enthält dabei ein Mapping von Koalitions-Tupeln (z. B. <code class="docutils literal notranslate"><span class="pre">(2,</span> <span class="pre">5,</span> <span class="pre">9)</span></code>) auf Integer-Indizes, die mit dem <code class="docutils literal notranslate"><span class="pre">values</span></code>-Array korrespondieren.</p>
+<p>So lassen sich alle gespeicherten Koalitionen mit ihren Werten z. B. programmgesteuert iterieren, visualisieren oder in Berichten weiterverarbeiten.</p>
+<blockquote>
+<div><p>Hinweis: Das von <code class="docutils literal notranslate"><span class="pre">subset_finding(...)</span></code> zurückgegebene <code class="docutils literal notranslate"><span class="pre">InteractionValues</span></code>-Objekt enthält genau zwei Koalitionen:</p>
+<ul class="simple">
+<li><p>Die Koalition mit dem niedrigsten aggregierten Interaktionswert (<code class="docutils literal notranslate"><span class="pre">s_min</span></code>) befindet sich immer an Index 0 im <code class="docutils literal notranslate"><span class="pre">.values</span></code>-Array</p></li>
+<li><p>Die Koalition mit dem höchsten aggregierten Interaktionswert (<code class="docutils literal notranslate"><span class="pre">s_max</span></code>) befindet sich immer an Index 1 im <code class="docutils literal notranslate"><span class="pre">.values</span></code>-Array</p></li>
+</ul>
+<p>Diese Positionen sind konsistent und durch das interne <code class="docutils literal notranslate"><span class="pre">interaction_lookup</span></code> eindeutig nachvollziehbar. Sie erlauben es, direkt auf die Extrem-Koalitionen zuzugreifen – entweder über die Attribute <code class="docutils literal notranslate"><span class="pre">s_min</span></code>, <code class="docutils literal notranslate"><span class="pre">s_max</span></code> oder über die Positionsindizes <code class="docutils literal notranslate"><span class="pre">0</span></code> und <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p>
+</div></blockquote>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[156]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Zugriff auf Koalitionen und zugehörige Werte aus dem Ergebnisobjekt</span>
+<span class="n">lookup</span> <span class="o">=</span> <span class="n">beam_result</span><span class="o">.</span><span class="n">interaction_lookup</span>
+<span class="n">values</span> <span class="o">=</span> <span class="n">beam_result</span><span class="o">.</span><span class="n">values</span>
+
+<span class="c1"># Ermitteln der Koalitions-Tupel anhand ihrer bekannten Position im Ergebnisarray</span>
+<span class="n">s_min_key</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">lookup</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+<span class="n">s_max_key</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">lookup</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span>
+
+<span class="c1"># Umwandlung der Koalition in lesbare Spaltennamen (sortiert nach Feature-Index)</span>
+<span class="n">s_min_names</span> <span class="o">=</span> <span class="n">readable</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">s_min_key</span><span class="p">))</span>
+<span class="n">s_max_names</span> <span class="o">=</span> <span class="n">readable</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">s_max_key</span><span class="p">))</span>
+
+<span class="c1"># Ausgabe der Koalitionen mit Namen und zugehörigem aggregierten Interaktionswert</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Koalition (s_max) </span><span class="si">{</span><span class="n">s_max_names</span><span class="si">}</span><span class="s2"> → Interaktionswert: </span><span class="si">{</span><span class="n">values</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Koalition (s_min) </span><span class="si">{</span><span class="n">s_min_names</span><span class="si">}</span><span class="s2"> → Interaktionswert: </span><span class="si">{</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<br/></pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Koalition (s_max) {&#39;windspeed&#39;, &#39;hour&#39;, &#39;humidity&#39;} → Interaktionswert: 282.441
+Koalition (s_min) {&#39;temp&#39;, &#39;workingday&#39;, &#39;feel_temp&#39;} → Interaktionswert: 132.399
+</pre></div></div>
+</div>
+</section>
+</section>
+<section id="Visualisierung-der-Koalitionsstrukturen-und-Interaktionen">
+<h2>Visualisierung der Koalitionsstrukturen und Interaktionen<a class="headerlink" href="#Visualisierung-der-Koalitionsstrukturen-und-Interaktionen" title="Link to this heading">¶</a></h2>
+<p>Der folgende Netzwerkplot visualisiert die Interaktionen der Ordnung 1 bis 3 für den betrachteten Datenpunkt. Besonders hervorgehoben sind dabei die Spieler (Features), die Teil der zuvor bestimmten Koalitionen <code class="docutils literal notranslate"><span class="pre">s_max</span></code> und <code class="docutils literal notranslate"><span class="pre">s_min</span></code> mit Koalitionsgröße <span class="math notranslate nohighlight">\(l=3\)</span> sind:</p>
+<ul class="simple">
+<li><p>Koalition s_max: {‘windspeed’, ‘hour’, ‘humidity’} → Aggregierter Interaktionswert: 282.441</p></li>
+<li><p>Koalition s_min: {‘temp’, ‘workingday’, ‘feel_temp’} → Aggregierter Interaktionswert: 132.399</p></li>
+</ul>
+<p>Im Plot zeigt sich, dass die <code class="docutils literal notranslate"><span class="pre">s_max</span></code>-Features deutlich zu den stärksten positiven Einzelbeiträgen (Ordnung 1) gehören – erkennbar an ihren leuchtend roten Knoten. Zusätzlich bestehen zwischen ihnen mehrere positive Interaktionen der Ordnung 2 und 3 (rote Kanten), was die starke aggregierte Wirkung dieser Koalition unterstreicht.</p>
+<p>Im Gegensatz dazu umfasst die <code class="docutils literal notranslate"><span class="pre">s_min</span></code>-Koalition mit <code class="docutils literal notranslate"><span class="pre">temp</span></code> den deutlich negativsten Einzelspieler, sowie zwei der schwächsten positiven Einzelspieler. Obwohl es mit <code class="docutils literal notranslate"><span class="pre">year</span></code> noch einen weiteren negativen Spieler im Netzwerk gibt, ist dieser nicht automatisch geeigneter für <code class="docutils literal notranslate"><span class="pre">s_min</span></code>, da der Plot auch zeigt, dass zwischen den gewählten <code class="docutils literal notranslate"><span class="pre">s_min</span></code>-Spielern deutlich negative Interaktionen höherer Ordnung (blau eingefärbte Kanten) bestehen. Dies stützt die Wahl dieser Koalition als tatsächlich
+minimal in Bezug auf den aggregierten Interaktionswert.</p>
+<p>Weitere Details zum <code class="docutils literal notranslate"><span class="pre">network_plot()</span></code> finden sich in der API-Dokumentation von <code class="docutils literal notranslate"><span class="pre">shapiq</span></code>: <a class="reference external" href="https://shapiq.readthedocs.io/en/latest/api/shapiq.plot.html#shapiq.plot.network_plot">https://shapiq.readthedocs.io/en/latest/api/shapiq.plot.html#shapiq.plot.network_plot</a></p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[168]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">si_graph_plot</span><span class="p">(</span>
+    <span class="n">interaction_values</span><span class="o">=</span><span class="n">explanation</span><span class="p">,</span>
+    <span class="n">feature_names</span><span class="o">=</span><span class="n">X_df</span><span class="o">.</span><span class="n">columns</span><span class="p">,</span>
+    <span class="n">min_max_order</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+    <span class="n">show</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+<br/></pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/examples_coalition_finding_algorithmus_17_0.png" src="../_images/examples_coalition_finding_algorithmus_17_0.png" />
+</div>
+</div>
+<p>Zur weiteren Untermauerung des Netzwerkplots zeigt der folgende Balkenplot die Einzelinteraktionen (Ordnung 1) der Spieler aus <code class="docutils literal notranslate"><span class="pre">s_max</span></code> und <code class="docutils literal notranslate"><span class="pre">s_min</span></code>.</p>
+<p>Wie zu erwarten, zeigen die <code class="docutils literal notranslate"><span class="pre">s_max</span></code>-Features die höchsten positiven Einzelbeiträge, während die <code class="docutils literal notranslate"><span class="pre">s_min</span></code>-Features entweder nur schwach positiv oder sogar negativ wirken.</p>
+<p>Weitere Informationen zur Funktion <code class="docutils literal notranslate"><span class="pre">stacked_bar_plot()</span></code> finden sich in der offiziellen Dokumentation: <a class="reference external" href="https://shapiq.readthedocs.io/en/latest/api/shapiq.plot.html#shapiq.plot.stacked_bar_plot">https://shapiq.readthedocs.io/en/latest/api/shapiq.plot.html#shapiq.plot.stacked_bar_plot</a></p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[182]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">shapiq</span><span class="o">.</span><span class="n">stacked_bar_plot</span><span class="p">(</span>
+    <span class="n">interaction_values</span><span class="o">=</span><span class="n">explanation</span><span class="o">.</span><span class="n">get_n_order</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span>
+    <span class="n">feature_names</span><span class="o">=</span><span class="n">X_df</span><span class="o">.</span><span class="n">columns</span><span class="p">,</span>
+    <span class="n">show</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/examples_coalition_finding_algorithmus_19_0.png" src="../_images/examples_coalition_finding_algorithmus_19_0.png" />
+</div>
+</div>
+</section>
+<section id="Fazit">
+<h2>Fazit<a class="headerlink" href="#Fazit" title="Link to this heading">¶</a></h2>
+<p>Der heuristische Beam Search Algorithmus ermöglicht eine effiziente Identifikation von Koalitionen mit hohem oder niedrigem Einfluss auf eine Modellvorhersage – selbst bei großen Feature-Mengen.</p>
+<p>Durch die Kombination aus Approximations- und Genauigkeitsphase werden vielversprechende Koalitionen gezielt ausgewählt und präzise bewertet. So lässt sich eine starke Reduktion des Suchraums erzielen, ohne auf gute Lösungen verzichten zu müssen.</p>
+<p>Der Algorithmus lässt sich flexibel auf Interaktionen höherer Ordnung anwenden und stellt eine leistungsfähige Erweiterung zur Analyse von modellbasierten Erklärungen dar.</p>
+</section>
 </section>
 
         </article>
@@ -308,8 +693,45 @@
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Coalition-Finding Algorithmus</a><ul>
+<li><a class="reference internal" href="#Vorbereitung:-Imports">Vorbereitung: Imports</a></li>
+<li><a class="reference internal" href="#Datensatz-und-Regressionsmodell">Datensatz und Regressionsmodell</a></li>
+<li><a class="reference internal" href="#Interaktionswerte-berechnen">Interaktionswerte berechnen</a></li>
+<li><a class="reference internal" href="#Koalitionsfindung-mit-Beam-Search-(Theorie)">Koalitionsfindung mit Beam Search (Theorie)</a><ul>
+<li><a class="reference internal" href="#Wie-wird-eine-Koalition-bewertet?">Wie wird eine Koalition bewertet?</a></li>
+<li><a class="reference internal" href="#Beispiel">Beispiel</a></li>
+<li><a class="reference internal" href="#Wie-findet-der-Algorithmus-solche-Koalitionen-effizient?">Wie findet der Algorithmus solche Koalitionen effizient?</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#Koalitionsfindung-mit-Beam-Search-(Anwendung)">Koalitionsfindung mit Beam Search (Anwendung)</a><ul>
+<li><a class="reference internal" href="#Parameter-von-subset_finding:">Parameter von <code class="docutils literal notranslate"><span class="pre">subset_finding</span></code>:</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#Analyse-der-gefundenen-Koalitionen">Analyse der gefundenen Koalitionen</a><ul>
+<li><a class="reference internal" href="#Alternative:-Direkter-Zugriff-auf-Koalitionswerte-über-Lookup-Dictionary">Alternative: Direkter Zugriff auf Koalitionswerte über Lookup-Dictionary</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#Visualisierung-der-Koalitionsstrukturen-und-Interaktionen">Visualisierung der Koalitionsstrukturen und Interaktionen</a></li>
+<li><a class="reference internal" href="#Fazit">Fazit</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>

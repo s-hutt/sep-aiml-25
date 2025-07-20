@@ -1,12 +1,6 @@
 ﻿shapiq\_student.subset\_finding
 ===============================
 
-.. automodule:: shapiq_student.subset_finding
+.. currentmodule:: shapiq_student
 
-   
-   .. rubric:: Functions
-
-   .. autosummary::
-   
-      run_subset_finding
-   
+.. autofunction:: subset_finding

@@ -264,13 +264,490 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.neighbors</span><span class="w"> </span><span class="kn">import</span> <span class="n">KNeighborsClassifier</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">itertools</span><span class="w"> </span><span class="kn">import</span> <span class="n">combinations_with_replacement</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">shapiq.explainer</span><span class="w"> </span><span class="kn">import</span> <span class="n">Explainer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">shapiq.interaction_values</span><span class="w"> </span><span class="kn">import</span> <span class="n">InteractionValues</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.metrics.pairwise</span><span class="w"> </span><span class="kn">import</span> <span class="n">cosine_similarity</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Papergetreuer KNNExplainer nach:</span>
+<span class="sd">- Jia et al. (2019) &quot;Efficient Task-Specific Data Valuation for Nearest Neighbor Algorithms&quot;</span>
+<span class="sd">- Wang et al. (2024) &quot;Threshold KNN-Shapley: A Linear-Time and Privacy-Friendly Approach to Data Valuation&quot;</span>
+<span class="sd">- Wang et al. (2024) &quot;Efficient Data Shapley for Weighted Nearest Neighbor Algorithms&quot;</span>
+<span class="sd">&quot;&quot;&quot;</span>
 
 
 <div class="viewcode-block" id="KNNExplainer">
 <a class="viewcode-back" href="../../api/shapiq_student.knn_explainer.html#shapiq_student.knn_explainer.KNNExplainer">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">KNNExplainer</span><span class="p">(</span><span class="n">Explainer</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Klasse zur Bestimmung datenpunktbasierter Einflusswerte mithilfe des KNN-Verfahrens.&quot;&quot;&quot;</span></div>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;KNNExplainer zur Berechnung von Shapley-Werten für KNN-Modelle.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">model</span><span class="p">:</span> <span class="n">KNeighborsClassifier</span><span class="p">,</span>
+        <span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">labels</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>  <span class="c1"># Basisexplainer falls nichts angegeben wird</span>
+        <span class="n">k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
+        <span class="n">tau</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.5</span><span class="p">,</span>
+        <span class="n">class_index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">m_star</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialisiert den KNNExplainer mit Modell, Trainingsdaten und Parameter.&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span> <span class="n">max_order</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_train</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y_train</span> <span class="o">=</span> <span class="n">labels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">k</span> <span class="o">=</span> <span class="n">k</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tau</span> <span class="o">=</span> <span class="n">tau</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">class_index</span> <span class="o">=</span> <span class="n">class_index</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">m_star</span> <span class="o">=</span> <span class="n">m_star</span>
+
+        <span class="k">if</span> <span class="n">method</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Automatische Erkennung für KNeighborsClassifier</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="s2">&quot;radius&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">model</span><span class="o">.</span><span class="n">radius</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">method</span> <span class="o">=</span> <span class="s2">&quot;threshold_knn_shapley&quot;</span>
+            <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="s2">&quot;weights&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">model</span><span class="o">.</span><span class="n">weights</span> <span class="o">==</span> <span class="s2">&quot;distance&quot;</span><span class="p">:</span>
+                <span class="n">method</span> <span class="o">=</span> <span class="s2">&quot;weighted_knn_shapley&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">method</span> <span class="o">=</span> <span class="s2">&quot;KNN-Shapley&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">=</span> <span class="n">method</span>
+
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;KNN-Shapley&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">=</span> <span class="s2">&quot;normal&quot;</span>
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;threshold_knn_shapley&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">=</span> <span class="s2">&quot;threshold&quot;</span>
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;weighted_knn_shapley&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">=</span> <span class="s2">&quot;weighted&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Unknown method </span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+<div class="viewcode-block" id="KNNExplainer.explain_function">
+<a class="viewcode-back" href="../../api/shapiq_student.knn_explainer.html#shapiq_student.knn_explainer.KNNExplainer.explain_function">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">explain_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">y_test</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InteractionValues</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Berechnet Shapley-Werte mittels der gewählten Methode.</span>
+
+<span class="sd">        Führt Input-Validierung durch und ruft die entsprechende Methode auf.</span>
+<span class="sd">        Bei y_test=None wird automatisch vorhergesagt oder class_index verwendet.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Input validation</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="n">single_sample</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">TWO_D</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="n">BATCH_ONE</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="n">single_sample</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">x</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="n">TWO_D</span> <span class="ow">and</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">BATCH_ONE</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">y_test</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">class_index</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">y_test</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">class_index</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">y_test</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;KNN-Shapley&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">standard_knn_shapley</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y_test</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;threshold_knn_shapley&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">threshold_knn_shapley</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y_test</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;weighted_knn_shapley&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">weighted_knn_shapley</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y_test</span><span class="p">)</span>
+
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Method not supported&quot;</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="KNNExplainer.standard_knn_shapley">
+<a class="viewcode-back" href="../../api/shapiq_student.knn_explainer.html#shapiq_student.knn_explainer.KNNExplainer.standard_knn_shapley">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">standard_knn_shapley</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_test</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">y_test</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InteractionValues</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Berechnet exakte KNN-Shapley-Werte nach Jia et al. (2019) Theorem 1.</span>
+
+<span class="sd">        Implementiert die rekursive Formel (7) für effiziente Shapley-Berechnung</span>
+<span class="sd">        basierend auf Distanz-sortierter Reihenfolge der Trainingspunkte.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x_train</span><span class="p">)</span>
+        <span class="n">shapley_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+
+        <span class="c1"># Distanzen berechnen und Indizes sortieren (aufsteigend nach Distanz)</span>
+        <span class="n">distances</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x_train</span> <span class="o">-</span> <span class="n">x_test</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">sorted_indices</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">distances</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+        <span class="c1"># Initialisierung: letzter Punkt in sortierter Liste (i = N), entspricht alpha_N</span>
+        <span class="n">idx_last</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">sorted_indices</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">label_last</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_train</span><span class="p">[</span><span class="n">idx_last</span><span class="p">]</span>
+        <span class="n">shapley_values</span><span class="p">[</span><span class="n">idx_last</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">label_last</span> <span class="o">==</span> <span class="n">y_test</span><span class="p">)</span> <span class="o">/</span> <span class="n">n</span>
+        <span class="p">)</span>  <span class="c1"># gemäß Formel (6): s_{alpha_N} = 1/N * 1[y = y_test]</span>
+
+        <span class="c1"># Rekursion rückwärts gemäß Formel (7)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>  <span class="c1"># i ∈ {N-2, ..., 0}</span>
+            <span class="n">idx_i</span> <span class="o">=</span> <span class="n">sorted_indices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">idx_next</span> <span class="o">=</span> <span class="n">sorted_indices</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+
+            <span class="n">label_i</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_train</span><span class="p">[</span><span class="n">idx_i</span><span class="p">]</span>
+            <span class="n">label_next</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_train</span><span class="p">[</span><span class="n">idx_next</span><span class="p">]</span>
+
+            <span class="n">i_pos</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>  <span class="c1"># Theorem 1 ist 1-basiert, Python 0-basiert ⇒ i+1 ∈ {1, ..., N-1}</span>
+
+            <span class="c1"># Formel (7): s_{alpha_i} = s_{alpha_{i+1}} + (1[y_i = y_test] - 1[y_{i+1} = y_test]) / K * min(K, i+1)/ (i+1)</span>
+            <span class="n">delta</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">label_i</span> <span class="o">==</span> <span class="n">y_test</span><span class="p">)</span> <span class="o">-</span> <span class="nb">int</span><span class="p">(</span><span class="n">label_next</span> <span class="o">==</span> <span class="n">y_test</span><span class="p">))</span>
+                <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">k</span>
+                <span class="o">*</span> <span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">k</span><span class="p">,</span> <span class="n">i_pos</span><span class="p">)</span> <span class="o">/</span> <span class="n">i_pos</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">shapley_values</span><span class="p">[</span><span class="n">idx_i</span><span class="p">]</span> <span class="o">=</span> <span class="n">shapley_values</span><span class="p">[</span><span class="n">idx_next</span><span class="p">]</span> <span class="o">+</span> <span class="n">delta</span>
+
+        <span class="k">return</span> <span class="n">InteractionValues</span><span class="p">(</span>
+            <span class="n">values</span><span class="o">=</span><span class="n">shapley_values</span><span class="p">,</span>
+            <span class="n">index</span><span class="o">=</span><span class="s2">&quot;SV&quot;</span><span class="p">,</span>
+            <span class="n">max_order</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">n_players</span><span class="o">=</span><span class="n">n</span><span class="p">,</span>
+            <span class="n">min_order</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">baseline_value</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="KNNExplainer.function_a1">
+<a class="viewcode-back" href="../../api/shapiq_student.knn_explainer.html#shapiq_student.knn_explainer.KNNExplainer.function_a1">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">function_a1</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">z_i</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">c_tau</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">c_tau_plus</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">y_test</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Berechnet A₁-Term aus Theorem 13 (Wang et al. 2024) für Threshold KNN-Shapley.</span>
+
+<span class="sd">        Misst direkten Einfluss von z_i auf Vorhersagequalität basierend auf</span>
+<span class="sd">        Label-Übereinstimmung und Nachbarschafts-Komposition.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_train</span><span class="p">[</span><span class="n">z_i</span><span class="p">]</span> <span class="o">==</span> <span class="n">y_test</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">c_tau</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">c_tau_plus</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">c_tau</span> <span class="o">*</span> <span class="p">(</span><span class="n">c_tau</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="o">-</span><span class="p">(</span><span class="n">c_tau_plus</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">c_tau</span> <span class="o">*</span> <span class="p">(</span><span class="n">c_tau</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="KNNExplainer.function_a2">
+<a class="viewcode-back" href="../../api/shapiq_student.knn_explainer.html#shapiq_student.knn_explainer.KNNExplainer.function_a2">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">function_a2</span><span class="p">(</span><span class="n">c_tau</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">c</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Berechnet A₂-Term aus Theorem 13 (Wang et al. 2024) für Threshold KNN-Shapley.</span>
+
+<span class="sd">        Schätzt analytisch die Wahrscheinlichkeit, dass z_i in zufälligen Subsets</span>
+<span class="sd">        benötigt wird für ausreichende Nachbarschaft. Ersetzt Monte-Carlo-Sampling.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Wie stark verändert sich die Nachbarschaft, wenn wir zᵢ zu random Subsets hinzufügen?</span>
+        <span class="c1"># Wenn zᵢ oft gebraucht wird, um ein gutes Subset zu bilden ⇒ großer A₂-Wert</span>
+
+        <span class="n">a2</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">c</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">a2</span> <span class="o">+=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">comb</span><span class="p">(</span><span class="n">c</span> <span class="o">-</span> <span class="n">k</span><span class="p">,</span> <span class="n">c_tau</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">comb</span><span class="p">(</span><span class="n">c</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">c_tau</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">a2</span> <span class="o">-</span> <span class="mi">1</span></div>
+
+
+<div class="viewcode-block" id="KNNExplainer.correction_term">
+<a class="viewcode-back" href="../../api/shapiq_student.knn_explainer.html#shapiq_student.knn_explainer.KNNExplainer.correction_term">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">correction_term</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">z_i</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">c_tau</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">y_test</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Korrekturterm für Threshold KNN-Shapley bei c_tau &lt; 2 (Wang et al. 2024).</span>
+
+<span class="sd">        Fallback-Strategie für zu wenige Nachbarn mit uniform verteilter</span>
+<span class="sd">        Baseline-Vorhersage basierend auf Klassenverteilung.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">c_tau</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mf">0.0</span>
+
+        <span class="n">C</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y_train</span><span class="p">))</span>  <span class="c1"># Klassen</span>
+        <span class="n">indicator</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y_train</span><span class="p">[</span><span class="n">z_i</span><span class="p">]</span> <span class="o">==</span> <span class="n">y_test</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">indicator</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">C</span><span class="p">)</span> <span class="o">/</span> <span class="n">c_tau</span></div>
+
+
+<div class="viewcode-block" id="KNNExplainer.threshold_knn_shapley">
+<a class="viewcode-back" href="../../api/shapiq_student.knn_explainer.html#shapiq_student.knn_explainer.KNNExplainer.threshold_knn_shapley">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">threshold_knn_shapley</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_test</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">y_test</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InteractionValues</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Berechnet die analytischen Shapley-Werte für x_test nach Theorem 13 der Threshold-KNN-Methode (Wang et al., 2024).&quot;&quot;&quot;</span>
+        <span class="n">tau</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tau</span>  <span class="c1"># Radius/Threshold</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x_train</span><span class="p">)</span>
+        <span class="n">shapley_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>  <span class="c1"># Wird noch später mit echten Shapley Werten befüllt</span>
+
+        <span class="n">cos_similarity</span> <span class="o">=</span> <span class="n">cosine_similarity</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x_train</span><span class="p">,</span> <span class="n">x_test</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+        <span class="n">distances</span> <span class="o">=</span> <span class="o">-</span><span class="n">cos_similarity</span>
+
+        <span class="n">neighbours</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">distances</span> <span class="o">&lt;=</span> <span class="n">tau</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">min_neighbours</span> <span class="o">=</span> <span class="mi">2</span>
+
+        <span class="c1"># effizienter C Vektor -&gt; Zuerst C(D) dann für jeden Trainingspunkt : CD-z_i</span>
+        <span class="n">c_all</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x_train</span><span class="p">)</span>  <span class="c1"># alle Punkte mit z_i</span>
+        <span class="n">c_tau_all</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">neighbours</span><span class="p">)</span>  <span class="c1"># Alle Nachbarn inklusive z_i</span>
+        <span class="n">c_tau_plus_all</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y_train</span><span class="p">[</span><span class="n">neighbours</span><span class="p">]</span> <span class="o">==</span> <span class="n">y_test</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">z_i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+            <span class="c1"># Außerhalb tau alle Shapleywerte 0</span>
+            <span class="k">if</span> <span class="n">z_i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">neighbours</span><span class="p">:</span>
+                <span class="n">shapley_values</span><span class="p">[</span><span class="n">z_i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Jetzt ohne z_i</span>
+                <span class="n">c</span> <span class="o">=</span> <span class="n">c_all</span> <span class="o">-</span> <span class="mi">1</span>
+                <span class="n">c_tau</span> <span class="o">=</span> <span class="n">c_tau_all</span> <span class="o">-</span> <span class="mi">1</span>
+                <span class="n">c_tau_plus</span> <span class="o">=</span> <span class="n">c_tau_plus_all</span> <span class="o">-</span> <span class="mi">1</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_train</span><span class="p">[</span><span class="n">z_i</span><span class="p">]</span> <span class="o">==</span> <span class="n">y_test</span> <span class="k">else</span> <span class="n">c_tau_plus_all</span>
+
+                <span class="c1"># Bedingung , dass ctau &gt;= 2/ genug Nachbarn i, Radius -&gt; Gesamte Formel Theorem 13( a1 * a2 * Korrekturterm)</span>
+                <span class="k">if</span> <span class="n">c_tau</span> <span class="o">&gt;=</span> <span class="n">min_neighbours</span><span class="p">:</span>
+                    <span class="n">shapley</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">function_a1</span><span class="p">(</span><span class="n">z_i</span><span class="p">,</span> <span class="n">c_tau</span><span class="p">,</span> <span class="n">c_tau_plus</span><span class="p">,</span> <span class="n">y_test</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">function_a2</span><span class="p">(</span>
+                        <span class="n">c_tau</span><span class="p">,</span> <span class="n">c</span>
+                    <span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">correction_term</span><span class="p">(</span><span class="n">z_i</span><span class="p">,</span> <span class="n">c_tau</span><span class="p">,</span> <span class="n">y_test</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">shapley</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">correction_term</span><span class="p">(</span><span class="n">z_i</span><span class="p">,</span> <span class="n">c_tau</span><span class="p">,</span> <span class="n">y_test</span><span class="p">)</span>  <span class="c1"># Zu wenige Nachbarn</span>
+
+                <span class="n">shapley_values</span><span class="p">[</span><span class="n">z_i</span><span class="p">]</span> <span class="o">=</span> <span class="n">shapley</span>
+
+        <span class="k">return</span> <span class="n">InteractionValues</span><span class="p">(</span>
+            <span class="n">values</span><span class="o">=</span><span class="n">shapley_values</span><span class="p">,</span>
+            <span class="n">index</span><span class="o">=</span><span class="s2">&quot;SV&quot;</span><span class="p">,</span>
+            <span class="n">max_order</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">n_players</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x_train</span><span class="p">),</span>
+            <span class="n">min_order</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">baseline_value</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="KNNExplainer.discretize_array">
+<a class="viewcode-back" href="../../api/shapiq_student.knn_explainer.html#shapiq_student.knn_explainer.KNNExplainer.discretize_array">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">discretize_array</span><span class="p">(</span><span class="n">arr</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>  <span class="c1"># b=3 wie im Paper</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Diskretisiert RBF-Kernel-Gewichte für Weighted KNN-Shapley (Wang et al. 2024).</span>
+
+<span class="sd">        Reduziert kontinuierliche Gewichte auf 2^b diskrete Stufen zur</span>
+<span class="sd">        Kombinatorik-Reduktion. Standard b=3 ergibt 8 Gewichtsstufen.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">arr</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">b</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">b</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1"># fragen welche spezifische formel</span></div>
+
+
+    <span class="c1"># ruff: noqa: C901</span>
+<div class="viewcode-block" id="KNNExplainer.compute_f_i">
+<a class="viewcode-back" href="../../api/shapiq_student.knn_explainer.html#shapiq_student.knn_explainer.KNNExplainer.compute_f_i">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compute_f_i</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">disc_weight</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">z_i</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">m_star</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">k</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">w_k</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+        <span class="n">s_to_index</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Berechnet F-Tabelle gemäß Theorem 17 (Wang et al. 2024) für Weighted KNN-Shapley.</span>
+
+<span class="sd">        Zählt rekursiv Anzahl gewichteter Subsets mit Gewichtssummen s,</span>
+<span class="sd">        unter Ausschluss des aktuellen Punktes i.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">m_star</span><span class="p">,</span> <span class="n">k</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">w_k</span><span class="p">)))</span>  <span class="c1"># F=0 initsialisieren</span>
+
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">m_star</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">m</span> <span class="o">==</span> <span class="n">z_i</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="n">w_m</span> <span class="o">=</span> <span class="n">disc_weight</span><span class="p">[</span><span class="n">m</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">s_index</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">w_k</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">s</span> <span class="o">==</span> <span class="n">w_m</span><span class="p">:</span>
+                    <span class="n">f</span><span class="p">[</span><span class="n">m</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">s_index</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># 0 für ell=1, Basisfall</span>
+        <span class="c1"># Rekursion</span>
+        <span class="k">for</span> <span class="n">ell</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+            <span class="n">f0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">w_k</span><span class="p">))</span>  <span class="c1"># geändert optimiert</span>
+            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">m_star</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">t</span> <span class="o">==</span> <span class="n">z_i</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="n">f0</span> <span class="o">+=</span> <span class="n">f</span><span class="p">[</span><span class="n">t</span><span class="p">,</span> <span class="n">ell</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span> <span class="p">:]</span>
+
+            <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ell</span><span class="p">,</span> <span class="n">m_star</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">m</span> <span class="o">==</span> <span class="n">z_i</span><span class="p">:</span>
+                    <span class="k">continue</span>  <span class="c1"># m ohne i</span>
+                <span class="n">w_m</span> <span class="o">=</span> <span class="n">disc_weight</span><span class="p">[</span><span class="n">m</span><span class="p">]</span>
+
+                <span class="k">for</span> <span class="n">s_idx</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">w_k</span><span class="p">):</span>
+                    <span class="n">s_prev</span> <span class="o">=</span> <span class="n">s</span> <span class="o">-</span> <span class="n">w_m</span>
+                    <span class="k">if</span> <span class="n">s_prev</span> <span class="ow">in</span> <span class="n">s_to_index</span><span class="p">:</span>
+                        <span class="n">idx_prev</span> <span class="o">=</span> <span class="n">s_to_index</span><span class="p">[</span><span class="n">s_prev</span><span class="p">]</span>
+                        <span class="n">f</span><span class="p">[</span><span class="n">m</span><span class="p">,</span> <span class="n">ell</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">s_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">f0</span><span class="p">[</span><span class="n">idx_prev</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">f</span></div>
+
+
+<div class="viewcode-block" id="KNNExplainer.compute_g_i">
+<a class="viewcode-back" href="../../api/shapiq_student.knn_explainer.html#shapiq_student.knn_explainer.KNNExplainer.compute_g_i">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compute_g_i</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">disc_weight</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">z_i</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">k</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">m_star</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">f_i</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">w_k</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+        <span class="n">s_to_index</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
+        <span class="n">y_val</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Berechnet G-Tabelle nach Definition 10 und Theorem 6 (Wang et al. 2024).</span>
+
+<span class="sd">        Summiert Subset-Konfigurationen für Vorhersage-Änderungen durch</span>
+<span class="sd">        Hinzufügen von z_i mit Label-spezifischen Gewichtsbereichen.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">g_i</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">disc_weight</span><span class="p">[</span><span class="n">z_i</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">g_i</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+        <span class="k">for</span> <span class="n">ell</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+            <span class="n">total</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">m_star</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">m</span> <span class="o">==</span> <span class="n">z_i</span><span class="p">:</span>
+                    <span class="k">continue</span>  <span class="c1"># i nicht mitzählen</span>
+                <span class="n">w_i</span> <span class="o">=</span> <span class="n">disc_weight</span><span class="p">[</span><span class="n">z_i</span><span class="p">]</span>
+
+                <span class="c1"># relevante s-Werte je nach Labelgleichheit</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_train</span><span class="p">[</span><span class="n">m</span><span class="p">]</span> <span class="o">==</span> <span class="n">y_val</span><span class="p">:</span>  <span class="c1"># kippt ergebniss wenn innerhalb grenzen</span>
+                    <span class="n">lower</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="o">-</span><span class="n">w_i</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1"># statt if schleife schneller gelöst</span>
+                    <span class="n">upper</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="o">-</span><span class="n">w_i</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">lower</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">w_i</span><span class="p">)</span>
+                    <span class="n">upper</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">w_i</span><span class="p">)</span>
+
+                <span class="c1"># Summe über alle s in [lower, upper]</span>
+                <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">w_k</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">lower</span> <span class="o">&lt;=</span> <span class="n">s</span> <span class="o">&lt;=</span> <span class="n">upper</span> <span class="ow">and</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">s_to_index</span><span class="p">:</span>
+                        <span class="n">s_idx</span> <span class="o">=</span> <span class="n">s_to_index</span><span class="p">[</span><span class="n">s</span><span class="p">]</span>
+                        <span class="n">total</span> <span class="o">+=</span> <span class="n">f_i</span><span class="p">[</span><span class="n">m</span><span class="p">,</span> <span class="n">ell</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">s_idx</span><span class="p">]</span>
+
+            <span class="n">g_i</span><span class="p">[</span><span class="n">ell</span><span class="p">]</span> <span class="o">=</span> <span class="n">total</span>
+
+        <span class="k">return</span> <span class="n">g_i</span></div>
+
+
+<div class="viewcode-block" id="KNNExplainer.compute_r_i">
+<a class="viewcode-back" href="../../api/shapiq_student.knn_explainer.html#shapiq_student.knn_explainer.KNNExplainer.compute_r_i">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compute_r_i</span><span class="p">(</span>  <span class="c1"># nicht optimierte version, theorem 8</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">f_i</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">y_train</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">y_test</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">disc_weight</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">w_k</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+        <span class="n">s_to_index</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
+        <span class="n">z_i</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">k</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">m_star</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Berechnet R-Tabelle gemäß Theorem 8 (Wang et al. 2024) für Weighted KNN-Shapley.</span>
+
+<span class="sd">        Akkumuliert für große Subsets (m &gt; k+1) die Beiträge von z_i zur</span>
+<span class="sd">        KNN-Vorhersage-Änderung, differenziert nach Labelgleichheit.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">r_i</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">m_star</span><span class="p">)</span>
+
+        <span class="n">r0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">w_k</span><span class="p">))</span>
+        <span class="n">t_max</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">z_i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">t_max</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">t</span> <span class="o">==</span> <span class="n">z_i</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="n">r0</span> <span class="o">+=</span> <span class="n">f_i</span><span class="p">[</span><span class="n">t</span><span class="p">,</span> <span class="n">k</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span> <span class="p">:]</span>  <span class="c1"># Python index</span>
+
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">t_max</span><span class="p">,</span> <span class="n">m_star</span><span class="p">):</span>  <span class="c1"># punkte nach z_i</span>
+            <span class="n">r_val</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="n">w_i</span> <span class="o">=</span> <span class="n">disc_weight</span><span class="p">[</span><span class="n">z_i</span><span class="p">]</span>
+            <span class="n">w_m</span> <span class="o">=</span> <span class="n">disc_weight</span><span class="p">[</span><span class="n">m</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="n">y_train</span><span class="p">[</span><span class="n">m</span><span class="p">]</span> <span class="o">==</span> <span class="n">y_test</span><span class="p">:</span>
+                <span class="n">lower</span> <span class="o">=</span> <span class="o">-</span><span class="n">w_i</span>
+                <span class="n">upper</span> <span class="o">=</span> <span class="o">-</span><span class="n">w_m</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">lower</span> <span class="o">=</span> <span class="o">-</span><span class="n">w_m</span>
+                <span class="n">upper</span> <span class="o">=</span> <span class="o">-</span><span class="n">w_i</span>
+
+            <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">w_k</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">lower</span> <span class="o">&lt;=</span> <span class="n">s</span> <span class="o">&lt;=</span> <span class="n">upper</span> <span class="ow">and</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">s_to_index</span><span class="p">:</span>
+                        <span class="n">r_val</span> <span class="o">+=</span> <span class="n">r0</span><span class="p">[</span><span class="n">s_to_index</span><span class="p">[</span><span class="n">s</span><span class="p">]]</span>
+
+            <span class="n">r_i</span><span class="p">[</span><span class="n">m</span><span class="p">]</span> <span class="o">=</span> <span class="n">r_val</span>
+
+            <span class="n">r0</span> <span class="o">+=</span> <span class="n">f_i</span><span class="p">[</span><span class="n">m</span><span class="p">,</span> <span class="n">k</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span> <span class="p">:]</span>
+
+        <span class="k">return</span> <span class="n">r_i</span></div>
+
+
+<div class="viewcode-block" id="KNNExplainer.weighted_knn_shapley">
+<a class="viewcode-back" href="../../api/shapiq_student.knn_explainer.html#shapiq_student.knn_explainer.KNNExplainer.weighted_knn_shapley">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">weighted_knn_shapley</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_test</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">y_test</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InteractionValues</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Berechnet Weighted KNN-Shapley-Werte nach Wang et al. (2024).</span>
+
+<span class="sd">        Implementiert exakte Methode mit RBF-Kernel-Gewichtung und dynamic programming</span>
+<span class="sd">        (F-, G-, R-Tabellen). Nutzt Diskretisierung für effiziente Berechnung.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">k</span>
+        <span class="n">distances</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x_train</span> <span class="o">-</span> <span class="n">x_test</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># Gewichte nach Weighted KNN-Shapley Paper: RBF/Gaussian Kernel</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">distances</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>  <span class="c1"># RBF-Kernel ohne zusätzlichen Alpha-Parameter</span>
+        <span class="n">weight</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y_train</span> <span class="o">==</span> <span class="n">y_test</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">w</span>
+        <span class="n">sorted_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">distances</span><span class="p">)</span>
+
+        <span class="n">disc_weight</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">discretize_array</span><span class="p">(</span><span class="n">weight</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x_train</span><span class="p">)</span>
+        <span class="n">shapley_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="n">m_star</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">m_star</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">m_star</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+        <span class="n">mstar_set</span> <span class="o">=</span> <span class="n">sorted_indices</span><span class="p">[:</span><span class="n">m_star</span><span class="p">]</span>
+        <span class="n">weight_levels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">disc_weight</span><span class="p">)</span>  <span class="c1"># Gewichtsstufen nach diskretisieren</span>
+
+        <span class="c1"># Berechne  W(k) für s &lt;- W(k)</span>
+        <span class="n">w_k</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="nb">round</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">comb</span><span class="p">),</span> <span class="mi">6</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">ell</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>  <span class="c1"># Subsets der Länge 1 bis k - 1</span>
+                <span class="k">for</span> <span class="n">comb</span> <span class="ow">in</span> <span class="n">combinations_with_replacement</span><span class="p">(</span><span class="n">weight_levels</span><span class="p">,</span> <span class="n">ell</span><span class="p">)</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+        <span class="c1"># Mappe jede Summe auf einen eindeutigen Index (damit wir später in F damit arbeiten können)</span>
+        <span class="n">s_to_index</span> <span class="o">=</span> <span class="p">{</span><span class="n">s</span><span class="p">:</span> <span class="n">idx</span> <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">w_k</span><span class="p">)}</span>
+
+        <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">z_i</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">mstar_set</span><span class="p">):</span>
+            <span class="n">f_i</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_f_i</span><span class="p">(</span><span class="n">disc_weight</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">m_star</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">w_k</span><span class="p">,</span> <span class="n">s_to_index</span><span class="p">)</span>
+
+            <span class="n">r_i</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_r_i</span><span class="p">(</span>
+                <span class="n">f_i</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_train</span><span class="p">,</span> <span class="n">y_test</span><span class="p">,</span> <span class="n">disc_weight</span><span class="p">,</span> <span class="n">w_k</span><span class="p">,</span> <span class="n">s_to_index</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">m_star</span>
+            <span class="p">)</span>
+
+            <span class="n">g_i</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_g_i</span><span class="p">(</span><span class="n">disc_weight</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">m_star</span><span class="p">,</span> <span class="n">f_i</span><span class="p">,</span> <span class="n">w_k</span><span class="p">,</span> <span class="n">s_to_index</span><span class="p">,</span> <span class="n">y_test</span><span class="p">)</span>
+
+            <span class="n">sign_u</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">weight</span><span class="p">[</span><span class="n">z_i</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="o">-</span><span class="mi">1</span> <span class="k">if</span> <span class="n">weight</span><span class="p">[</span><span class="n">z_i</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span>
+            <span class="n">phi</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="k">for</span> <span class="n">ell</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">k</span><span class="p">):</span>
+                <span class="n">phi</span> <span class="o">+=</span> <span class="n">g_i</span><span class="p">[</span><span class="n">ell</span><span class="p">]</span> <span class="o">/</span> <span class="p">(</span><span class="n">n</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">comb</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">ell</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">m_star</span><span class="p">):</span>  <span class="c1"># statt zi</span>
+                <span class="n">denom</span> <span class="o">=</span> <span class="n">m</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">comb</span><span class="p">(</span><span class="n">m</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">denom</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">phi</span> <span class="o">+=</span> <span class="n">r_i</span><span class="p">[</span><span class="n">m</span><span class="p">]</span> <span class="o">/</span> <span class="n">denom</span>
+
+            <span class="n">phi</span> <span class="o">/=</span> <span class="n">n</span>
+
+            <span class="n">shapley_values</span><span class="p">[</span><span class="n">z_i</span><span class="p">]</span> <span class="o">=</span> <span class="n">sign_u</span> <span class="o">*</span> <span class="p">(</span><span class="n">phi</span> <span class="o">/</span> <span class="n">n</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">InteractionValues</span><span class="p">(</span>
+            <span class="n">values</span><span class="o">=</span><span class="n">shapley_values</span><span class="p">,</span>
+            <span class="n">index</span><span class="o">=</span><span class="s2">&quot;SV&quot;</span><span class="p">,</span>
+            <span class="n">max_order</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">n_players</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x_train</span><span class="p">),</span>
+            <span class="n">min_order</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">baseline_value</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+        <span class="p">)</span></div>
+</div>
 
 </pre></div>
         </article>

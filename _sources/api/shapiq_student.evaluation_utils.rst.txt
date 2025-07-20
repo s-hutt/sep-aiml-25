@@ -1,0 +1,13 @@
+﻿shapiq\_student.evaluation\_utils
+=================================
+
+.. automodule:: shapiq_student.evaluation_utils
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      compare_methods_robust
+      find_best_and_worst_subsets
+   

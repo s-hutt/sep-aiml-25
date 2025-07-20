@@ -1,0 +1,12 @@
+﻿shapiq\_student.evaluation
+==========================
+
+.. automodule:: shapiq_student.evaluation
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      evaluate_interaction_coalition
+   

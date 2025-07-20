@@ -1,0 +1,12 @@
+﻿shapiq\_student.beam\_finder
+============================
+
+.. automodule:: shapiq_student.beam_finder
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      BeamCoalitionFinder
+   

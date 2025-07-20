@@ -1,0 +1,12 @@
+﻿shapiq\_student.brute\_force
+============================
+
+.. automodule:: shapiq_student.brute_force
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      brute_force_find_extrema
+   

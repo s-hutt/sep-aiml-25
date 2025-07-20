@@ -3,10 +3,10 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="shapiq_student.beam_finder" href="shapiq_student.beam_finder.html" /><link rel="prev" title="shapiq_student.gaussian" href="shapiq_student.gaussian.html" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="shapiq_student.brute_force" href="shapiq_student.brute_force.html" /><link rel="prev" title="shapiq_student.knn_explainer" href="shapiq_student.knn_explainer.html" />
 
     <link rel="shortcut icon" href="../_static/shapiq.ico"/><!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
-        <title>shapiq_student.knn_explainer - shapiq_student 0.5.0 documentation</title>
+        <title>shapiq_student.beam_finder - shapiq_student 0.5.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -219,8 +219,8 @@
 <li class="toctree-l1 current has-children"><a class="reference internal" href="../api.html">📖 API Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of 📖 API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="shapiq_student.copula.html">shapiq_student.copula</a></li>
 <li class="toctree-l2"><a class="reference internal" href="shapiq_student.gaussian.html">shapiq_student.gaussian</a></li>
-<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">shapiq_student.knn_explainer</a></li>
-<li class="toctree-l2"><a class="reference internal" href="shapiq_student.beam_finder.html">shapiq_student.beam_finder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="shapiq_student.knn_explainer.html">shapiq_student.knn_explainer</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">shapiq_student.beam_finder</a></li>
 <li class="toctree-l2"><a class="reference internal" href="shapiq_student.brute_force.html">shapiq_student.brute_force</a></li>
 <li class="toctree-l2"><a class="reference internal" href="shapiq_student.evaluation.html">shapiq_student.evaluation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="shapiq_student.evaluation_utils.html">shapiq_student.evaluation_utils</a></li>
@@ -245,7 +245,7 @@
         </a>
         <div class="content-icon-container">
           <div class="view-this-page">
-  <a class="muted-link" href="../_sources/api/shapiq_student.knn_explainer.rst.txt" title="View this page">
+  <a class="muted-link" href="../_sources/api/shapiq_student.beam_finder.rst.txt" title="View this page">
     <svg><use href="#svg-eye"></use></svg>
     <span class="visually-hidden">View this page</span>
   </a>
@@ -265,54 +265,80 @@
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section id="module-shapiq_student.knn_explainer">
-<span id="shapiq-student-knn-explainer"></span><h1>shapiq_student.knn_explainer<a class="headerlink" href="#module-shapiq_student.knn_explainer" title="Link to this heading">¶</a></h1>
-<p>KNNExplainer-Klasse für das shapiq-Paket.</p>
+          <section id="module-shapiq_student.beam_finder">
+<span id="shapiq-student-beam-finder"></span><h1>shapiq_student.beam_finder<a class="headerlink" href="#module-shapiq_student.beam_finder" title="Link to this heading">¶</a></h1>
+<p>Modul zur Implementierung der Beam Search Koalitionsfindung.</p>
 <p class="rubric">Classes</p>
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#shapiq_student.knn_explainer.KNNExplainer" title="shapiq_student.knn_explainer.KNNExplainer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">KNNExplainer</span></code></a>(model[, data, class_index, ...])</p></td>
-<td><p>Klasse zur Bestimmung datenpunktbasierter Einflusswerte mithilfe des KNN-Verfahrens.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#shapiq_student.beam_finder.BeamCoalitionFinder" title="shapiq_student.beam_finder.BeamCoalitionFinder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BeamCoalitionFinder</span></code></a>(features, interactions, ...)</p></td>
+<td><p>Heuristischer Algorithmus zur Suche optimaler Feature-Koalitionen mittels Beam Search.</p></td>
 </tr>
 </tbody>
 </table>
 </div>
 <dl class="py class">
-<dt class="sig sig-object py" id="shapiq_student.knn_explainer.KNNExplainer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">shapiq_student.knn_explainer.</span></span><span class="sig-name descname"><span class="pre">KNNExplainer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'k-SII'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/shapiq_student/knn_explainer.html#KNNExplainer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#shapiq_student.knn_explainer.KNNExplainer" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Explainer</span></code></p>
-<p>Klasse zur Bestimmung datenpunktbasierter Einflusswerte mithilfe des KNN-Verfahrens.</p>
-<p>Initialize the Explainer class.</p>
+<dt class="sig sig-object py" id="shapiq_student.beam_finder.BeamCoalitionFinder">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">shapiq_student.beam_finder.</span></span><span class="sig-name descname"><span class="pre">BeamCoalitionFinder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interactions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">evaluate_fn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beam_start_fraction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beam_decay</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.7</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exact_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/shapiq_student/beam_finder.html#BeamCoalitionFinder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#shapiq_student.beam_finder.BeamCoalitionFinder" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Heuristischer Algorithmus zur Suche optimaler Feature-Koalitionen mittels Beam Search.</p>
+<p>Die Koalitionssuche erfolgt mit adaptiver Beam-Breitenreduktion: Beginnend mit einer
+Breite von p * n (Standard: 100% der Features) wird diese pro Iteration exponentiell
+reduziert. Die Stärke des Abfalls kann über den Parameter beam_decay ∈ (0, 1] gesteuert
+werden. Ein kleinerer Wert führt zu stärkerer Reduktion (Standard: 0.7).</p>
+<p>Zusätzlich erfolgt eine zweiphasige Bewertung: Solange die Beam-Breite größer als ein
+konfigurierbarer Schwellenwert (exact_threshold) ist, wird eine schnelle heuristische
+Bewertung verwendet. Diese basiert auf einer vorab durchgeführten Verteilung
+der Hyperkanten auf Einzelspieler. Sobald die Breite ≤ exact_threshold fällt, erfolgt eine
+exakte Bewertung aller Kandidaten.</p>
+<p>Die finale Rückgabe ist stets eine exakt bewertete Koalition mit maximalem/minimalem Wert.</p>
+<p>Initialisiert den BeamCoalitionFinder.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.13)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">Model</span></code>), <code class="xref py py-class docutils literal notranslate"><span class="pre">Game</span></code>, <a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Callable</span></code></a>[[<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></a>], <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></a>]]</span>) – The model object to be explained.</p></li>
-<li><p><strong>data</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.13)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></a>]</span>) – A background dataset to be used for imputation in
-<code class="xref py py-class docutils literal notranslate"><span class="pre">TabularExplainer</span></code> or
-<code class="xref py py-class docutils literal notranslate"><span class="pre">TabPFNExplainer</span></code>. This is a 2-dimensional
-NumPy array with shape <code class="docutils literal notranslate"><span class="pre">(n_samples,</span> <span class="pre">n_features)</span></code>. Can be <code class="docutils literal notranslate"><span class="pre">None</span></code> for the
-<code class="xref py py-class docutils literal notranslate"><span class="pre">TreeExplainer</span></code>, which does not require background
-data.</p></li>
-<li><p><strong>class_index</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.13)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]</span>) – The class index of the model to explain. Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>, which will
-set the class index to <code class="docutils literal notranslate"><span class="pre">1</span></code> per default for classification models and is ignored
-for regression models. Note, it is important to specify the class index for your
-classification model.</p></li>
-<li><p><strong>index</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.13)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code></a>[<code class="docutils literal notranslate"><span class="pre">'SV'</span></code>, <code class="docutils literal notranslate"><span class="pre">'SII'</span></code>, <code class="docutils literal notranslate"><span class="pre">'k-SII'</span></code>, <code class="docutils literal notranslate"><span class="pre">'STII'</span></code>, <code class="docutils literal notranslate"><span class="pre">'FSII'</span></code>, <code class="docutils literal notranslate"><span class="pre">'BV'</span></code>, <code class="docutils literal notranslate"><span class="pre">'BII'</span></code>, <code class="docutils literal notranslate"><span class="pre">'FBII'</span></code>]</span>) – The type of Shapley interaction index to use. Defaults to <code class="docutils literal notranslate"><span class="pre">&quot;k-SII&quot;</span></code>, which
-computes the k-Shapley Interaction Index. If <code class="docutils literal notranslate"><span class="pre">max_order</span></code> is set to 1, this
-corresponds to the Shapley value (<code class="docutils literal notranslate"><span class="pre">index=&quot;SV&quot;</span></code>). Options are:
-- <code class="docutils literal notranslate"><span class="pre">&quot;SV&quot;</span></code>: Shapley value
-- <code class="docutils literal notranslate"><span class="pre">&quot;k-SII&quot;</span></code>: k-Shapley Interaction Index
-- <code class="docutils literal notranslate"><span class="pre">&quot;FSII&quot;</span></code>: Faithful Shapley Interaction Index
-- <code class="docutils literal notranslate"><span class="pre">&quot;FBII&quot;</span></code>: Faithful Banzhaf Interaction Index (becomes <code class="docutils literal notranslate"><span class="pre">BV</span></code> for order 1)
-- <code class="docutils literal notranslate"><span class="pre">&quot;STII&quot;</span></code>: Shapley Taylor Interaction Index
-- <code class="docutils literal notranslate"><span class="pre">&quot;SII&quot;</span></code>: Shapley Interaction Index</p></li>
-<li><p><strong>max_order</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>) – The maximum interaction order to be computed. Defaults to <code class="docutils literal notranslate"><span class="pre">2</span></code>. Set to
-<code class="docutils literal notranslate"><span class="pre">1</span></code> for no interactions (single feature attribution).</p></li>
-<li><p><strong>**kwargs</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.13)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a></span>) – Additional keyword-only arguments passed to the specific explainer classes.</p></li>
+<li><p><strong>features</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]</span>) – Liste aller verfügbaren Feature-Indizes.</p></li>
+<li><p><strong>interactions</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#Ellipsis" title="(in Python v3.13)"><code class="xref py py-data docutils literal notranslate"><span class="pre">...</span></code></a>], <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>]</span>) – Dictionary mit Interaktionswerten.</p></li>
+<li><p><strong>evaluate_fn</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Callable</span></code></a>[[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#set" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">set</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>], <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#Ellipsis" title="(in Python v3.13)"><code class="xref py py-data docutils literal notranslate"><span class="pre">...</span></code></a>], <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>]], <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>]</span>) – Bewertungsfunktion, die einer Koalition einen Wert zuweist.</p></li>
+<li><p><strong>beam_start_fraction</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></span>) – Startfaktor p ∈ (0, 1], bestimmt die initiale Beam-Breite als p * n.
+Bei großen Featuremengen kann p &lt; 1 gewählt werden, um die Startbreite zu begrenzen.
+Standard ist 1.0 (alle Features zu Beginn berücksichtigt).</p></li>
+<li><p><strong>beam_decay</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></span>) – Abfallfaktor r ∈ (0, 1], steuert die Stärke der exponentiellen Reduktion
+der Beam-Breite über die Iterationen. Kleinere Werte führen zu schnellerem Abfall.
+Standard ist 0.7.</p></li>
+<li><p><strong>exact_threshold</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>) – Schwellwert für die Beam-Breite, ab dem die Bewertung von
+heuristisch auf exakt wechselt. Der finale Kandidat wird stets exakt bewertet.</p></li>
 </ul>
 </dd>
 </dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="shapiq_student.beam_finder.BeamCoalitionFinder.find_max">
+<span class="sig-name descname"><span class="pre">find_max</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/shapiq_student/beam_finder.html#BeamCoalitionFinder.find_max"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#shapiq_student.beam_finder.BeamCoalitionFinder.find_max" title="Link to this definition">¶</a></dt>
+<dd><p>Finde die Koalition der Größe <cite>size</cite>, die den höchsten Bewertungswert erzielt.</p>
+<p>Solange die Beam-Breite oberhalb des Schwellwerts liegt, wird eine schnelle heuristische
+Bewertung durchgeführt. Bei geringer Beam-Breite erfolgt eine exakte Bewertung.
+Der finale Rückgabewert ist immer exakt berechnet.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#set" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">set</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>], <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="shapiq_student.beam_finder.BeamCoalitionFinder.find_min">
+<span class="sig-name descname"><span class="pre">find_min</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/shapiq_student/beam_finder.html#BeamCoalitionFinder.find_min"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#shapiq_student.beam_finder.BeamCoalitionFinder.find_min" title="Link to this definition">¶</a></dt>
+<dd><p>Finde die Koalition der Größe <cite>size</cite>, die den niedrigsten Bewertungswert erzielt.</p>
+<p>Solange die Beam-Breite oberhalb des Schwellwerts liegt, wird eine schnelle heuristische
+Bewertung nach Tipp B durchgeführt. Bei geringer Beam-Breite erfolgt eine exakte Bewertung.
+Der finale Rückgabewert ist immer exakt berechnet.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#set" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">set</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>], <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </section>
@@ -322,23 +348,23 @@ corresponds to the Shapley value (<code class="docutils literal notranslate"><sp
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="shapiq_student.beam_finder.html">
+          <a class="next-page" href="shapiq_student.brute_force.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">shapiq_student.beam_finder</div>
+                <div class="title">shapiq_student.brute_force</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="shapiq_student.gaussian.html">
+          <a class="prev-page" href="shapiq_student.knn_explainer.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">shapiq_student.gaussian</div>
+                <div class="title">shapiq_student.knn_explainer</div>
                 
               </div>
             </a>
@@ -372,8 +398,12 @@ corresponds to the Shapley value (<code class="docutils literal notranslate"><sp
         <div class="toc-tree-container">
           <div class="toc-tree">
             <ul>
-<li><a class="reference internal" href="#">shapiq_student.knn_explainer</a><ul>
-<li><a class="reference internal" href="#shapiq_student.knn_explainer.KNNExplainer"><code class="docutils literal notranslate"><span class="pre">KNNExplainer</span></code></a></li>
+<li><a class="reference internal" href="#">shapiq_student.beam_finder</a><ul>
+<li><a class="reference internal" href="#shapiq_student.beam_finder.BeamCoalitionFinder"><code class="docutils literal notranslate"><span class="pre">BeamCoalitionFinder</span></code></a><ul>
+<li><a class="reference internal" href="#shapiq_student.beam_finder.BeamCoalitionFinder.find_max"><code class="docutils literal notranslate"><span class="pre">BeamCoalitionFinder.find_max()</span></code></a></li>
+<li><a class="reference internal" href="#shapiq_student.beam_finder.BeamCoalitionFinder.find_min"><code class="docutils literal notranslate"><span class="pre">BeamCoalitionFinder.find_min()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>

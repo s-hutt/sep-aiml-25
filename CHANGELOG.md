@@ -3,6 +3,12 @@ This changelog is to be updated with each important change to the codebase.
 
 ## Development
 
+## 0.5.0 (2025-07-20)
+
+### Feat
+
+- **coalition_finding**: add beam_coalition, subset_finding, and belonging tests (#40)
+
 ## 0.4.5 (2025-07-18)
 
 ### Fix

@@ -1,5 +1,5 @@
 # Changelog
-This changelog is to be updated with each important change to the codebase.
+This changelog is to be updated with each important change to the codebase. 
 
 ## Development
 

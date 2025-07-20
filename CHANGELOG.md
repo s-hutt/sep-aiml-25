@@ -3,6 +3,12 @@ This changelog is to be updated with each important change to the codebase.
 
 ## Development
 
+## 1.0.0 (2025-07-20)
+
+### Feat
+
+- release
+
 ## 0.7.0 (2025-07-20)
 
 ### Feat

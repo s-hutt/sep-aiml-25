@@ -3,6 +3,12 @@ This changelog is to be updated with each important change to the codebase.
 
 ## Development
 
+## 0.5.1 (2025-07-20)
+
+### Fix
+
+- **api_rendering**: registered new modules to api references on the doc page (#41)
+
 ## 0.5.0 (2025-07-20)
 
 ### Feat

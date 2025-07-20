@@ -1,4 +1,3 @@
-# TODO(mmschlk): add your project name and description here
 # uncomment the following line and incoprorate the build system
 [build-system]
 requires = ["setuptools"]
@@ -10,7 +9,11 @@ include = ["shapiq_student"]
 [project]
 name = "shapiq-student"
 version = "0.1.0"
-description = "Add your description here"
+description = """
+    shapiq-student is a group project for the Softwareentwicklungspraktikum:
+Game Theoretic Explainable Artificial Intelligence (SoSe 2025). It serves as
+an extension of the existing Python library, shapiq.
+    """
 requires-python = ">=3.10"
 license = "MIT"
 dependencies = [
@@ -78,8 +81,6 @@ ignore = [
     "RET504", # Unnecessary assignment to {name} before return statement
     "PLR0913", # too many arguments (>5)
     "TD003",  # TODOs can be written without an issue link
-    "FIX002",  # TODO: remove for final submission but allows todos in code for now
-    # TODO(mmschlk): extend this list below if you need to ignore more rules (do this with care)
 ]
 exclude = [
     ".bzr",
@@ -110,7 +111,6 @@ exclude = [
     "venv",
     "docs/build",
 ]
-# TODO(mmschlk): you can add more exclusions here if you want to ignore certain files  (do this with care)
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = [
     "I002", # __init__.py does not have to import required modules

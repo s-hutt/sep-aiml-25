@@ -3,6 +3,12 @@ This changelog is to be updated with each important change to the codebase.
 
 ## Development
 
+## 0.7.0 (2025-07-20)
+
+### Feat
+
+- **runtime_analyze**: added runtime_analysis_shap_vs_shapiq.ipynb to the doc page (#45)
+
 ## 0.6.0 (2025-07-20)
 
 ### Feat

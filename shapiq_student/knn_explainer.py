@@ -378,13 +378,13 @@ class KNNExplainer(Explainer):
                 lower = -w_m
                 upper = -w_i
 
-                for s in w_k:
+            for s in w_k:
                     if lower <= s <= upper and s in s_to_index:
                         r_val += r0[s_to_index[s]]
 
-                r_i[m] = r_val
+            r_i[m] = r_val
 
-                r0 += f_i[m, k - 2, :]
+            r0 += f_i[m, k - 2, :]
 
         return r_i
 
@@ -439,7 +439,9 @@ class KNNExplainer(Explainer):
                 if denom != 0:
                     phi += r_i[m] / denom
 
-            shapley_values[z_i] = sign_u * phi
+            phi /= n
+
+            shapley_values[z_i] = sign_u * (phi / n)
 
         return InteractionValues(
             values=shapley_values,

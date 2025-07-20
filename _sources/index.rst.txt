@@ -28,6 +28,7 @@ Contents
    examples/KNN_shapley
    examples/conditional_data_imputers
    examples/coalition_finding_algorithmus
+   examples/runtime_analysis_shap_vs_shapiq
 
 .. toctree::
    :maxdepth: 1

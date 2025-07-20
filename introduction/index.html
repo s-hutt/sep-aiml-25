@@ -6,7 +6,7 @@
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Installation" href="start.html" /><link rel="prev" title="shapiq_student Documentation" href="../index.html" />
 
     <link rel="shortcut icon" href="../_static/shapiq.ico"/><!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
-        <title>What is this project about? - shapiq_student 0.5.0 documentation</title>
+        <title>What is this project about? - shapiq_student 0.5.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -168,7 +168,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../index.html"><div class="brand">shapiq_student 0.5.0 documentation</div></a>
+      <a href="../index.html"><div class="brand">shapiq_student 0.5.1 documentation</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -180,7 +180,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -259,7 +259,7 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
@@ -267,7 +267,33 @@
         <article role="main" id="furo-main-content">
           <section id="what-is-this-project-about">
 <h1>What is this project about?<a class="headerlink" href="#what-is-this-project-about" title="Link to this heading">¶</a></h1>
-<p>This is a group project in 2025.</p>
+<p>shapiq-student is a <code class="docutils literal notranslate"><span class="pre">Group</span> <span class="pre">2</span></code> project for the Softwareentwicklungspraktikum:
+Game Theoretic Explainable Artificial Intelligence (SoSe 2025). It serves as
+an extension of the existing Python library, <a class="reference external" href="https://github.com/mmschlk/shapiq"><code class="docutils literal notranslate"><span class="pre">shapiq</span></code></a>,
+a library for explaining machine learning models with Shapley interactions.</p>
+<p>The main development under <code class="docutils literal notranslate"><span class="pre">shapiq_student/</span></code> contains three parts:</p>
+<ol class="arabic simple">
+<li><p>KNN-explainer</p></li>
+<li><p>Conditonal Imputers</p></li>
+<li><p>Coalition-Finding Algorithmus</p></li>
+</ol>
+<p>Tutorials and demonstrations are available in EXAMPLES.</p>
+<section id="project-structure">
+<h2>Project Structure<a class="headerlink" href="#project-structure" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">.github/</span></code> Contains GitHub Actions workflows that run automated tests and other checks on every commit.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">docs/</span></code> This folder is used for creating and maintaining the project documentation.
+The documentation page is created with Sphinx with theme furo and published via GitHub Pages.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">shapiq_student/</span></code> This is the where the main functionalities: KNN-explainer; Conditonal Imputers; Coalition-Finding Algorithmus are implemented.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tests/</span></code> Contains various Uni-tests for shapiq_student.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tests_grading/</span></code> Contains tests for final examination.</p></li>
+</ul>
+</section>
+<section id="extra">
+<h2>Extra<a class="headerlink" href="#extra" title="Link to this heading">¶</a></h2>
+<p>To ensure a modern Python project codebase, this project incorporates package and project manager <a class="reference external" href="https://docs.astral.sh/uv/"><code class="docutils literal notranslate"><span class="pre">uv</span></code></a>, <a class="reference external" href="https://docs.astral.sh/ruff/"><code class="docutils literal notranslate"><span class="pre">Ruff</span></code></a> for linting,
+static type checking tool <a class="reference external" href="https://mypy.readthedocs.io/en/stable/"><code class="docutils literal notranslate"><span class="pre">mypy</span></code></a>, and <a class="reference external" href="https://commitizen-tools.github.io/commitizen/"><code class="docutils literal notranslate"><span class="pre">Commitizen</span></code></a> for release management.</p>
+</section>
 </section>
 
         </article>
@@ -313,13 +339,33 @@
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">What is this project about?</a><ul>
+<li><a class="reference internal" href="#project-structure">Project Structure</a></li>
+<li><a class="reference internal" href="#extra">Extra</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=1dd76d02"></script>
+</div><script src="../_static/documentation_options.js?v=b9afe91b"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/furo.js?v=5fa4622c"></script>
